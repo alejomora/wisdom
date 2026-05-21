@@ -30,3 +30,24 @@ Stage Summary:
 - Missions system fully functional with claim rewards feature
 - 3 types of missions: Daily (reset daily), Weekly (reset weekly), Special (one-time)
 - Special missions auto-track progress from cumulative user stats (exercises done, longest streak, total XP)
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Fix order_words exercise bug, scenario completion bug, mission claim bug, and improve scenario unlock UI
+
+Work Log:
+- **Fixed order_words answer validation bug**: The `correctAnswer` in the database was "A, B, C, D" (comma-separated), but the UI built user answers with space separators "A B C D". Added `normalizeAnswer()` function in store.ts that strips commas and normalizes spaces before comparison.
+- **Fixed scenario never marked as "completed"**: The `/api/progress/complete` endpoint only set scenario status to `in_progress` and never checked if all lessons were done. Updated it to count completed lessons vs total lessons and mark scenario as `completed` when all lessons are done, including proper progress percentage and star calculation.
+- **Fixed mission claim 400 error**: The claim API used a simple `userMission.completed` check from the database, which didn't match the dynamic progress calculation used by the missions list API. Rewrote the claim API to always dynamically calculate progress using `calculateDynamicProgress()` and verify completion the same way the UI does. Also added proper weekly mission progress calculation (was previously always returning 0).
+- **Improved missions API**: Weekly missions now auto-calculate progress dynamically (exercises completed this week, XP earned this week, scenarios completed this week, streak). Special missions now count completed scenarios from UserProgress.
+- **Updated lessons API**: Added `userId` query parameter support to include lesson completion progress (`userProgress` field with status, stars, progress).
+- **Updated loadLessons store function**: Now passes `userId` to the lessons API to get completion data.
+- **Improved ScenarioMap UI**: Added "🔓 Complete previous scenario to unlock" hint text for locked scenarios.
+- **Improved Lesson Selection Modal**: Now shows lesson completion status (checkmark + green highlight for completed lessons), star ratings for completed lessons, and "X/Y lessons completed" counter in the header.
+
+Stage Summary:
+- order_words exercises now work correctly - commas are normalized during comparison
+- Scenarios properly get marked as "completed" when all their lessons are finished
+- Mission claim now works for all mission types with dynamic progress verification
+- Scenario unlock progression is now clear: complete all lessons in a scenario → scenario completes → next scenario unlocks

@@ -584,6 +584,13 @@ function ScenarioMap() {
                         />
                       </div>
                     )}
+
+                    {/* Lock hint for locked scenarios */}
+                    {!unlocked && (
+                      <p className="text-[10px] text-muted-foreground/70 mt-1">
+                        🔓 Complete previous scenario to unlock
+                      </p>
+                    )}
                   </div>
 
                   {/* Right side */}
@@ -658,6 +665,9 @@ function ScenarioMap() {
                 <div>
                   <h3 className="text-lg font-bold">{selectedScenarioForLessons.icon} {selectedScenarioForLessons.name}</h3>
                   <p className="text-sm text-muted-foreground">{selectedScenarioForLessons.nameEs}</p>
+                  <p className="text-xs text-muted-foreground/70 mt-1">
+                    {lessons.filter((l: any) => l.userProgress?.status === 'completed').length}/{lessons.length} lessons completed
+                  </p>
                 </div>
                 <button onClick={() => setSelectedScenarioForLessons(null)} className="p-2 rounded-xl hover:bg-secondary">
                   <Icons.x size={20} />
@@ -665,7 +675,10 @@ function ScenarioMap() {
               </div>
 
               <div className="space-y-3">
-                {lessons.map((lesson, i) => (
+                {lessons.map((lesson, i) => {
+                  const lessonCompleted = lesson.userProgress?.status === 'completed'
+                  const lessonStars = lesson.userProgress?.stars || 0
+                  return (
                   <motion.button
                     key={lesson.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -674,23 +687,41 @@ function ScenarioMap() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => startLesson(lesson.id)}
-                    className="w-full p-4 rounded-xl glass border border-border hover:border-emerald-500/30 text-left transition-all"
+                    className={`w-full p-4 rounded-xl border text-left transition-all ${
+                      lessonCompleted
+                        ? 'border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/50'
+                        : 'border-border hover:border-emerald-500/30 bg-secondary/50'
+                    }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-sm font-bold">
-                        {i + 1}
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${
+                        lessonCompleted ? 'bg-emerald-500/20 text-emerald-400' : 'bg-secondary'
+                      }`}>
+                        {lessonCompleted ? '✓' : i + 1}
                       </div>
                       <div className="flex-1">
                         <p className="font-bold text-sm">{lesson.title}</p>
                         <p className="text-xs text-muted-foreground">{lesson.titleEs}</p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex flex-col items-end gap-1">
                         <span className="text-xs text-emerald-400">+{lesson.xpReward} XP</span>
                         <p className="text-[10px] text-muted-foreground capitalize">{lesson.type}</p>
+                        {lessonCompleted && (
+                          <div className="flex gap-0.5">
+                            {[1, 2, 3].map((s) => (
+                              <Icons.star
+                                key={s}
+                                size={10}
+                                className={s <= lessonStars ? 'star-filled' : 'star-empty'}
+                              />
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </motion.button>
-                ))}
+                  )
+                })}
               </div>
             </motion.div>
           </motion.div>

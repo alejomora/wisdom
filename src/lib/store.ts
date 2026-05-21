@@ -448,7 +448,11 @@ export const useAppStore = create<AppStoreState>()(
       loadLessons: async (scenarioId) => {
         set({ isLoading: true, selectedScenarioId: scenarioId });
         try {
-          const res = await fetch(`${API_BASE}/scenarios/${scenarioId}/lessons`);
+          const userId = get().user?.id;
+          const url = userId
+            ? `${API_BASE}/scenarios/${scenarioId}/lessons?userId=${userId}`
+            : `${API_BASE}/scenarios/${scenarioId}/lessons`;
+          const res = await fetch(url);
           if (!res.ok) throw new Error('Failed to load lessons');
           const data = await res.json();
           set({ lessons: data.lessons ?? data, isLoading: false });
@@ -510,7 +514,10 @@ export const useAppStore = create<AppStoreState>()(
         const currentQuestion = questions[currentQuestionIndex];
         if (!currentQuestion) return;
 
-        const isCorrect = answer.trim().toLowerCase() === currentQuestion.correctAnswer.trim().toLowerCase();
+        // Normalize answers for comparison: remove commas and extra spaces for ordering exercises
+        // This fixes the bug where order_words correctAnswer is "A, B, C, D" but user input is "A B C D"
+        const normalizeAnswer = (ans: string) => ans.trim().toLowerCase().replace(/,\s*/g, ' ').replace(/\s+/g, ' ').trim();
+        const isCorrect = normalizeAnswer(answer) === normalizeAnswer(currentQuestion.correctAnswer);
         const timeTaken = Date.now() - exerciseStartTime;
 
         set({

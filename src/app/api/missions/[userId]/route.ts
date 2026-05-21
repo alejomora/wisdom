@@ -55,7 +55,6 @@ export async function GET(
         const dateMap = userMissionMap.get(mission.id);
         const todayEntry = dateMap?.get(today);
 
-        // Calculate progress based on category
         let progress = todayEntry?.progress ?? 0;
         let completed = todayEntry?.completed ?? false;
         let claimed = todayEntry?.claimed ?? false;
@@ -64,14 +63,12 @@ export async function GET(
         if (!todayEntry) {
           switch (mission.category) {
             case 'exercises':
-              // Count exercises completed today from UserProgress
               progress = 0; // Will be populated when user completes exercises
               break;
             case 'streak':
               progress = user.lastActiveDate === today ? 1 : 0;
               break;
             case 'xp':
-              // XP earned today would need tracking - set to 0 for now
               progress = 0;
               break;
             case 'scenarios':
@@ -103,16 +100,66 @@ export async function GET(
         };
       });
 
-    // Process weekly missions
-    const weeklyMissions = allMissions
+    // Process weekly missions with auto-calculation
+    const weeklyMissionsPromises = allMissions
       .filter((m) => m.type === 'weekly')
-      .map((mission) => {
+      .map(async (mission) => {
         const dateMap = userMissionMap.get(mission.id);
         const weekEntry = dateMap?.get(weekStartStr);
 
         let progress = weekEntry?.progress ?? 0;
         let completed = weekEntry?.completed ?? false;
         let claimed = weekEntry?.claimed ?? false;
+
+        // Auto-calculate progress for this week if no entry exists
+        if (!weekEntry) {
+          const weekStart = new Date(weekStartStr);
+          switch (mission.category) {
+            case 'exercises': {
+              const completedThisWeek = await db.userProgress.count({
+                where: {
+                  userId,
+                  lessonId: { not: null },
+                  status: 'completed',
+                  completedAt: { gte: weekStart },
+                },
+              });
+              progress = completedThisWeek;
+              break;
+            }
+            case 'xp': {
+              const xpThisWeek = await db.userProgress.aggregate({
+                where: {
+                  userId,
+                  lessonId: { not: null },
+                  status: 'completed',
+                  completedAt: { gte: weekStart },
+                },
+                _sum: { xpEarned: true },
+              });
+              progress = xpThisWeek._sum.xpEarned ?? 0;
+              break;
+            }
+            case 'scenarios': {
+              const scenariosThisWeek = await db.userProgress.count({
+                where: {
+                  userId,
+                  scenarioId: { not: null },
+                  status: 'completed',
+                  completedAt: { gte: weekStart },
+                },
+              });
+              progress = scenariosThisWeek;
+              break;
+            }
+            case 'streak':
+              progress = user.streak;
+              break;
+            default:
+              progress = 0;
+          }
+          completed = progress >= mission.requirement;
+        }
 
         return {
           id: mission.id,
@@ -134,10 +181,12 @@ export async function GET(
         };
       });
 
+    const weeklyMissions = await Promise.all(weeklyMissionsPromises);
+
     // Process special missions (one-time, based on cumulative stats)
-    const specialMissions = allMissions
+    const specialMissionsPromises = allMissions
       .filter((m) => m.type === 'special')
-      .map((mission) => {
+      .map(async (mission) => {
         // Special missions use a fixed date key "special"
         const dateMap = userMissionMap.get(mission.id);
         const specialEntry = dateMap?.get('special');
@@ -160,7 +209,14 @@ export async function GET(
               break;
             case 'scenarios': {
               // Count completed scenarios from UserProgress
-              progress = 0;
+              const completedScenarios = await db.userProgress.count({
+                where: {
+                  userId,
+                  scenarioId: { not: null },
+                  status: 'completed',
+                },
+              });
+              progress = completedScenarios;
               break;
             }
             default:
@@ -188,6 +244,8 @@ export async function GET(
           date: 'special',
         };
       });
+
+    const specialMissions = await Promise.all(specialMissionsPromises);
 
     return NextResponse.json({
       daily: dailyMissions,

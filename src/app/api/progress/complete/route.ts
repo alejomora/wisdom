@@ -58,7 +58,44 @@ export async function POST(request: Request) {
       });
     }
 
-    // Also ensure scenario progress exists
+    // Also ensure scenario progress exists and check if all lessons are completed
+    // Get all lessons in this scenario
+    const allLessonsInScenario = await db.lesson.findMany({
+      where: { scenarioId: lesson.scenarioId },
+      select: { id: true },
+    });
+    const lessonIds = allLessonsInScenario.map((l) => l.id);
+
+    // Count completed lessons for this user in this scenario
+    const completedLessonsCount = await db.userProgress.count({
+      where: {
+        userId,
+        lessonId: { in: lessonIds },
+        status: 'completed',
+      },
+    });
+
+    const allLessonsCompleted = completedLessonsCount >= allLessonsInScenario.length;
+    const scenarioStatus = allLessonsCompleted ? 'completed' : 'in_progress';
+    const scenarioProgress = allLessonsCompleted ? 100 : Math.round((completedLessonsCount / allLessonsInScenario.length) * 100);
+
+    // Calculate best stars across all completed lessons in this scenario
+    let bestScenarioStars = 0;
+    if (allLessonsCompleted) {
+      const lessonProgressRecords = await db.userProgress.findMany({
+        where: {
+          userId,
+          lessonId: { in: lessonIds },
+          status: 'completed',
+        },
+        select: { stars: true },
+      });
+      // Use the minimum stars as the scenario stars (like Duolingo - based on weakest lesson)
+      bestScenarioStars = lessonProgressRecords.length > 0
+        ? Math.min(...lessonProgressRecords.map((r) => r.stars))
+        : 0;
+    }
+
     await db.userProgress.upsert({
       where: {
         userId_scenarioId: { userId, scenarioId: lesson.scenarioId },
@@ -66,12 +103,17 @@ export async function POST(request: Request) {
       create: {
         userId,
         scenarioId: lesson.scenarioId,
-        status: 'in_progress',
-        progress: 0,
-        stars: 0,
+        status: scenarioStatus,
+        progress: scenarioProgress,
+        stars: bestScenarioStars,
         xpEarned: 0,
+        ...(allLessonsCompleted ? { completedAt: new Date() } : {}),
       },
-      update: {},
+      update: {
+        status: scenarioStatus,
+        progress: scenarioProgress,
+        ...(allLessonsCompleted ? { stars: bestScenarioStars, completedAt: new Date() } : {}),
+      },
     });
 
     // Get current user
