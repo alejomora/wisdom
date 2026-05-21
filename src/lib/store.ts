@@ -435,7 +435,11 @@ export const useAppStore = create<AppStoreState>()(
       loadScenarios: async (levelId) => {
         set({ isLoading: true, selectedLevelId: levelId });
         try {
-          const res = await fetch(`${API_BASE}/levels/${levelId}/scenarios`);
+          const userId = get().user?.id;
+          const url = userId
+            ? `${API_BASE}/levels/${levelId}/scenarios?userId=${userId}`
+            : `${API_BASE}/levels/${levelId}/scenarios`;
+          const res = await fetch(url);
           if (!res.ok) throw new Error('Failed to load scenarios');
           const data = await res.json();
           set({ scenarios: data.scenarios ?? data, isLoading: false });
@@ -585,13 +589,14 @@ export const useAppStore = create<AppStoreState>()(
         // Coins: 5 per correct answer + bonus for stars
         const coins = correctCount * 5 + stars * 10;
 
+        // Optimistic update - will be corrected by backend response
         const newTotalStars = user.totalStars + stars;
         const newXp = user.xp + totalXp;
         const newCoins = user.coins + coins;
         const newLevel = calculateLevelFromXp(newXp);
         const didLevelUp = newLevel > user.level;
 
-        // Update user state
+        // Update user state optimistically
         const updatedUser: UserData = {
           ...user,
           xp: newXp,
@@ -630,9 +635,9 @@ export const useAppStore = create<AppStoreState>()(
           get().playSound('reward');
         }
 
-        // Persist results to the backend (fire and forget)
+        // Persist results to the backend
         try {
-          await fetch(`${API_BASE}/progress/complete`, {
+          const res = await fetch(`${API_BASE}/progress/complete`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -644,6 +649,42 @@ export const useAppStore = create<AppStoreState>()(
               results: exerciseResults,
             }),
           });
+
+          if (res.ok) {
+            const data = await res.json();
+            // Update user from backend (has accurate stats)
+            // Backend will NOT add XP/coins if this was a replay
+            if (data.user) {
+              set({ user: data.user });
+            }
+            // If this was a replay, update the UI to show no rewards were earned
+            if (data.isReplay) {
+              set({
+                rewardData: {
+                  type: 'exercise_complete',
+                  title: 'Practice Complete! 🔄',
+                  message: 'You already completed this lesson. Only your best star score is updated.',
+                  xp: 0,
+                  coins: 0,
+                  stars: 0,
+                },
+                exerciseXpEarned: 0,
+              });
+            }
+            // Refresh scenarios to reflect updated progress/unlocks
+            const selectedLevelId = get().selectedLevelId;
+            if (selectedLevelId) {
+              const userId = get().user?.id;
+              const url = userId
+                ? `${API_BASE}/levels/${selectedLevelId}/scenarios?userId=${userId}`
+                : `${API_BASE}/levels/${selectedLevelId}/scenarios`;
+              const scenariosRes = await fetch(url);
+              if (scenariosRes.ok) {
+                const scenariosData = await scenariosRes.json();
+                set({ scenarios: scenariosData.scenarios ?? scenariosData });
+              }
+            }
+          }
         } catch (error) {
           console.error('Failed to save exercise results:', error);
         }

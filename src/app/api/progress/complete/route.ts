@@ -26,7 +26,17 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check if lesson was already completed (to prevent double rewards)
+    const existingProgress = await db.userProgress.findUnique({
+      where: {
+        userId_lessonId: { userId, lessonId },
+      },
+    });
+
+    const isAlreadyCompleted = existingProgress?.status === 'completed';
+
     // Update or create lesson progress
+    // If already completed, only update stars if the new score is better
     const lessonProgress = await db.userProgress.upsert({
       where: {
         userId_lessonId: { userId, lessonId },
@@ -44,19 +54,12 @@ export async function POST(request: Request) {
       update: {
         status: 'completed',
         progress: 100,
-        stars: { set: Math.max(stars ?? 0, 0) },
+        // Only update stars if the new score is better
+        stars: { set: Math.max(existingProgress?.stars ?? 0, stars ?? 0) },
         xpEarned: xpEarned ?? 0,
         completedAt: new Date(),
       },
     });
-
-    // Update stars to keep the best score
-    if (lessonProgress.stars < (stars ?? 0)) {
-      await db.userProgress.update({
-        where: { id: lessonProgress.id },
-        data: { stars: stars ?? 0 },
-      });
-    }
 
     // Also ensure scenario progress exists and check if all lessons are completed
     // Get all lessons in this scenario
@@ -125,12 +128,31 @@ export async function POST(request: Request) {
       );
     }
 
-    // Calculate new user stats
-    const newXp = user.xp + (xpEarned ?? 0);
-    const coinsEarned = (stars ?? 0) * 10 + Math.floor((accuracy ?? 0) * 20);
-    const newCoins = user.coins + coinsEarned;
-    const newTotalStars = user.totalStars + (stars ?? 0);
-    const newExercisesDone = user.exercisesDone + 1;
+    let coinsEarned = 0;
+    let newXp = user.xp;
+    let newCoins = user.coins;
+    let newTotalStars = user.totalStars;
+    let newExercisesDone = user.exercisesDone;
+    let newAccuracy = user.accuracy;
+    let newWordsLearned = user.wordsLearned;
+
+    if (isAlreadyCompleted) {
+      // Lesson was already completed - NO additional rewards
+      // Only update stars if the new score is better (already handled in upsert)
+      coinsEarned = 0;
+    } else {
+      // First time completing this lesson - award full rewards
+      newXp = user.xp + (xpEarned ?? 0);
+      coinsEarned = (stars ?? 0) * 10 + Math.floor((accuracy ?? 0) * 20);
+      newCoins = user.coins + coinsEarned;
+      newTotalStars = user.totalStars + (stars ?? 0);
+      newExercisesDone = user.exercisesDone + 1;
+      newAccuracy =
+        user.exercisesDone > 0
+          ? (user.accuracy * user.exercisesDone + (accuracy ?? 0)) / (user.exercisesDone + 1)
+          : (accuracy ?? 0);
+      newWordsLearned = user.wordsLearned + Math.floor((accuracy ?? 0) * 5);
+    }
 
     // Calculate level from XP
     let newLevel = 1;
@@ -142,13 +164,7 @@ export async function POST(request: Request) {
       newLevel = lvl;
     }
 
-    // Calculate running accuracy
-    const newAccuracy =
-      user.exercisesDone > 0
-        ? (user.accuracy * user.exercisesDone + (accuracy ?? 0)) / (user.exercisesDone + 1)
-        : (accuracy ?? 0);
-
-    // Update streak
+    // Update streak (always update, even on replay - to maintain streak)
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     let newStreak = user.streak;
@@ -178,11 +194,11 @@ export async function POST(request: Request) {
         streak: newStreak,
         longestStreak: newLongestStreak,
         lastActiveDate: today,
-        wordsLearned: user.wordsLearned + Math.floor((accuracy ?? 0) * 5),
+        wordsLearned: newWordsLearned,
       },
     });
 
-    // Save individual answer results if provided
+    // Save individual answer results if provided (always save, even on replay for analytics)
     if (Array.isArray(results)) {
       for (const result of results) {
         await db.userAnswer.create({
@@ -197,7 +213,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // Check for achievement unlocks
+    // Check for achievement unlocks (only for first completion)
     const newAchievements: Array<{
       id: string;
       name: string;
@@ -205,67 +221,69 @@ export async function POST(request: Request) {
       reward: number;
     }> = [];
 
-    const achievements = await db.achievement.findMany();
-    const unlockedAchievements = await db.userAchievement.findMany({
-      where: { userId },
-    });
-    const unlockedSlugs = new Set(
-      unlockedAchievements.map((ua) => ua.achievementId)
-    );
+    if (!isAlreadyCompleted) {
+      const achievements = await db.achievement.findMany();
+      const unlockedAchievements = await db.userAchievement.findMany({
+        where: { userId },
+      });
+      const unlockedSlugs = new Set(
+        unlockedAchievements.map((ua) => ua.achievementId)
+      );
 
-    for (const achievement of achievements) {
-      if (unlockedSlugs.has(achievement.id)) continue;
+      for (const achievement of achievements) {
+        if (unlockedSlugs.has(achievement.id)) continue;
 
-      let met = false;
+        let met = false;
 
-      switch (achievement.category) {
-        case 'exercises':
-          met = newExercisesDone >= achievement.requirement;
-          break;
-        case 'streak':
-          met = newStreak >= achievement.requirement;
-          break;
-        case 'xp':
-          met = newXp >= achievement.requirement;
-          break;
-        case 'scenarios': {
-          const completedScenarios = await db.userProgress.count({
-            where: {
+        switch (achievement.category) {
+          case 'exercises':
+            met = newExercisesDone >= achievement.requirement;
+            break;
+          case 'streak':
+            met = newStreak >= achievement.requirement;
+            break;
+          case 'xp':
+            met = newXp >= achievement.requirement;
+            break;
+          case 'scenarios': {
+            const completedScenarios = await db.userProgress.count({
+              where: {
+                userId,
+                scenarioId: { not: null },
+                status: 'completed',
+              },
+            });
+            met = completedScenarios >= achievement.requirement;
+            break;
+          }
+          case 'special':
+            met = (accuracy ?? 0) >= 1.0;
+            break;
+        }
+
+        if (met) {
+          await db.userAchievement.create({
+            data: {
               userId,
-              scenarioId: { not: null },
-              status: 'completed',
+              achievementId: achievement.id,
             },
           });
-          met = completedScenarios >= achievement.requirement;
-          break;
-        }
-        case 'special':
-          met = (accuracy ?? 0) >= 1.0;
-          break;
-      }
 
-      if (met) {
-        await db.userAchievement.create({
-          data: {
-            userId,
-            achievementId: achievement.id,
-          },
-        });
+          // Award coins for achievement
+          if (achievement.reward > 0) {
+            await db.user.update({
+              where: { id: userId },
+              data: { coins: { increment: achievement.reward } },
+            });
+          }
 
-        // Award coins for achievement
-        if (achievement.reward > 0) {
-          await db.user.update({
-            where: { id: userId },
-            data: { coins: { increment: achievement.reward } },
+          newAchievements.push({
+            id: achievement.id,
+            name: achievement.name,
+            icon: achievement.icon,
+            reward: achievement.reward,
           });
         }
-
-        newAchievements.push({
-          id: achievement.id,
-          name: achievement.name,
-          icon: achievement.icon,
-          reward: achievement.reward,
-        });
       }
     }
 
@@ -276,6 +294,7 @@ export async function POST(request: Request) {
       user: userData,
       progress: lessonProgress,
       coinsEarned,
+      isReplay: isAlreadyCompleted,
       newAchievements,
     });
   } catch (error) {
