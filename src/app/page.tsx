@@ -1640,8 +1640,36 @@ function ProfileView() {
   const user = useAppStore((s) => s.user)
   const logout = useAppStore((s) => s.logout)
   const navigate = useAppStore((s) => s.navigate)
+  const inventory = useAppStore((s) => s.inventory)
+  const loadShop = useAppStore((s) => s.loadShop)
+  const equipReward = useAppStore((s) => s.equipReward)
+  const [activeTab, setActiveTab] = useState<'stats' | 'inventory'>('stats')
+  const [inventoryFilter, setInventoryFilter] = useState<string>('all')
+
+  useEffect(() => {
+    loadShop()
+  }, [loadShop])
 
   if (!user) return null
+
+  const filteredInventory = inventoryFilter === 'all'
+    ? inventory
+    : inventory.filter((item) => item.type === inventoryFilter)
+
+  const inventoryTypes = ['all', 'avatar', 'frame', 'title']
+
+  const rarityColors: Record<string, string> = {
+    common: 'border-gray-500/30 bg-gray-500/5',
+    rare: 'border-cyan-500/30 bg-cyan-500/5',
+    epic: 'border-purple-500/30 bg-purple-500/5',
+    legendary: 'border-yellow-500/30 bg-yellow-500/5',
+  }
+  const rarityGlow: Record<string, string> = {
+    common: '',
+    rare: 'shadow-cyan-500/20',
+    epic: 'shadow-purple-500/20',
+    legendary: 'shadow-yellow-500/20',
+  }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
@@ -1651,11 +1679,22 @@ function ProfileView() {
         animate={{ opacity: 1, y: 0 }}
         className="glass rounded-2xl p-6 text-center mb-6"
       >
-        <div className="w-24 h-24 mx-auto rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-5xl shadow-lg shadow-emerald-500/20 mb-4">
-          {user.avatar}
+        {/* Avatar with Frame */}
+        <div className="relative w-28 h-28 mx-auto mb-4">
+          {user.frame && (
+            <div className="absolute -inset-2 rounded-2xl text-5xl flex items-center justify-center opacity-40 animate-pulse-glow">
+              {user.frame}
+            </div>
+          )}
+          <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-5xl shadow-lg shadow-emerald-500/20 relative z-10">
+            {user.avatar}
+          </div>
+          {user.frame && (
+            <div className="absolute -inset-1 rounded-2xl border-2 border-yellow-500/40 z-0" />
+          )}
         </div>
         <h2 className="text-2xl font-bold">{user.name}</h2>
-        <p className="text-muted-foreground">{user.title}</p>
+        <p className="text-emerald-400 font-medium">{user.title}</p>
         <p className="text-xs text-muted-foreground mt-1">Level {user.level} • {user.email}</p>
 
         <div className="grid grid-cols-3 gap-3 mt-6">
@@ -1674,47 +1713,177 @@ function ProfileView() {
         </div>
       </motion.div>
 
-      {/* Achievements */}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold mb-3">🏆 Achievements</h3>
-        <div className="grid grid-cols-5 gap-2">
-          {['👶', '🔥', '⚡', '🌟', '💯', '⭐', '💫', '🧠', '🎓', '📈'].map((icon, i) => (
-            <div key={i} className="aspect-square rounded-xl bg-secondary/50 border border-border flex items-center justify-center text-xl">
-              {i < 3 ? icon : '🔒'}
+      {/* Tabs */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setActiveTab('stats')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            activeTab === 'stats' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-secondary/50 text-muted-foreground border border-transparent'
+          }`}
+        >
+          📊 Stats
+        </button>
+        <button
+          onClick={() => setActiveTab('inventory')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            activeTab === 'inventory' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-secondary/50 text-muted-foreground border border-transparent'
+          }`}
+        >
+          🎒 My Items ({inventory.length})
+        </button>
+      </div>
+
+      {activeTab === 'stats' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          {/* Detailed Stats */}
+          <div className="glass rounded-2xl p-5 mb-4">
+            <h3 className="text-lg font-bold mb-3">📈 Detailed Stats</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
+                <p className="text-lg font-bold text-orange-400">{user.streak}</p>
+                <p className="text-[10px] text-muted-foreground">Day Streak (Best: {user.longestStreak})</p>
+              </div>
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                <p className="text-lg font-bold text-emerald-400">{user.exercisesDone}</p>
+                <p className="text-[10px] text-muted-foreground">Exercises Done</p>
+              </div>
+              <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+                <p className="text-lg font-bold text-cyan-400">{user.wordsLearned}</p>
+                <p className="text-[10px] text-muted-foreground">Words Learned</p>
+              </div>
+              <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                <p className="text-lg font-bold text-purple-400">{Math.round(user.accuracy * 100)}%</p>
+                <p className="text-[10px] text-muted-foreground">Accuracy</p>
+              </div>
+              <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                <p className="text-lg font-bold text-blue-400">{Math.round(user.listeningScore * 100)}%</p>
+                <p className="text-[10px] text-muted-foreground">Listening</p>
+              </div>
+              <div className="p-3 rounded-xl bg-pink-500/10 border border-pink-500/20">
+                <p className="text-lg font-bold text-pink-400">{Math.round(user.speakingScore * 100)}%</p>
+                <p className="text-[10px] text-muted-foreground">Speaking</p>
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="space-y-3">
-        <motion.button
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
-          onClick={() => navigate('shop')}
-          className="w-full p-4 rounded-xl glass border border-border flex items-center gap-3 text-left"
-        >
-          <span className="text-2xl">🛍️</span>
-          <div>
-            <p className="font-bold">Shop</p>
-            <p className="text-xs text-muted-foreground">Spend your coins on avatars & items</p>
           </div>
-          <Icons.arrowRight size={20} className="ml-auto text-muted-foreground" />
-        </motion.button>
 
-        <motion.button
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
-          onClick={logout}
-          className="w-full p-4 rounded-xl glass border border-red-500/20 flex items-center gap-3 text-left text-red-400"
-        >
-          <Icons.logOut size={20} />
-          <div>
-            <p className="font-bold">Log Out</p>
-            <p className="text-xs text-red-400/60">Sign out of your account</p>
+          {/* Achievements */}
+          <div className="mb-4">
+            <h3 className="text-lg font-bold mb-3">🏆 Achievements</h3>
+            <div className="grid grid-cols-5 gap-2">
+              {['👶', '🔥', '⚡', '🌟', '💯', '⭐', '💫', '🧠', '🎓', '📈'].map((icon, i) => (
+                <div key={i} className="aspect-square rounded-xl bg-secondary/50 border border-border flex items-center justify-center text-xl">
+                  {i < 3 ? icon : '🔒'}
+                </div>
+              ))}
+            </div>
           </div>
-        </motion.button>
-      </div>
+
+          {/* Actions */}
+          <div className="space-y-3">
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              onClick={() => navigate('shop')}
+              className="w-full p-4 rounded-xl glass border border-border flex items-center gap-3 text-left"
+            >
+              <span className="text-2xl">🛍️</span>
+              <div>
+                <p className="font-bold">Shop</p>
+                <p className="text-xs text-muted-foreground">Spend your coins on avatars & items</p>
+              </div>
+              <Icons.arrowRight size={20} className="ml-auto text-muted-foreground" />
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              onClick={logout}
+              className="w-full p-4 rounded-xl glass border border-red-500/20 flex items-center gap-3 text-left text-red-400"
+            >
+              <Icons.logOut size={20} />
+              <div>
+                <p className="font-bold">Log Out</p>
+                <p className="text-xs text-red-400/60">Sign out of your account</p>
+              </div>
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
+
+      {activeTab === 'inventory' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          {/* Filter tabs */}
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+            {inventoryTypes.map((type) => (
+              <button
+                key={type}
+                onClick={() => setInventoryFilter(type)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                  inventoryFilter === type
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-secondary/50 text-muted-foreground border border-transparent'
+                }`}
+              >
+                {type === 'all' ? '📦 All' : type === 'avatar' ? '👤 Avatars' : type === 'frame' ? '🖼️ Frames' : '🏷️ Titles'}
+              </button>
+            ))}
+          </div>
+
+          {filteredInventory.length === 0 ? (
+            <div className="text-center py-12">
+              <span className="text-5xl block mb-4">🎒</span>
+              <p className="text-muted-foreground mb-2">No items yet</p>
+              <p className="text-xs text-muted-foreground mb-4">Visit the shop to buy avatars, frames, and titles!</p>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('shop')}
+                className="px-6 py-2 rounded-xl bg-gradient-to-r from-yellow-500 to-amber-500 text-white font-bold text-sm"
+              >
+                🛍️ Go to Shop
+              </motion.button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {filteredInventory.map((item, i) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.03 }}
+                  className={`relative p-4 rounded-xl border text-center transition-all ${
+                    rarityColors[item.rarity] || rarityColors.common
+                  } ${item.equipped ? `ring-2 ring-emerald-500/50 shadow-lg ${rarityGlow[item.rarity] || ''}` : ''}`}
+                >
+                  {/* Equipped badge */}
+                  {item.equipped && (
+                    <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center z-10">
+                      <Icons.check size={12} className="text-white" />
+                    </div>
+                  )}
+
+                  <span className="text-3xl block mb-2">{item.icon}</span>
+                  <p className="font-bold text-xs">{item.nameEs || item.name}</p>
+                  <p className="text-[9px] text-muted-foreground capitalize">{item.type}</p>
+
+                  {/* Equip/Unequip button */}
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => equipReward(item.rewardId)}
+                    className={`mt-2 px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                      item.equipped
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-secondary text-foreground hover:bg-emerald-500/10 hover:text-emerald-400'
+                    }`}
+                  >
+                    {item.equipped ? '✓ Equipped' : 'Equip'}
+                  </motion.button>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      )}
     </div>
   )
 }
@@ -1724,22 +1893,20 @@ function ProfileView() {
 // ============================================
 function ShopView() {
   const user = useAppStore((s) => s.user)
-  const addCoins = useAppStore((s) => s.addCoins)
-  const [loading] = useState(false)
+  const shopItems = useAppStore((s) => s.shopItems)
+  const inventory = useAppStore((s) => s.inventory)
+  const isLoading = useAppStore((s) => s.isLoading)
+  const loadShop = useAppStore((s) => s.loadShop)
+  const buyReward = useAppStore((s) => s.buyReward)
+  const equipReward = useAppStore((s) => s.equipReward)
+  const playSound = useAppStore((s) => s.playSound)
+  const [shopFilter, setShopFilter] = useState<string>('all')
+  const [buyingId, setBuyingId] = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
-  const rewards = [
-    { slug: 'avatar-fox', name: 'Fox Avatar', icon: '🦊', cost: 50, rarity: 'common', type: 'avatar' },
-    { slug: 'avatar-tiger', name: 'Tiger Avatar', icon: '🐯', cost: 100, rarity: 'rare', type: 'avatar' },
-    { slug: 'avatar-lion', name: 'Lion Avatar', icon: '🦁', cost: 150, rarity: 'rare', type: 'avatar' },
-    { slug: 'avatar-dragon', name: 'Dragon Avatar', icon: '🐉', cost: 300, rarity: 'epic', type: 'avatar' },
-    { slug: 'avatar-unicorn', name: 'Unicorn Avatar', icon: '🦄', cost: 500, rarity: 'legendary', type: 'avatar' },
-    { slug: 'frame-gold', name: 'Gold Frame', icon: '🖼️', cost: 200, rarity: 'rare', type: 'frame' },
-    { slug: 'frame-diamond', name: 'Diamond Frame', icon: '💎', cost: 400, rarity: 'epic', type: 'frame' },
-    { slug: 'frame-fire', name: 'Fire Frame', icon: '🔥', cost: 350, rarity: 'epic', type: 'frame' },
-    { slug: 'title-word-master', name: 'Word Master', icon: '📝', cost: 250, rarity: 'rare', type: 'title' },
-    { slug: 'title-grammar-guru', name: 'Grammar Guru', icon: '📖', cost: 300, rarity: 'rare', type: 'title' },
-    { slug: 'title-fluent', name: 'Fluent Speaker', icon: '🗣️', cost: 500, rarity: 'legendary', type: 'title' },
-  ]
+  useEffect(() => {
+    loadShop()
+  }, [loadShop])
 
   const rarityColors: Record<string, string> = {
     common: 'border-gray-500/30 bg-gray-500/5',
@@ -1753,16 +1920,43 @@ function ShopView() {
     epic: 'text-purple-400',
     legendary: 'text-yellow-400',
   }
-
-  const handleBuy = (reward: any) => {
-    if (!user || user.coins < reward.cost) return
-    // Deduct coins (simplified)
-    addCoins(-reward.cost)
+  const rarityGlow: Record<string, string> = {
+    common: '',
+    rare: 'shadow-cyan-500/20',
+    epic: 'shadow-purple-500/20',
+    legendary: 'shadow-yellow-500/20',
   }
+
+  const shopTypes = ['all', 'avatar', 'frame', 'title']
+
+  const filteredItems = shopFilter === 'all'
+    ? shopItems
+    : shopItems.filter((item) => item.type === shopFilter)
+
+  // Check if an item is equipped
+  const isEquipped = (rewardId: string) => inventory.some((i) => i.rewardId === rewardId && i.equipped)
+
+  const handleBuy = async (rewardId: string) => {
+    setBuyingId(rewardId)
+    await buyReward(rewardId)
+    setBuyingId(null)
+  }
+
+  const handleEquip = async (rewardId: string) => {
+    await equipReward(rewardId)
+  }
+
+  // Show success message briefly
+  useEffect(() => {
+    if (successMsg) {
+      const timer = setTimeout(() => setSuccessMsg(null), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [successMsg])
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold">🛍️ Shop</h2>
         <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
           <Icons.coin size={14} className="text-yellow-400" />
@@ -1770,40 +1964,124 @@ function ShopView() {
         </div>
       </div>
 
-      {loading ? (
+      {/* Success notification */}
+      <AnimatePresence>
+        {successMsg && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm text-center font-medium"
+          >
+            {successMsg}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Filter tabs */}
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+        {shopTypes.map((type) => (
+          <button
+            key={type}
+            onClick={() => setShopFilter(type)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+              shopFilter === type
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                : 'bg-secondary/50 text-muted-foreground border border-transparent'
+            }`}
+          >
+            {type === 'all' ? '📦 All' : type === 'avatar' ? '👤 Avatars' : type === 'frame' ? '🖼️ Frames' : '🏷️ Titles'}
+          </button>
+        ))}
+      </div>
+
+      {isLoading ? (
         <div className="grid grid-cols-2 gap-3">
           {Array.from({length: 6}).map((_, i) => (
-            <div key={i} className="animate-pulse h-40 rounded-xl bg-secondary" />
+            <div key={i} className="animate-pulse h-44 rounded-xl bg-secondary" />
           ))}
+        </div>
+      ) : filteredItems.length === 0 ? (
+        <div className="text-center py-12">
+          <span className="text-5xl block mb-4">🛍️</span>
+          <p className="text-muted-foreground">No items available</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {rewards.map((reward, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.03 }}
-              whileHover={{ scale: 1.05 }}
-              className={`p-4 rounded-xl border text-center ${rarityColors[reward.rarity]}`}
-            >
-              <span className="text-4xl block mb-2">{reward.icon}</span>
-              <p className="font-bold text-sm">{reward.name}</p>
-              <p className={`text-[10px] uppercase font-bold mt-1 ${rarityLabels[reward.rarity]}`}>
-                {reward.rarity}
-              </p>
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={() => handleBuy(reward)}
-                disabled={!user || user.coins < reward.cost}
-                className="mt-3 px-3 py-1.5 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-xs font-bold disabled:opacity-30"
+          {filteredItems.map((item, i) => {
+            const owned = item.purchased
+            const equipped = isEquipped(item.id)
+            const canAfford = (user?.coins || 0) >= item.cost
+            const isBuying = buyingId === item.id
+
+            return (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.03 }}
+                whileHover={!owned ? { scale: 1.05 } : {}}
+                className={`relative p-4 rounded-xl border text-center transition-all ${
+                  rarityColors[item.rarity] || rarityColors.common
+                } ${equipped ? `ring-2 ring-emerald-500/50 shadow-lg ${rarityGlow[item.rarity] || ''}` : ''}`}
               >
-                {reward.cost} 🪙
-              </motion.button>
-            </motion.div>
-          ))}
+                {/* Owned badge */}
+                {owned && !equipped && (
+                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center z-10">
+                    <Icons.check size={12} className="text-white" />
+                  </div>
+                )}
+                {equipped && (
+                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center z-10">
+                    <Icons.check size={12} className="text-white" />
+                  </div>
+                )}
+
+                <span className="text-4xl block mb-2">{item.icon}</span>
+                <p className="font-bold text-sm">{item.nameEs || item.name}</p>
+                <p className="text-[9px] text-muted-foreground mt-0.5">{item.descriptionEs || item.description}</p>
+                <p className={`text-[10px] uppercase font-bold mt-1 ${rarityLabels[item.rarity] || ''}`}>
+                  {item.rarity}
+                </p>
+
+                {owned ? (
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => handleEquip(item.id)}
+                    className={`mt-3 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      equipped
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-secondary text-foreground hover:bg-emerald-500/10 hover:text-emerald-400'
+                    }`}
+                  >
+                    {equipped ? '✓ Equipped' : 'Equip'}
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => handleBuy(item.id)}
+                    disabled={!canAfford || isBuying}
+                    className="mt-3 px-3 py-1.5 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-1 mx-auto"
+                  >
+                    {isBuying ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>{item.cost} 🪙</>
+                    )}
+                  </motion.button>
+                )}
+              </motion.div>
+            )
+          })}
         </div>
       )}
+
+      {/* Bottom info */}
+      <div className="mt-6 p-4 rounded-xl glass border border-border text-center">
+        <p className="text-xs text-muted-foreground">
+          💡 Earn coins by completing exercises. Equip your items in <button onClick={() => useAppStore.getState().navigate('profile')} className="text-emerald-400 hover:underline">Profile → My Items</button>
+        </p>
+      </div>
     </div>
   )
 }

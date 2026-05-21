@@ -148,6 +148,36 @@ export interface NotificationData {
 
 export type SoundType = 'correct' | 'wrong' | 'reward' | 'levelup' | 'unlock';
 
+export interface ShopItem {
+  id: string;
+  slug: string;
+  name: string;
+  nameEs: string;
+  description: string;
+  descriptionEs: string;
+  type: string; // avatar | frame | title | skin | theme
+  icon: string;
+  rarity: string; // common | rare | epic | legendary
+  cost: number;
+  purchased: boolean;
+}
+
+export interface InventoryItem {
+  id: string;
+  rewardId: string;
+  slug: string;
+  name: string;
+  nameEs: string;
+  description: string;
+  descriptionEs: string;
+  type: string;
+  icon: string;
+  rarity: string;
+  cost: number;
+  equipped: boolean;
+  purchased: string;
+}
+
 // ============================================
 // PERSISTED PREFERENCES
 // ============================================
@@ -189,6 +219,10 @@ export interface AppStoreState {
   exerciseXpEarned: number;
   exerciseStars: number;
 
+  // Shop State
+  shopItems: ShopItem[];
+  inventory: InventoryItem[];
+
   // UI State
   showConfetti: boolean;
   soundEnabled: boolean;
@@ -227,6 +261,11 @@ export interface AppStoreState {
   loseLife: () => void;
   refillLives: () => void;
   updateStreak: () => void;
+
+  // Actions - Shop
+  loadShop: () => Promise<void>;
+  buyReward: (rewardId: string) => Promise<void>;
+  equipReward: (rewardId: string) => Promise<void>;
 
   // Actions - UI
   setShowConfetti: (val: boolean) => void;
@@ -297,6 +336,10 @@ export const useAppStore = create<AppStoreState>()(
       isExerciseComplete: false,
       exerciseXpEarned: 0,
       exerciseStars: 0,
+
+      // ── Shop State ──────────────────────────────
+      shopItems: [],
+      inventory: [],
 
       // ── UI State ────────────────────────────────
       showConfetti: false,
@@ -730,6 +773,79 @@ export const useAppStore = create<AppStoreState>()(
       // ────────────────────────────────────────────
       // UI ACTIONS
       // ────────────────────────────────────────────
+      // ────────────────────────────────────────────
+      // SHOP ACTIONS
+      // ────────────────────────────────────────────
+      loadShop: async () => {
+        const { user } = get();
+        if (!user) return;
+        set({ isLoading: true });
+        try {
+          const res = await fetch(`${API_BASE}/shop/inventory?userId=${user.id}`);
+          if (!res.ok) throw new Error('Failed to load shop');
+          const data = await res.json();
+          set({ shopItems: data.shopItems ?? [], inventory: data.inventory ?? [], isLoading: false });
+        } catch (error) {
+          console.error('Failed to load shop:', error);
+          set({ isLoading: false });
+        }
+      },
+
+      buyReward: async (rewardId) => {
+        const { user } = get();
+        if (!user) return;
+        set({ isLoading: true });
+        try {
+          const res = await fetch(`${API_BASE}/shop/buy`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id, rewardId }),
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || 'Purchase failed');
+          }
+          const data = await res.json();
+          set({
+            user: data.user ?? user,
+            isLoading: false,
+          });
+          // Reload shop to update purchased state
+          await get().loadShop();
+          get().playSound('reward');
+          get().setNotification({ type: 'success', message: data.message || 'Item purchased!' });
+        } catch (error: any) {
+          console.error('Buy reward error:', error);
+          set({ isLoading: false });
+          get().setNotification({ type: 'error', message: error.message || 'Purchase failed' });
+        }
+      },
+
+      equipReward: async (rewardId) => {
+        const { user } = get();
+        if (!user) return;
+        try {
+          const res = await fetch(`${API_BASE}/shop/equip`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id, rewardId }),
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || 'Equip failed');
+          }
+          const data = await res.json();
+          set({ user: data.user ?? user });
+          // Reload shop to update equipped state
+          await get().loadShop();
+          get().playSound('unlock');
+          get().setNotification({ type: 'success', message: data.message || 'Item equipped!' });
+        } catch (error: any) {
+          console.error('Equip reward error:', error);
+          get().setNotification({ type: 'error', message: error.message || 'Equip failed' });
+        }
+      },
+
       setShowConfetti: (val) => set({ showConfetti: val }),
 
       playSound: (type) => {
