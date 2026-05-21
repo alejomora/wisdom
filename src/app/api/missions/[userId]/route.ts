@@ -26,10 +26,10 @@ export async function GET(
     startOfWeek.setDate(now.getDate() - now.getDay());
     const weekStartStr = startOfWeek.toISOString().split('T')[0];
 
-    // Get all missions (daily and weekly)
+    // Get all missions (daily, weekly and special)
     const allMissions = await db.mission.findMany({
       where: {
-        type: { in: ['daily', 'weekly'] },
+        type: { in: ['daily', 'weekly', 'special'] },
       },
     });
 
@@ -134,9 +134,65 @@ export async function GET(
         };
       });
 
+    // Process special missions (one-time, based on cumulative stats)
+    const specialMissions = allMissions
+      .filter((m) => m.type === 'special')
+      .map((mission) => {
+        // Special missions use a fixed date key "special"
+        const dateMap = userMissionMap.get(mission.id);
+        const specialEntry = dateMap?.get('special');
+
+        let progress = specialEntry?.progress ?? 0;
+        let completed = specialEntry?.completed ?? false;
+        let claimed = specialEntry?.claimed ?? false;
+
+        // Auto-calculate progress based on cumulative stats
+        if (!specialEntry) {
+          switch (mission.category) {
+            case 'exercises':
+              progress = user.exercisesDone;
+              break;
+            case 'streak':
+              progress = user.longestStreak;
+              break;
+            case 'xp':
+              progress = user.xp;
+              break;
+            case 'scenarios': {
+              // Count completed scenarios from UserProgress
+              progress = 0;
+              break;
+            }
+            default:
+              progress = 0;
+          }
+          completed = progress >= mission.requirement;
+        }
+
+        return {
+          id: mission.id,
+          slug: mission.slug,
+          title: mission.title,
+          titleEs: mission.titleEs,
+          description: mission.description,
+          descriptionEs: mission.descriptionEs,
+          type: mission.type,
+          category: mission.category,
+          requirement: mission.requirement,
+          rewardXp: mission.rewardXp,
+          rewardCoins: mission.rewardCoins,
+          icon: mission.icon,
+          progress,
+          completed,
+          claimed,
+          date: 'special',
+        };
+      });
+
     return NextResponse.json({
       daily: dailyMissions,
       weekly: weeklyMissions,
+      special: specialMissions,
     });
   } catch (error) {
     console.error('Get missions error:', error);

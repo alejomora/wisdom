@@ -471,14 +471,27 @@ async function main() {
   // ============================================
   console.log('📋 Creating missions...');
   const missions = [
+    // ── DAILY MISSIONS ──
     { slug: 'daily-exercises-5', title: 'Exercise Time', titleEs: 'Hora de Ejercicio', description: 'Complete 5 exercises today', descriptionEs: 'Completa 5 ejercicios hoy', type: 'daily', category: 'exercises', requirement: 5, rewardXp: 25, rewardCoins: 10, icon: '💪' },
     { slug: 'daily-pronunciation', title: 'Speak Up!', titleEs: '¡Habla!', description: 'Practice pronunciation 3 times', descriptionEs: 'Practica pronunciación 3 veces', type: 'daily', category: 'pronunciation', requirement: 3, rewardXp: 20, rewardCoins: 8, icon: '🗣️' },
     { slug: 'daily-xp-50', title: 'XP Hunter', titleEs: 'Cazador de XP', description: 'Earn 50 XP today', descriptionEs: 'Gana 50 XP hoy', type: 'daily', category: 'xp', requirement: 50, rewardXp: 15, rewardCoins: 5, icon: '✨' },
     { slug: 'daily-streak', title: 'Keep the Flame', titleEs: 'Mantén la Llama', description: 'Maintain your daily streak', descriptionEs: 'Mantén tu racha diaria', type: 'daily', category: 'streak', requirement: 1, rewardXp: 10, rewardCoins: 5, icon: '🔥' },
     { slug: 'daily-scenario', title: 'Scenario Explorer', titleEs: 'Explorador de Escenarios', description: 'Complete 1 scenario today', descriptionEs: 'Completa 1 escenario hoy', type: 'daily', category: 'scenarios', requirement: 1, rewardXp: 30, rewardCoins: 15, icon: '🗺️' },
+    { slug: 'daily-perfect', title: 'Perfect Score', titleEs: 'Puntuación Perfecta', description: 'Get 100% on any exercise today', descriptionEs: 'Obtén 100% en cualquier ejercicio hoy', type: 'daily', category: 'exercises', requirement: 1, rewardXp: 40, rewardCoins: 20, icon: '💯' },
+    { slug: 'daily-vocabulary', title: 'Word Collector', titleEs: 'Coleccionista de Palabras', description: 'Learn 10 new words today', descriptionEs: 'Aprende 10 palabras nuevas hoy', type: 'daily', category: 'exercises', requirement: 10, rewardXp: 30, rewardCoins: 12, icon: '📖' },
+    { slug: 'daily-quick', title: 'Speed Learner', titleEs: 'Aprendizaje Rápido', description: 'Complete 3 exercises in under 2 minutes each', descriptionEs: 'Completa 3 ejercicios en menos de 2 minutos cada uno', type: 'daily', category: 'exercises', requirement: 3, rewardXp: 35, rewardCoins: 15, icon: '⚡' },
+    // ── WEEKLY MISSIONS ──
     { slug: 'weekly-exercises-30', title: 'Exercise Marathon', titleEs: 'Maratón de Ejercicios', description: 'Complete 30 exercises this week', descriptionEs: 'Completa 30 ejercicios esta semana', type: 'weekly', category: 'exercises', requirement: 30, rewardXp: 100, rewardCoins: 50, icon: '🏃' },
     { slug: 'weekly-xp-500', title: 'XP Machine', titleEs: 'Máquina de XP', description: 'Earn 500 XP this week', descriptionEs: 'Gana 500 XP esta semana', type: 'weekly', category: 'xp', requirement: 500, rewardXp: 75, rewardCoins: 40, icon: '⚡' },
     { slug: 'weekly-scenarios-5', title: 'World Tour', titleEs: 'Gira Mundial', description: 'Complete 5 scenarios this week', descriptionEs: 'Completa 5 escenarios esta semana', type: 'weekly', category: 'scenarios', requirement: 5, rewardXp: 120, rewardCoins: 60, icon: '🌍' },
+    { slug: 'weekly-streak-7', title: 'Full Week Streak', titleEs: 'Racha de Semana Completa', description: 'Login every day this week', descriptionEs: 'Inicia sesión todos los días esta semana', type: 'weekly', category: 'streak', requirement: 7, rewardXp: 150, rewardCoins: 75, icon: '📅' },
+    { slug: 'weekly-xp-1000', title: 'XP Overlord', titleEs: 'Señor del XP', description: 'Earn 1000 XP this week', descriptionEs: 'Gana 1000 XP esta semana', type: 'weekly', category: 'xp', requirement: 1000, rewardXp: 200, rewardCoins: 100, icon: '👑' },
+    { slug: 'weekly-exercises-50', title: 'Iron Student', titleEs: 'Estudiante de Hierro', description: 'Complete 50 exercises this week', descriptionEs: 'Completa 50 ejercicios esta semana', type: 'weekly', category: 'exercises', requirement: 50, rewardXp: 180, rewardCoins: 90, icon: '🏋️' },
+    // ── SPECIAL MISSIONS ──
+    { slug: 'special-first-scenario', title: 'First Steps', titleEs: 'Primeros Pasos', description: 'Complete your first scenario', descriptionEs: 'Completa tu primer escenario', type: 'special', category: 'scenarios', requirement: 1, rewardXp: 50, rewardCoins: 25, icon: '🌱' },
+    { slug: 'special-10-scenarios', title: 'World Traveler', titleEs: 'Viajero del Mundo', description: 'Complete 10 scenarios', descriptionEs: 'Completa 10 escenarios', type: 'special', category: 'scenarios', requirement: 10, rewardXp: 200, rewardCoins: 100, icon: '✈️' },
+    { slug: 'special-streak-7', title: 'Week Warrior', titleEs: 'Guerrero Semanal', description: 'Maintain a 7-day streak', descriptionEs: 'Mantén una racha de 7 días', type: 'special', category: 'streak', requirement: 7, rewardXp: 150, rewardCoins: 75, icon: '🔥' },
+    { slug: 'special-xp-1000', title: 'Knowledge Seeker', titleEs: 'Buscador de Conocimiento', description: 'Earn 1000 total XP', descriptionEs: 'Gana 1000 XP en total', type: 'special', category: 'xp', requirement: 1000, rewardXp: 100, rewardCoins: 50, icon: '🧠' },
   ];
 
   for (const m of missions) {
@@ -490,17 +503,88 @@ async function main() {
   // ============================================
   console.log('🎁 Creating rewards...');
   const rewards = [
-    { slug: 'avatar-fox', name: 'Fox Avatar', nameEs: 'Avatar Zorro', description: 'A clever fox avatar', descriptionEs: 'Un avatar de zorro astuto', type: 'avatar', icon: '🦊', cost: 50, rarity: 'common' },
+    // ── AVATARS (Common) ──
+    { slug: 'avatar-fox', name: 'Fox Avatar', nameEs: 'Avatar Zorro', description: 'A clever fox avatar', descriptionEs: 'Un avatar de zorro astuto', type: 'avatar', icon: '🦊', cost: 30, rarity: 'common' },
+    { slug: 'avatar-cat', name: 'Cat Avatar', nameEs: 'Avatar Gato', description: 'A cute cat avatar', descriptionEs: 'Un avatar de gato adorable', type: 'avatar', icon: '🐱', cost: 30, rarity: 'common' },
+    { slug: 'avatar-dog', name: 'Dog Avatar', nameEs: 'Avatar Perro', description: 'A loyal dog avatar', descriptionEs: 'Un avatar de perro leal', type: 'avatar', icon: '🐶', cost: 30, rarity: 'common' },
+    { slug: 'avatar-bear', name: 'Bear Avatar', nameEs: 'Avatar Oso', description: 'A strong bear avatar', descriptionEs: 'Un avatar de oso fuerte', type: 'avatar', icon: '🐻', cost: 40, rarity: 'common' },
+    { slug: 'avatar-rabbit', name: 'Rabbit Avatar', nameEs: 'Avatar Conejo', description: 'A quick rabbit avatar', descriptionEs: 'Un avatar de conejo veloz', type: 'avatar', icon: '🐰', cost: 40, rarity: 'common' },
+    { slug: 'avatar-panda', name: 'Panda Avatar', nameEs: 'Avatar Panda', description: 'A chill panda avatar', descriptionEs: 'Un avatar de panda relajado', type: 'avatar', icon: '🐼', cost: 45, rarity: 'common' },
+    { slug: 'avatar-penguin', name: 'Penguin Avatar', nameEs: 'Avatar Pingüino', description: 'A dapper penguin avatar', descriptionEs: 'Un avatar de pingüino elegante', type: 'avatar', icon: '🐧', cost: 45, rarity: 'common' },
+    { slug: 'avatar-owl', name: 'Owl Avatar', nameEs: 'Avatar Búho', description: 'A wise owl avatar', descriptionEs: 'Un avatar de búho sabio', type: 'avatar', icon: '🦉', cost: 50, rarity: 'common' },
+    { slug: 'avatar-frog', name: 'Frog Avatar', nameEs: 'Avatar Rana', description: 'A funny frog avatar', descriptionEs: 'Un avatar de rana divertido', type: 'avatar', icon: '🐸', cost: 50, rarity: 'common' },
+    { slug: 'avatar-monkey', name: 'Monkey Avatar', nameEs: 'Avatar Mono', description: 'A playful monkey avatar', descriptionEs: 'Un avatar de mono juguetón', type: 'avatar', icon: '🐒', cost: 55, rarity: 'common' },
+    // ── AVATARS (Rare) ──
     { slug: 'avatar-tiger', name: 'Tiger Avatar', nameEs: 'Avatar Tigre', description: 'A fierce tiger avatar', descriptionEs: 'Un avatar de tigre feroz', type: 'avatar', icon: '🐯', cost: 100, rarity: 'rare' },
-    { slug: 'avatar-lion', name: 'Lion Avatar', nameEs: 'Avatar León', description: 'The king of the jungle', descriptionEs: 'El rey de la selva', type: 'avatar', icon: '🦁', cost: 150, rarity: 'rare' },
+    { slug: 'avatar-lion', name: 'Lion Avatar', nameEs: 'Avatar León', description: 'The king of the jungle', descriptionEs: 'El rey de la selva', type: 'avatar', icon: '🦁', cost: 120, rarity: 'rare' },
+    { slug: 'avatar-wolf', name: 'Wolf Avatar', nameEs: 'Avatar Lobo', description: 'A fierce wolf avatar', descriptionEs: 'Un avatar de lobo feroz', type: 'avatar', icon: '🐺', cost: 100, rarity: 'rare' },
+    { slug: 'avatar-eagle', name: 'Eagle Avatar', nameEs: 'Avatar Águila', description: 'Soar above the rest', descriptionEs: 'Vuela por encima del resto', type: 'avatar', icon: '🦅', cost: 110, rarity: 'rare' },
+    { slug: 'avatar-dolphin', name: 'Dolphin Avatar', nameEs: 'Avatar Delfín', description: 'A smart dolphin avatar', descriptionEs: 'Un avatar de delfín inteligente', type: 'avatar', icon: '🐬', cost: 110, rarity: 'rare' },
+    { slug: 'avatar-horse', name: 'Horse Avatar', nameEs: 'Avatar Caballo', description: 'A majestic horse avatar', descriptionEs: 'Un avatar de caballo majestuoso', type: 'avatar', icon: '🐴', cost: 120, rarity: 'rare' },
+    { slug: 'avatar-gorilla', name: 'Gorilla Avatar', nameEs: 'Avatar Gorila', description: 'A powerful gorilla avatar', descriptionEs: 'Un avatar de gorila poderoso', type: 'avatar', icon: '🦍', cost: 130, rarity: 'rare' },
+    { slug: 'avatar-shark', name: 'Shark Avatar', nameEs: 'Avatar Tiburón', description: 'Rule the ocean', descriptionEs: 'Domina el océano', type: 'avatar', icon: '🦈', cost: 130, rarity: 'rare' },
+    { slug: 'avatar-octopus', name: 'Octopus Avatar', nameEs: 'Avatar Pulpo', description: 'Multitask like a pro', descriptionEs: 'Multitarea como un profesional', type: 'avatar', icon: '🐙', cost: 140, rarity: 'rare' },
+    { slug: 'avatar-parrot', name: 'Parrot Avatar', nameEs: 'Avatar Loro', description: 'Speak many languages', descriptionEs: 'Habla muchos idiomas', type: 'avatar', icon: '🦜', cost: 140, rarity: 'rare' },
+    // ── AVATARS (Epic) ──
     { slug: 'avatar-dragon', name: 'Dragon Avatar', nameEs: 'Avatar Dragón', description: 'A legendary dragon avatar', descriptionEs: 'Un avatar de dragón legendario', type: 'avatar', icon: '🐉', cost: 300, rarity: 'epic' },
+    { slug: 'avatar-phoenix', name: 'Phoenix Avatar', nameEs: 'Avatar Fénix', description: 'Rise from the ashes', descriptionEs: 'Renace de las cenizas', type: 'avatar', icon: '🔥', cost: 350, rarity: 'epic' },
+    { slug: 'avatar-robot', name: 'Robot Avatar', nameEs: 'Avatar Robot', description: 'Future is now', descriptionEs: 'El futuro es ahora', type: 'avatar', icon: '🤖', cost: 300, rarity: 'epic' },
+    { slug: 'avatar-alien', name: 'Alien Avatar', nameEs: 'Avatar Alienígena', description: 'Out of this world', descriptionEs: 'Fuera de este mundo', type: 'avatar', icon: '👽', cost: 320, rarity: 'epic' },
+    { slug: 'avatar-ninja', name: 'Ninja Avatar', nameEs: 'Avatar Ninja', description: 'Silent and deadly', descriptionEs: 'Silencioso y letal', type: 'avatar', icon: '🥷', cost: 340, rarity: 'epic' },
+    { slug: 'avatar-wizard', name: 'Wizard Avatar', nameEs: 'Avatar Mago', description: 'Master of spells', descriptionEs: 'Maestro de hechizos', type: 'avatar', icon: '🧙', cost: 350, rarity: 'epic' },
+    { slug: 'avatar-astronaut', name: 'Astronaut Avatar', nameEs: 'Avatar Astronauta', description: 'To infinity and beyond', descriptionEs: 'Hasta el infinito y más allá', type: 'avatar', icon: '👨‍🚀', cost: 360, rarity: 'epic' },
+    { slug: 'avatar-superhero', name: 'Superhero Avatar', nameEs: 'Avatar Superhéroe', description: 'Save the day', descriptionEs: 'Salva el día', type: 'avatar', icon: '🦸', cost: 380, rarity: 'epic' },
+    // ── AVATARS (Legendary) ──
     { slug: 'avatar-unicorn', name: 'Unicorn Avatar', nameEs: 'Avatar Unicornio', description: 'A magical unicorn avatar', descriptionEs: 'Un avatar de unicornio mágico', type: 'avatar', icon: '🦄', cost: 500, rarity: 'legendary' },
+    { slug: 'avatar-crown', name: 'Crown Avatar', nameEs: 'Avatar Corona', description: 'Royal and majestic', descriptionEs: 'Real y majestuoso', type: 'avatar', icon: '👑', cost: 600, rarity: 'legendary' },
+    { slug: 'avatar-diamond', name: 'Diamond Avatar', nameEs: 'Avatar Diamante', description: 'Unbreakable brilliance', descriptionEs: 'Brillantez irrompible', type: 'avatar', icon: '💎', cost: 700, rarity: 'legendary' },
+    { slug: 'avatar-sun', name: 'Sun Avatar', nameEs: 'Avatar Sol', description: 'Shine like the sun', descriptionEs: 'Brilla como el sol', type: 'avatar', icon: '☀️', cost: 800, rarity: 'legendary' },
+    { slug: 'avatar-galaxy', name: 'Galaxy Avatar', nameEs: 'Avatar Galaxia', description: 'The universe within you', descriptionEs: 'El universo dentro de ti', type: 'avatar', icon: '🌌', cost: 1000, rarity: 'legendary' },
+
+    // ── FRAMES (Common) ──
+    { slug: 'frame-silver', name: 'Silver Frame', nameEs: 'Marco Plateado', description: 'A classic silver frame', descriptionEs: 'Un marco plateado clásico', type: 'frame', icon: '🪙', cost: 60, rarity: 'common' },
+    { slug: 'frame-bronze', name: 'Bronze Frame', nameEs: 'Marco Bronce', description: 'A warm bronze frame', descriptionEs: 'Un marco de bronce cálido', type: 'frame', icon: '🥉', cost: 70, rarity: 'common' },
+    { slug: 'frame-leaf', name: 'Leaf Frame', nameEs: 'Marco Hoja', description: 'A nature-inspired frame', descriptionEs: 'Un marco inspirado en la naturaleza', type: 'frame', icon: '🍃', cost: 80, rarity: 'common' },
+    { slug: 'frame-wave', name: 'Wave Frame', nameEs: 'Marco Onda', description: 'Flow like the ocean', descriptionEs: 'Fluye como el océano', type: 'frame', icon: '🌊', cost: 80, rarity: 'common' },
+    // ── FRAMES (Rare) ──
     { slug: 'frame-gold', name: 'Gold Frame', nameEs: 'Marco Dorado', description: 'A shiny gold frame for your avatar', descriptionEs: 'Un marco dorado brillante para tu avatar', type: 'frame', icon: '🖼️', cost: 200, rarity: 'rare' },
+    { slug: 'frame-thunder', name: 'Thunder Frame', nameEs: 'Marco Trueno', description: 'Electric energy frame', descriptionEs: 'Marco de energía eléctrica', type: 'frame', icon: '⚡', cost: 220, rarity: 'rare' },
+    { slug: 'frame-rose', name: 'Rose Frame', nameEs: 'Marco Rosa', description: 'Elegant rose frame', descriptionEs: 'Marco de rosa elegante', type: 'frame', icon: '🌹', cost: 200, rarity: 'rare' },
+    { slug: 'frame-snowflake', name: 'Snowflake Frame', nameEs: 'Marco Copo de Nieve', description: 'Frozen beauty frame', descriptionEs: 'Marco de belleza congelada', type: 'frame', icon: '❄️', cost: 220, rarity: 'rare' },
+    { slug: 'frame-rainbow', name: 'Rainbow Frame', nameEs: 'Marco Arcoíris', description: 'Colorful rainbow frame', descriptionEs: 'Marco arcoíris colorido', type: 'frame', icon: '🌈', cost: 240, rarity: 'rare' },
+    { slug: 'frame-star', name: 'Star Frame', nameEs: 'Marco Estrella', description: 'Shine bright like a star', descriptionEs: 'Brilla como una estrella', type: 'frame', icon: '⭐', cost: 250, rarity: 'rare' },
+    // ── FRAMES (Epic) ──
     { slug: 'frame-diamond', name: 'Diamond Frame', nameEs: 'Marco Diamante', description: 'A sparkling diamond frame', descriptionEs: 'Un marco de diamante brillante', type: 'frame', icon: '💎', cost: 400, rarity: 'epic' },
     { slug: 'frame-fire', name: 'Fire Frame', nameEs: 'Marco de Fuego', description: 'A blazing fire frame', descriptionEs: 'Un marco de fuego ardiente', type: 'frame', icon: '🔥', cost: 350, rarity: 'epic' },
+    { slug: 'frame-neon', name: 'Neon Frame', nameEs: 'Marco Neón', description: 'Glow in the dark', descriptionEs: 'Brilla en la oscuridad', type: 'frame', icon: '💡', cost: 380, rarity: 'epic' },
+    { slug: 'frame-crown', name: 'Crown Frame', nameEs: 'Marco Corona', description: 'Rule with style', descriptionEs: 'Gobierna con estilo', type: 'frame', icon: '👑', cost: 400, rarity: 'epic' },
+    { slug: 'frame-cosmic', name: 'Cosmic Frame', nameEs: 'Marco Cósmico', description: 'The power of the cosmos', descriptionEs: 'El poder del cosmos', type: 'frame', icon: '🌌', cost: 420, rarity: 'epic' },
+    // ── FRAMES (Legendary) ──
+    { slug: 'frame-legendary', name: 'Legendary Frame', nameEs: 'Marco Legendario', description: 'Only for legends', descriptionEs: 'Solo para leyendas', type: 'frame', icon: '🏆', cost: 700, rarity: 'legendary' },
+    { slug: 'frame-eternal', name: 'Eternal Frame', nameEs: 'Marco Eterno', description: 'Timeless and infinite', descriptionEs: 'Atemporal e infinito', type: 'frame', icon: '♾️', cost: 900, rarity: 'legendary' },
+    { slug: 'frame-chaos', name: 'Chaos Frame', nameEs: 'Marco Caos', description: 'Embrace the chaos', descriptionEs: 'Abraza el caos', type: 'frame', icon: '🌀', cost: 800, rarity: 'legendary' },
+
+    // ── TITLES (Common) ──
+    { slug: 'title-beginner', name: 'Beginner', nameEs: 'Principiante', description: 'Just starting out', descriptionEs: 'Recién comenzando', type: 'title', icon: '🌱', cost: 30, rarity: 'common' },
+    { slug: 'title-learner', name: 'Learner', nameEs: 'Aprendiz', description: 'Eager to learn', descriptionEs: 'Ansioso por aprender', type: 'title', icon: '📚', cost: 40, rarity: 'common' },
+    { slug: 'title-student', name: 'Student', nameEs: 'Estudiante', description: 'Dedicated student', descriptionEs: 'Estudiante dedicado', type: 'title', icon: '🎓', cost: 50, rarity: 'common' },
+    { slug: 'title-explorer', name: 'Explorer', nameEs: 'Explorador', description: 'Explore new words', descriptionEs: 'Explora nuevas palabras', type: 'title', icon: '🧭', cost: 60, rarity: 'common' },
+    // ── TITLES (Rare) ──
     { slug: 'title-word-master', name: 'Word Master', nameEs: 'Maestro de Palabras', description: 'A prestigious title', descriptionEs: 'Un título prestigioso', type: 'title', icon: '📝', cost: 250, rarity: 'rare' },
-    { slug: 'title-grammar-guru', name: 'Grammar Guru', nameEs: 'Gurú de Gramática', description: 'Master of grammar', descriptionEs: 'Maestro de la gramática', type: 'title', icon: '📖', cost: 300, rarity: 'rare' },
+    { slug: 'title-grammar-guru', name: 'Grammar Guru', nameEs: 'Gurú de Gramática', description: 'Master of grammar', descriptionEs: 'Maestro de la gramática', type: 'title', icon: '📖', cost: 250, rarity: 'rare' },
+    { slug: 'title-vocabulary-king', name: 'Vocabulary King', nameEs: 'Rey del Vocabulario', description: 'Rule the words', descriptionEs: 'Domina las palabras', type: 'title', icon: '👑', cost: 280, rarity: 'rare' },
+    { slug: 'title-listener', name: 'Sharp Listener', nameEs: 'Oyente Agudo', description: 'Hear every detail', descriptionEs: 'Escucha cada detalle', type: 'title', icon: '👂', cost: 260, rarity: 'rare' },
+    { slug: 'title-challenger', name: 'Challenger', nameEs: 'Desafiante', description: 'Never backs down', descriptionEs: 'Nunca se rinde', type: 'title', icon: '⚔️', cost: 280, rarity: 'rare' },
+    { slug: 'title-linguist', name: 'Linguist', nameEs: 'Lingüista', description: 'Language expert', descriptionEs: 'Experto en idiomas', type: 'title', icon: '🗣️', cost: 300, rarity: 'rare' },
+    // ── TITLES (Epic) ──
+    { slug: 'title-polyglot', name: 'Polyglot', nameEs: 'Políglota', description: 'Master of languages', descriptionEs: 'Maestro de idiomas', type: 'title', icon: '🌐', cost: 400, rarity: 'epic' },
+    { slug: 'title-wordsmith', name: 'Wordsmith', nameEs: 'Forjador de Palabras', description: 'Craft words with precision', descriptionEs: 'Forja palabras con precisión', type: 'title', icon: '⚒️', cost: 420, rarity: 'epic' },
+    { slug: 'title-scholar', name: 'Scholar', nameEs: 'Erudito', description: 'Academic excellence', descriptionEs: 'Excelencia académica', type: 'title', icon: '🏛️', cost: 450, rarity: 'epic' },
+    { slug: 'title-mentor', name: 'Mentor', nameEs: 'Mentor', description: 'Guide others to success', descriptionEs: 'Guía a otros al éxito', type: 'title', icon: '🧑‍🏫', cost: 450, rarity: 'epic' },
+    // ── TITLES (Legendary) ──
     { slug: 'title-fluent', name: 'Fluent Speaker', nameEs: 'Hablante Fluido', description: 'Speak like a native', descriptionEs: 'Habla como un nativo', type: 'title', icon: '🗣️', cost: 500, rarity: 'legendary' },
+    { slug: 'title-legend', name: 'Legend', nameEs: 'Leyenda', description: 'A true legend', descriptionEs: 'Una verdadera leyenda', type: 'title', icon: '⚡', cost: 700, rarity: 'legendary' },
+    { slug: 'title-grand-master', name: 'Grand Master', nameEs: 'Gran Maestro', description: 'The ultimate achievement', descriptionEs: 'El logro definitivo', type: 'title', icon: '🌟', cost: 1000, rarity: 'legendary' },
   ];
 
   for (const r of rewards) {

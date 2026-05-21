@@ -1517,28 +1517,161 @@ function StatisticsView() {
 // MISSIONS VIEW
 // ============================================
 function MissionsView() {
-  const [missions, setMissions] = useState<Array<any>>([])
+  const [missions, setMissions] = useState<{daily: any[], weekly: any[], special: any[]}>({daily: [], weekly: [], special: []})
   const [loading, setLoading] = useState(true)
+  const [claimingId, setClaimingId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'special'>('daily')
   const user = useAppStore((s) => s.user)
+  const setUser = useAppStore((s) => s.setUser)
+  const playSound = useAppStore((s) => s.playSound)
 
   useEffect(() => {
     if (user?.id) {
       fetch(`/api/missions/${user.id}`)
         .then(r => r.json())
         .then(data => {
-          setMissions(data.missions || [])
+          setMissions({
+            daily: data.daily || [],
+            weekly: data.weekly || [],
+            special: data.special || [],
+          })
           setLoading(false)
         })
         .catch(() => setLoading(false))
     }
   }, [user?.id])
 
-  const dailyMissions = missions.filter(m => m.mission?.type === 'daily')
-  const weeklyMissions = missions.filter(m => m.mission?.type === 'weekly')
+  const handleClaim = async (missionId: string, date: string) => {
+    if (!user) return
+    setClaimingId(missionId)
+    try {
+      const res = await fetch('/api/missions/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, missionId, date }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Claim failed')
+      }
+      const data = await res.json()
+      // Update user with new XP and coins
+      if (data.user) setUser(data.user)
+      playSound('reward')
+
+      // Reload missions
+      const missionsRes = await fetch(`/api/missions/${user.id}`)
+      const missionsData = await missionsRes.json()
+      setMissions({
+        daily: missionsData.daily || [],
+        weekly: missionsData.weekly || [],
+        special: missionsData.special || [],
+      })
+    } catch (err: any) {
+      console.error('Claim error:', err)
+    }
+    setClaimingId(null)
+  }
+
+  const renderMission = (m: any, i: number, colorClass: string = 'bg-emerald-500') => (
+    <motion.div
+      key={m.id || i}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: i * 0.05 }}
+      className={`p-4 rounded-xl border relative overflow-hidden ${
+        m.claimed
+          ? 'bg-gray-500/5 border-gray-500/20 opacity-70'
+          : m.completed
+          ? 'bg-yellow-500/10 border-yellow-500/30'
+          : 'glass border-border'
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <span className="text-2xl">{m.icon || '📋'}</span>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <p className="font-bold text-sm">{m.titleEs || m.title}</p>
+            {m.claimed && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-500/20 text-gray-400 font-bold">CLAIMED</span>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">{m.descriptionEs || m.description}</p>
+          <div className="mt-2 flex items-center gap-2">
+            <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+              <div
+                className={`h-full ${colorClass} rounded-full transition-all`}
+                style={{ width: `${Math.min((m.progress / (m.requirement || 1)) * 100, 100)}%` }}
+              />
+            </div>
+            <span className="text-xs text-muted-foreground font-medium">{Math.min(m.progress, m.requirement)}/{m.requirement}</span>
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-1 min-w-[70px]">
+          <span className="text-xs text-emerald-400 font-medium">+{m.rewardXp} XP</span>
+          <span className="text-xs text-yellow-400 font-medium">+{m.rewardCoins} 🪙</span>
+          {m.completed && !m.claimed && (
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05 }}
+              onClick={() => handleClaim(m.id, m.date)}
+              disabled={claimingId === m.id}
+              className="mt-1 px-3 py-1 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-[10px] font-bold disabled:opacity-50"
+            >
+              {claimingId === m.id ? '⏳' : '🎁 Claim'}
+            </motion.button>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  )
+
+  const tabs = [
+    { key: 'daily' as const, label: '☀️ Daily', count: missions.daily.length },
+    { key: 'weekly' as const, label: '📅 Weekly', count: missions.weekly.length },
+    { key: 'special' as const, label: '⭐ Special', count: missions.special.length },
+  ]
+
+  const currentMissions = activeTab === 'daily' ? missions.daily : activeTab === 'weekly' ? missions.weekly : missions.special
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
-      <h2 className="text-2xl font-bold mb-6 text-center">📋 Missions</h2>
+      <h2 className="text-2xl font-bold mb-2 text-center">📋 Missions</h2>
+      <p className="text-xs text-muted-foreground text-center mb-6">
+        Complete missions to earn XP and coins. Claim your rewards when done!
+      </p>
+
+      {/* How Missions Work */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass rounded-xl p-4 mb-6 border border-border"
+      >
+        <h3 className="font-bold text-sm mb-2 flex items-center gap-2">❓ How Do Missions Work?</h3>
+        <div className="space-y-2 text-xs text-muted-foreground">
+          <p>☀️ <strong className="text-foreground">Daily Missions</strong> — Reset every day. Complete them before midnight!</p>
+          <p>📅 <strong className="text-foreground">Weekly Missions</strong> — Reset every Monday. Bigger challenges, bigger rewards!</p>
+          <p>⭐ <strong className="text-foreground">Special Missions</strong> — One-time achievements. Complete them at your own pace!</p>
+          <p>🎁 <strong className="text-yellow-400">Claim Rewards</strong> — When a mission is complete, tap &quot;Claim&quot; to receive your XP and coins!</p>
+        </div>
+      </motion.div>
+
+      {/* Mission Tabs */}
+      <div className="flex gap-2 mb-4">
+        {tabs.map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === tab.key
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                : 'bg-secondary/50 text-muted-foreground border border-transparent'
+            }`}
+          >
+            {tab.label} ({tab.count})
+          </button>
+        ))}
+      </div>
 
       {loading ? (
         <div className="space-y-4">
@@ -1546,88 +1679,17 @@ function MissionsView() {
             <div key={i} className="animate-pulse h-20 rounded-xl bg-secondary" />
           ))}
         </div>
+      ) : currentMissions.length === 0 ? (
+        <div className="text-center py-12">
+          <span className="text-5xl block mb-4">📋</span>
+          <p className="text-muted-foreground">No missions available</p>
+        </div>
       ) : (
-        <>
-          {/* Daily Missions */}
-          <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-            ☀️ Daily Missions
-          </h3>
-          <div className="space-y-3 mb-8">
-            {dailyMissions.map((m, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className={`p-4 rounded-xl border ${
-                  m.completed ? 'bg-emerald-500/10 border-emerald-500/20' : 'glass border-border'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{m.mission?.icon || '📋'}</span>
-                  <div className="flex-1">
-                    <p className="font-bold text-sm">{m.mission?.title || 'Mission'}</p>
-                    <p className="text-xs text-muted-foreground">{m.mission?.description || ''}</p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-emerald-500 rounded-full transition-all"
-                          style={{ width: `${Math.min((m.progress / (m.mission?.requirement || 1)) * 100, 100)}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-muted-foreground">{m.progress}/{m.mission?.requirement || 1}</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs text-emerald-400">+{m.mission?.rewardXp || 0} XP</span>
-                    <br />
-                    <span className="text-xs text-yellow-400">+{m.mission?.rewardCoins || 0} 🪙</span>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Weekly Missions */}
-          <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-            📅 Weekly Missions
-          </h3>
-          <div className="space-y-3">
-            {weeklyMissions.map((m, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className={`p-4 rounded-xl border ${
-                  m.completed ? 'bg-emerald-500/10 border-emerald-500/20' : 'glass border-border'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{m.mission?.icon || '📋'}</span>
-                  <div className="flex-1">
-                    <p className="font-bold text-sm">{m.mission?.title || 'Mission'}</p>
-                    <p className="text-xs text-muted-foreground">{m.mission?.description || ''}</p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-orange-500 rounded-full transition-all"
-                          style={{ width: `${Math.min((m.progress / (m.mission?.requirement || 1)) * 100, 100)}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-muted-foreground">{m.progress}/{m.mission?.requirement || 1}</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs text-emerald-400">+{m.mission?.rewardXp || 0} XP</span>
-                    <br />
-                    <span className="text-xs text-yellow-400">+{m.mission?.rewardCoins || 0} 🪙</span>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </>
+        <div className="space-y-3">
+          {currentMissions.map((m: any, i: number) =>
+            renderMission(m, i, activeTab === 'daily' ? 'bg-emerald-500' : activeTab === 'weekly' ? 'bg-orange-500' : 'bg-purple-500')
+          )}
+        </div>
       )}
     </div>
   )
@@ -2140,8 +2202,8 @@ function AdminView() {
               <p>📚 3 Levels (75 Scenarios)</p>
               <p>📝 6 Exams (Midterm + Final per level)</p>
               <p>🏆 15 Achievements</p>
-              <p>📋 8 Missions (5 Daily + 3 Weekly)</p>
-              <p>🎁 11 Shop Items</p>
+              <p>📋 18 Missions (8 Daily + 6 Weekly + 4 Special)</p>
+              <p>🎁 68 Shop Items (33 Avatars, 18 Frames, 17 Titles)</p>
               <p>👤 2 Users (1 Demo + 1 Admin)</p>
             </div>
           </div>
