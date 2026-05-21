@@ -1,0 +1,331 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER & AUTH
+// ============================================
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String
+  avatar          String    @default("🎯")
+  frame           String    @default("")
+  title           String    @default("Beginner")
+  password        String
+  role            String    @default("user") // user | admin
+  xp              Int       @default(0)
+  coins           Int       @default(0)
+  totalStars      Int       @default(0)
+  level           Int       @default(1) // user level based on XP
+  lives           Int       @default(5)
+  maxLives        Int       @default(5)
+  livesLastRefill DateTime  @default(now())
+  streak          Int       @default(0)
+  longestStreak   Int       @default(0)
+  lastActiveDate  String    @default("") // YYYY-MM-DD
+  wordsLearned    Int       @default(0)
+  exercisesDone   Int       @default(0)
+  totalStudyTime  Int       @default(0) // minutes
+  accuracy        Float     @default(0)
+  listeningScore  Float     @default(0)
+  writingScore    Float     @default(0)
+  speakingScore   Float     @default(0)
+  currentLevelId  String    @default("basic")
+  theme           String    @default("default")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  progress        UserProgress[]
+  achievements    UserAchievement[]
+  missions        UserMission[]
+  rankingEntries  Ranking[]
+  notifications   Notification[]
+}
+
+// ============================================
+// LEVELS & SCENARIOS
+// ============================================
+
+model Level {
+  id          String     @id @default(cuid())
+  slug        String     @unique // basic | intermediate | advanced
+  name        String
+  nameEs      String
+  description String
+  descriptionEs String
+  icon        String
+  color       String
+  order       Int
+  minXp       Int        @default(0)
+  scenarios   Scenario[]
+  exams       Exam[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Scenario {
+  id            String   @id @default(cuid())
+  levelId       String
+  slug          String
+  name          String
+  nameEs        String
+  description   String
+  descriptionEs String
+  icon          String
+  image         String   @default("")
+  difficulty    Int      @default(1) // 1-5
+  xpReward      Int      @default(50)
+  order         Int
+  isStarter     Boolean  @default(false) // first scenario unlocked by default
+  level         Level    @relation(fields: [levelId], references: [id])
+  lessons       Lesson[]
+  progress      UserProgress[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([levelId, slug])
+}
+
+// ============================================
+// LESSONS & QUESTIONS
+// ============================================
+
+model Lesson {
+  id          String    @id @default(cuid())
+  scenarioId  String
+  title       String
+  titleEs     String
+  description String
+  descriptionEs String
+  type        String    // vocabulary | grammar | listening | speaking | conversation | reading
+  order       Int
+  xpReward    Int       @default(10)
+  scenario    Scenario  @relation(fields: [scenarioId], references: [id])
+  questions    Question[]
+  progress    UserProgress[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Question {
+  id              String   @id @default(cuid())
+  lessonId        String
+  type            String   // multiple_choice | fill_blank | listen_write | order_words | match_concepts | pronunciation | translate | choose_image | build_sentence | find_error | dictation | flashcard
+  prompt          String   // The question text in English
+  promptEs        String   // Spanish hint/translation
+  hintEn          String   // Hint in English
+  hintEs          String   // Hint in Spanish
+  audioText       String   // Text to speak via TTS
+  options         String   // JSON array of options
+  correctAnswer   String   // The correct answer
+  explanation     String   // Why this is correct
+  explanationEs   String   // Explanation in Spanish
+  image           String   @default("")
+  points          Int      @default(10)
+  order           Int
+  lesson          Lesson   @relation(fields: [lessonId], references: [id])
+  answers         UserAnswer[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============================================
+// EXAMS
+// ============================================
+
+model Exam {
+  id          String    @id @default(cuid())
+  levelId     String
+  type        String    // midterm | final
+  title       String
+  titleEs     String
+  description String
+  descriptionEs String
+  minScore    Float     @default(0.9) // 90% to pass
+  questions   String    // JSON array of question data
+  level       Level     @relation(fields: [levelId], references: [id])
+  results     ExamResult[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model ExamResult {
+  id        String   @id @default(cuid())
+  examId    String
+  userId    String
+  score     Float
+  passed    Boolean
+  answers   String   // JSON
+  exam      Exam     @relation(fields: [examId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+// ============================================
+// USER PROGRESS
+// ============================================
+
+model UserProgress {
+  id           String   @id @default(cuid())
+  userId       String
+  scenarioId   String?
+  lessonId     String?
+  status       String   @default("locked") // locked | unlocked | in_progress | completed
+  progress     Float    @default(0) // 0-100
+  stars        Int      @default(0) // 0-3
+  xpEarned     Int      @default(0)
+  completedAt  DateTime?
+  user         User     @relation(fields: [userId], references: [id])
+  scenario     Scenario? @relation(fields: [scenarioId], references: [id])
+  lesson       Lesson?  @relation(fields: [lessonId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, scenarioId])
+  @@unique([userId, lessonId])
+}
+
+model UserAnswer {
+  id          String   @id @default(cuid())
+  userId      String
+  questionId  String
+  answer      String
+  isCorrect   Boolean
+  timeTaken   Int      @default(0) // ms
+  question    Question @relation(fields: [questionId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+// ============================================
+// GAMIFICATION
+// ============================================
+
+model Achievement {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  nameEs      String
+  description String
+  descriptionEs String
+  icon        String
+  category    String   // streak | xp | exercises | scenarios | special
+  requirement Int      @default(1)
+  reward      Int      @default(0) // coins
+  users       UserAchievement[]
+  createdAt   DateTime @default(now())
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime    @default(now())
+  user          User        @relation(fields: [userId], references: [id])
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+
+  @@unique([userId, achievementId])
+}
+
+model Mission {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  title         String
+  titleEs       String
+  description   String
+  descriptionEs String
+  type          String   // daily | weekly | special
+  category      String   // exercises | pronunciation | streak | xp | scenarios
+  requirement   Int
+  rewardXp      Int      @default(0)
+  rewardCoins   Int      @default(0)
+  icon          String
+  startDate     String   @default("") // YYYY-MM-DD or empty for recurring
+  endDate       String   @default("")
+  users         UserMission[]
+  createdAt     DateTime @default(now())
+}
+
+model UserMission {
+  id        String   @id @default(cuid())
+  userId    String
+  missionId String
+  progress  Int      @default(0)
+  completed Boolean  @default(false)
+  claimed   Boolean  @default(false)
+  date      String   // YYYY-MM-DD to track daily instances
+  user      User     @relation(fields: [userId], references: [id])
+  mission   Mission  @relation(fields: [missionId], references: [id])
+
+  @@unique([userId, missionId, date])
+}
+
+// ============================================
+// RANKINGS
+// ============================================
+
+model Ranking {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // global | weekly | monthly
+  period    String   @default("") // YYYY-WXX or YYYY-MM
+  xp        Int      @default(0)
+  rank      Int      @default(0)
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, type, period])
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // achievement | level_up | streak | mission | event | system
+  title     String
+  message   String
+  icon      String   @default("🔔")
+  read      Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+// ============================================
+// REWARDS SHOP
+// ============================================
+
+model Reward {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  nameEs      String
+  description String
+  descriptionEs String
+  type        String   // avatar | frame | title | skin | theme
+  icon        String
+  cost        Int      // coins
+  rarity      String   @default("common") // common | rare | epic | legendary
+  available   Boolean  @default(true)
+  users       UserReward[]
+  createdAt   DateTime @default(now())
+}
+
+model UserReward {
+  id        String   @id @default(cuid())
+  userId    String
+  rewardId  String
+  reward    Reward   @relation(fields: [rewardId], references: [id])
+  equipped  Boolean  @default(false)
+  purchased DateTime @default(now())
+
+  @@unique([userId, rewardId])
+}
