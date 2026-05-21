@@ -14,12 +14,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LingoQuest - Learn English Like a Game",
+  title: "Prompt Maestro - Learn English Like a Game",
   description: "Master English through gamified scenarios, exercises, and challenges. The most fun way to learn English!",
-  keywords: ["English", "Learning", "Gamification", "ESL", "Language", "Education"],
-  authors: [{ name: "LingoQuest" }],
+  keywords: ["English", "Learning", "Gamification", "ESL", "Language", "Education", "Prompt Maestro"],
+  authors: [{ name: "Prompt Maestro" }],
   icons: {
-    icon: "🏆",
+    icon: "/logo.svg",
   },
   manifest: "/manifest.json",
 };

@@ -1,0 +1,21 @@
+{
+  "name": "Prompt Maestro - Learn English Like a Game",
+  "short_name": "Prompt Maestro",
+  "description": "Master English through gamified scenarios, exercises, and challenges. The most fun way to learn English!",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a1a",
+  "theme_color": "#22c55e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "lang": "en",
+  "dir": "ltr"
+}
