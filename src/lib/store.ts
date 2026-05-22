@@ -188,6 +188,7 @@ interface PersistedPreferences {
   musicEnabled: boolean;
   theme: string;
   speechSpeed: SpeechSpeed;
+  speechVoiceIndex: number;
 }
 
 // ============================================
@@ -231,6 +232,7 @@ export interface AppStoreState {
   soundEnabled: boolean;
   musicEnabled: boolean;
   speechSpeed: SpeechSpeed;
+  speechVoiceIndex: number;
   showRewardModal: boolean;
   rewardData: RewardData | null;
   isLoading: boolean;
@@ -274,6 +276,7 @@ export interface AppStoreState {
   // Actions - UI
   setShowConfetti: (val: boolean) => void;
   setSpeechSpeed: (speed: SpeechSpeed) => void;
+  setSpeechVoiceIndex: (index: number) => void;
   playSound: (type: SoundType) => void;
   claimReward: (reward: RewardData) => void;
   setNotification: (notification: NotificationData | null) => void;
@@ -351,6 +354,7 @@ export const useAppStore = create<AppStoreState>()(
       soundEnabled: true,
       musicEnabled: true,
       speechSpeed: 'normal' as SpeechSpeed,
+      speechVoiceIndex: -1, // -1 = default voice
       showRewardModal: false,
       rewardData: null,
       isLoading: false,
@@ -909,6 +913,8 @@ export const useAppStore = create<AppStoreState>()(
 
       setSpeechSpeed: (speed) => set({ speechSpeed: speed }),
 
+      setSpeechVoiceIndex: (index) => set({ speechVoiceIndex: index }),
+
       playSound: (type) => {
         const { soundEnabled } = get();
         if (!soundEnabled) return;
@@ -1008,6 +1014,7 @@ export const useAppStore = create<AppStoreState>()(
         musicEnabled: state.musicEnabled,
         theme: state.user?.theme ?? 'default',
         speechSpeed: state.speechSpeed,
+        speechVoiceIndex: state.speechVoiceIndex,
       }),
       // Rehydrate persisted preferences back into the store
       merge: (persistedState, currentState) => {
@@ -1017,6 +1024,7 @@ export const useAppStore = create<AppStoreState>()(
           soundEnabled: persisted.soundEnabled ?? currentState.soundEnabled,
           musicEnabled: persisted.musicEnabled ?? currentState.musicEnabled,
           speechSpeed: persisted.speechSpeed ?? currentState.speechSpeed,
+          speechVoiceIndex: persisted.speechVoiceIndex ?? currentState.speechVoiceIndex,
         };
       },
     }

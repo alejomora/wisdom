@@ -810,6 +810,32 @@ function ExerciseView() {
 
   const speechSpeed = useAppStore((s) => s.speechSpeed)
   const setSpeechSpeed = useAppStore((s) => s.setSpeechSpeed)
+  const speechVoiceIndex = useAppStore((s) => s.speechVoiceIndex)
+  const setSpeechVoiceIndex = useAppStore((s) => s.setSpeechVoiceIndex)
+
+  // Load available browser voices
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([])
+  const [showVoiceSelector, setShowVoiceSelector] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+
+    const loadVoices = () => {
+      const voices = speechSynthesis.getVoices()
+      // Filter to only English voices
+      const englishVoices = voices.filter(v => v.lang.startsWith('en'))
+      setAvailableVoices(englishVoices)
+    }
+
+    // Voices may already be loaded
+    loadVoices()
+    // But on some browsers they load asynchronously
+    speechSynthesis.onvoiceschanged = loadVoices
+
+    return () => {
+      speechSynthesis.onvoiceschanged = null
+    }
+  }, [])
 
   const speakText = (text: string) => {
     if ('speechSynthesis' in window) {
@@ -818,6 +844,10 @@ function ExerciseView() {
       const utterance = new SpeechSynthesisUtterance(text)
       utterance.lang = 'en-US'
       utterance.rate = speechSpeed === 'slow' ? 0.5 : 0.9
+      // Apply selected voice if available
+      if (speechVoiceIndex >= 0 && speechVoiceIndex < availableVoices.length) {
+        utterance.voice = availableVoices[speechVoiceIndex]
+      }
       speechSynthesis.speak(utterance)
     }
   }
@@ -1296,6 +1326,105 @@ function ExerciseView() {
           >
             {speechSpeed === 'slow' ? '🐢 Slow' : '🐇 Normal'}
           </motion.button>
+
+          {/* Voice selector */}
+          <div className="relative">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setShowVoiceSelector(!showVoiceSelector)}
+              className="p-2 rounded-xl hover:bg-secondary text-cyan-400 relative"
+              title="Change voice"
+            >
+              <Icons.volume size={18} />
+              {speechVoiceIndex >= 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cyan-400" />
+              )}
+            </motion.button>
+
+            {/* Voice dropdown */}
+            <AnimatePresence>
+              {showVoiceSelector && (
+                <>
+                  {/* Backdrop to close on click outside */}
+                  <div className="fixed inset-0 z-40" onClick={() => setShowVoiceSelector(false)} />
+                  <motion.div
+                  initial={{ opacity: 0, y: -5, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -5, scale: 0.95 }}
+                  className="absolute right-0 top-full mt-2 w-64 rounded-xl bg-popover border border-border shadow-xl z-50 overflow-hidden"
+                >
+                  <div className="p-2 border-b border-border">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Voice Selection</p>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto">
+                    {/* Default voice option */}
+                    <button
+                      onClick={() => {
+                        setSpeechVoiceIndex(-1)
+                        setShowVoiceSelector(false)
+                        // Preview the voice
+                        if ('speechSynthesis' in window) {
+                          speechSynthesis.cancel()
+                          const u = new SpeechSynthesisUtterance('Hello, this is the default voice.')
+                          u.lang = 'en-US'
+                          u.rate = speechSpeed === 'slow' ? 0.5 : 0.9
+                          speechSynthesis.speak(u)
+                        }
+                      }}
+                      className={`w-full px-3 py-2.5 text-left text-sm hover:bg-secondary transition-colors flex items-center gap-2 ${
+                        speechVoiceIndex === -1 ? 'bg-cyan-500/10 text-cyan-400' : 'text-foreground'
+                      }`}
+                    >
+                      <span className="text-base">🔊</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">Default</p>
+                        <p className="text-[10px] text-muted-foreground">System default voice</p>
+                      </div>
+                      {speechVoiceIndex === -1 && <Icons.check size={14} className="text-cyan-400 shrink-0" />}
+                    </button>
+
+                    {/* Available English voices */}
+                    {availableVoices.map((voice, i) => (
+                      <button
+                        key={`${voice.name}-${i}`}
+                        onClick={() => {
+                          setSpeechVoiceIndex(i)
+                          setShowVoiceSelector(false)
+                          // Preview the voice
+                          if ('speechSynthesis' in window) {
+                            speechSynthesis.cancel()
+                            const u = new SpeechSynthesisUtterance('Hello, this is how I sound.')
+                            u.lang = 'en-US'
+                            u.rate = speechSpeed === 'slow' ? 0.5 : 0.9
+                            u.voice = voice
+                            speechSynthesis.speak(u)
+                          }
+                        }}
+                        className={`w-full px-3 py-2.5 text-left text-sm hover:bg-secondary transition-colors flex items-center gap-2 ${
+                          speechVoiceIndex === i ? 'bg-cyan-500/10 text-cyan-400' : 'text-foreground'
+                        }`}
+                      >
+                        <span className="text-base">{voice.localService ? '🤖' : '☁️'}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{voice.name.replace(/Microsoft |Google |Apple /, '')}</p>
+                          <p className="text-[10px] text-muted-foreground">{voice.lang} {voice.localService ? '• Local' : '• Cloud'}</p>
+                        </div>
+                        {speechVoiceIndex === i && <Icons.check size={14} className="text-cyan-400 shrink-0" />}
+                      </button>
+                    ))}
+
+                    {availableVoices.length === 0 && (
+                      <div className="px-3 py-4 text-center text-xs text-muted-foreground">
+                        Loading voices...
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
 
           <motion.button
             whileHover={{ scale: 1.1 }}
