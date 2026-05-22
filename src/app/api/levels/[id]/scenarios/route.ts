@@ -26,10 +26,13 @@ export async function GET(
     }> = {};
 
     if (userId) {
+      // Only get SCENARIO progress records (scenarioId set, lessonId null)
+      // Lesson progress records have lessonId set and should not be mixed in
       const progress = await db.userProgress.findMany({
         where: {
           userId,
           scenarioId: { in: scenarios.map((s) => s.id) },
+          lessonId: null,
         },
       });
 

@@ -23,10 +23,12 @@ async function calculateDynamicProgress(
       case 'xp':
         return user.xp;
       case 'scenarios': {
+        // Only count scenario progress records (scenarioId set, lessonId null)
         const completedScenarios = await db.userProgress.count({
           where: {
             userId: user.id,
             scenarioId: { not: null },
+            lessonId: null,
             status: 'completed',
           },
         });
@@ -43,12 +45,13 @@ async function calculateDynamicProgress(
       case 'streak':
         return user.lastActiveDate === today ? 1 : 0;
       case 'exercises': {
-        // Count exercises completed today
+        // Count lessons completed today (lessonId set, scenarioId null)
         const todayStart = new Date(today);
         const completedToday = await db.userProgress.count({
           where: {
             userId: user.id,
             lessonId: { not: null },
+            scenarioId: null,
             status: 'completed',
             completedAt: { gte: todayStart },
           },
@@ -62,6 +65,7 @@ async function calculateDynamicProgress(
           where: {
             userId: user.id,
             lessonId: { not: null },
+            scenarioId: null,
             status: 'completed',
             completedAt: { gte: todayStart },
           },
@@ -75,6 +79,7 @@ async function calculateDynamicProgress(
           where: {
             userId: user.id,
             scenarioId: { not: null },
+            lessonId: null,
             status: 'completed',
             completedAt: { gte: todayStart },
           },
@@ -93,6 +98,7 @@ async function calculateDynamicProgress(
           where: {
             userId: user.id,
             lessonId: { not: null },
+            scenarioId: null,
             status: 'completed',
             completedAt: { gte: weekStart },
           },
@@ -104,6 +110,7 @@ async function calculateDynamicProgress(
           where: {
             userId: user.id,
             lessonId: { not: null },
+            scenarioId: null,
             status: 'completed',
             completedAt: { gte: weekStart },
           },
@@ -116,6 +123,7 @@ async function calculateDynamicProgress(
           where: {
             userId: user.id,
             scenarioId: { not: null },
+            lessonId: null,
             status: 'completed',
             completedAt: { gte: weekStart },
           },

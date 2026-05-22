@@ -662,14 +662,19 @@ export const useAppStore = create<AppStoreState>()(
               set({
                 rewardData: {
                   type: 'exercise_complete',
-                  title: 'Practice Complete! 🔄',
+                  title: 'Practice Complete!',
                   message: 'You already completed this lesson. Only your best star score is updated.',
                   xp: 0,
                   coins: 0,
                   stars: 0,
                 },
                 exerciseXpEarned: 0,
+                showConfetti: false,
               });
+            }
+            // If the scenario was just completed, play unlock sound
+            if (data.scenarioCompleted) {
+              get().playSound('unlock');
             }
             // Refresh scenarios to reflect updated progress/unlocks
             const selectedLevelId = get().selectedLevelId;

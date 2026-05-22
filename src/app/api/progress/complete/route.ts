@@ -35,8 +35,16 @@ export async function POST(request: Request) {
 
     const isAlreadyCompleted = existingProgress?.status === 'completed';
 
-    // Update or create lesson progress
-    // If already completed, only update stars if the new score is better
+    // ============================================================
+    // CRITICAL FIX: Lesson progress records must NOT set scenarioId
+    // and Scenario progress records must NOT set lessonId.
+    // Otherwise the unique constraints (@@unique([userId, scenarioId])
+    // and @@unique([userId, lessonId])) conflict because a single
+    // record would occupy both unique slots, causing upserts to
+    // overwrite lesson data with scenario data (or vice versa).
+    // ============================================================
+
+    // Create/update LESSON progress (lessonId set, scenarioId NOT set)
     const lessonProgress = await db.userProgress.upsert({
       where: {
         userId_lessonId: { userId, lessonId },
@@ -44,7 +52,7 @@ export async function POST(request: Request) {
       create: {
         userId,
         lessonId,
-        scenarioId: lesson.scenarioId,
+        // DO NOT set scenarioId here — it would conflict with scenario progress records
         status: 'completed',
         progress: 100,
         stars: stars ?? 0,
@@ -55,14 +63,13 @@ export async function POST(request: Request) {
         status: 'completed',
         progress: 100,
         // Only update stars if the new score is better
-        stars: { set: Math.max(existingProgress?.stars ?? 0, stars ?? 0) },
+        stars: Math.max(existingProgress?.stars ?? 0, stars ?? 0),
         xpEarned: xpEarned ?? 0,
         completedAt: new Date(),
       },
     });
 
-    // Also ensure scenario progress exists and check if all lessons are completed
-    // Get all lessons in this scenario
+    // Get all lessons in this scenario to check completion
     const allLessonsInScenario = await db.lesson.findMany({
       where: { scenarioId: lesson.scenarioId },
       select: { id: true },
@@ -70,6 +77,7 @@ export async function POST(request: Request) {
     const lessonIds = allLessonsInScenario.map((l) => l.id);
 
     // Count completed lessons for this user in this scenario
+    // Only count records that have a lessonId set (lesson progress records)
     const completedLessonsCount = await db.userProgress.count({
       where: {
         userId,
@@ -80,9 +88,11 @@ export async function POST(request: Request) {
 
     const allLessonsCompleted = completedLessonsCount >= allLessonsInScenario.length;
     const scenarioStatus = allLessonsCompleted ? 'completed' : 'in_progress';
-    const scenarioProgress = allLessonsCompleted ? 100 : Math.round((completedLessonsCount / allLessonsInScenario.length) * 100);
+    const scenarioProgressPercent = allLessonsCompleted
+      ? 100
+      : Math.round((completedLessonsCount / allLessonsInScenario.length) * 100);
 
-    // Calculate best stars across all completed lessons in this scenario
+    // Calculate scenario stars based on weakest lesson (like Duolingo)
     let bestScenarioStars = 0;
     if (allLessonsCompleted) {
       const lessonProgressRecords = await db.userProgress.findMany({
@@ -93,12 +103,25 @@ export async function POST(request: Request) {
         },
         select: { stars: true },
       });
-      // Use the minimum stars as the scenario stars (like Duolingo - based on weakest lesson)
       bestScenarioStars = lessonProgressRecords.length > 0
         ? Math.min(...lessonProgressRecords.map((r) => r.stars))
         : 0;
+    } else {
+      // For in-progress scenario, also get current star info for partial display
+      const lessonProgressRecords = await db.userProgress.findMany({
+        where: {
+          userId,
+          lessonId: { in: lessonIds },
+          status: 'completed',
+        },
+        select: { stars: true },
+      });
+      if (lessonProgressRecords.length > 0) {
+        bestScenarioStars = Math.min(...lessonProgressRecords.map((r) => r.stars));
+      }
     }
 
+    // Create/update SCENARIO progress (scenarioId set, lessonId NOT set)
     await db.userProgress.upsert({
       where: {
         userId_scenarioId: { userId, scenarioId: lesson.scenarioId },
@@ -106,16 +129,18 @@ export async function POST(request: Request) {
       create: {
         userId,
         scenarioId: lesson.scenarioId,
+        // DO NOT set lessonId here — it would conflict with lesson progress records
         status: scenarioStatus,
-        progress: scenarioProgress,
+        progress: scenarioProgressPercent,
         stars: bestScenarioStars,
         xpEarned: 0,
         ...(allLessonsCompleted ? { completedAt: new Date() } : {}),
       },
       update: {
         status: scenarioStatus,
-        progress: scenarioProgress,
-        ...(allLessonsCompleted ? { stars: bestScenarioStars, completedAt: new Date() } : {}),
+        progress: scenarioProgressPercent,
+        stars: bestScenarioStars,
+        ...(allLessonsCompleted ? { completedAt: new Date() } : {}),
       },
     });
 
@@ -138,7 +163,6 @@ export async function POST(request: Request) {
 
     if (isAlreadyCompleted) {
       // Lesson was already completed - NO additional rewards
-      // Only update stars if the new score is better (already handled in upsert)
       coinsEarned = 0;
     } else {
       // First time completing this lesson - award full rewards
@@ -246,10 +270,12 @@ export async function POST(request: Request) {
             met = newXp >= achievement.requirement;
             break;
           case 'scenarios': {
+            // Count scenario progress records with status 'completed' (scenarioId set, lessonId null)
             const completedScenarios = await db.userProgress.count({
               where: {
                 userId,
                 scenarioId: { not: null },
+                lessonId: null,
                 status: 'completed',
               },
             });
@@ -295,6 +321,7 @@ export async function POST(request: Request) {
       progress: lessonProgress,
       coinsEarned,
       isReplay: isAlreadyCompleted,
+      scenarioCompleted: allLessonsCompleted,
       newAchievements,
     });
   } catch (error) {

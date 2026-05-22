@@ -556,87 +556,87 @@ async function main() {
   console.log('🎁 Creating rewards...');
   const rewards = [
     // ── AVATARS (Common) ──
-    { slug: 'avatar-fox', name: 'Fox Avatar', nameEs: 'Avatar Zorro', description: 'A clever fox avatar', descriptionEs: 'Un avatar de zorro astuto', type: 'avatar', icon: '🦊', cost: 80, rarity: 'common' },
-    { slug: 'avatar-cat', name: 'Cat Avatar', nameEs: 'Avatar Gato', description: 'A cute cat avatar', descriptionEs: 'Un avatar de gato adorable', type: 'avatar', icon: '🐱', cost: 80, rarity: 'common' },
-    { slug: 'avatar-dog', name: 'Dog Avatar', nameEs: 'Avatar Perro', description: 'A loyal dog avatar', descriptionEs: 'Un avatar de perro leal', type: 'avatar', icon: '🐶', cost: 100, rarity: 'common' },
-    { slug: 'avatar-bear', name: 'Bear Avatar', nameEs: 'Avatar Oso', description: 'A strong bear avatar', descriptionEs: 'Un avatar de oso fuerte', type: 'avatar', icon: '🐻', cost: 120, rarity: 'common' },
-    { slug: 'avatar-rabbit', name: 'Rabbit Avatar', nameEs: 'Avatar Conejo', description: 'A quick rabbit avatar', descriptionEs: 'Un avatar de conejo veloz', type: 'avatar', icon: '🐰', cost: 120, rarity: 'common' },
-    { slug: 'avatar-panda', name: 'Panda Avatar', nameEs: 'Avatar Panda', description: 'A chill panda avatar', descriptionEs: 'Un avatar de panda relajado', type: 'avatar', icon: '🐼', cost: 150, rarity: 'common' },
-    { slug: 'avatar-penguin', name: 'Penguin Avatar', nameEs: 'Avatar Pingüino', description: 'A dapper penguin avatar', descriptionEs: 'Un avatar de pingüino elegante', type: 'avatar', icon: '🐧', cost: 150, rarity: 'common' },
-    { slug: 'avatar-owl', name: 'Owl Avatar', nameEs: 'Avatar Búho', description: 'A wise owl avatar', descriptionEs: 'Un avatar de búho sabio', type: 'avatar', icon: '🦉', cost: 180, rarity: 'common' },
-    { slug: 'avatar-frog', name: 'Frog Avatar', nameEs: 'Avatar Rana', description: 'A funny frog avatar', descriptionEs: 'Un avatar de rana divertido', type: 'avatar', icon: '🐸', cost: 180, rarity: 'common' },
-    { slug: 'avatar-monkey', name: 'Monkey Avatar', nameEs: 'Avatar Mono', description: 'A playful monkey avatar', descriptionEs: 'Un avatar de mono juguetón', type: 'avatar', icon: '🐒', cost: 200, rarity: 'common' },
+    { slug: 'avatar-fox', name: 'Fox Avatar', nameEs: 'Avatar Zorro', description: 'A clever fox avatar', descriptionEs: 'Un avatar de zorro astuto', type: 'avatar', icon: '🦊', cost: 250, rarity: 'common' },
+    { slug: 'avatar-cat', name: 'Cat Avatar', nameEs: 'Avatar Gato', description: 'A cute cat avatar', descriptionEs: 'Un avatar de gato adorable', type: 'avatar', icon: '🐱', cost: 250, rarity: 'common' },
+    { slug: 'avatar-dog', name: 'Dog Avatar', nameEs: 'Avatar Perro', description: 'A loyal dog avatar', descriptionEs: 'Un avatar de perro leal', type: 'avatar', icon: '🐶', cost: 300, rarity: 'common' },
+    { slug: 'avatar-bear', name: 'Bear Avatar', nameEs: 'Avatar Oso', description: 'A strong bear avatar', descriptionEs: 'Un avatar de oso fuerte', type: 'avatar', icon: '🐻', cost: 350, rarity: 'common' },
+    { slug: 'avatar-rabbit', name: 'Rabbit Avatar', nameEs: 'Avatar Conejo', description: 'A quick rabbit avatar', descriptionEs: 'Un avatar de conejo veloz', type: 'avatar', icon: '🐰', cost: 350, rarity: 'common' },
+    { slug: 'avatar-panda', name: 'Panda Avatar', nameEs: 'Avatar Panda', description: 'A chill panda avatar', descriptionEs: 'Un avatar de panda relajado', type: 'avatar', icon: '🐼', cost: 450, rarity: 'common' },
+    { slug: 'avatar-penguin', name: 'Penguin Avatar', nameEs: 'Avatar Pingüino', description: 'A dapper penguin avatar', descriptionEs: 'Un avatar de pingüino elegante', type: 'avatar', icon: '🐧', cost: 450, rarity: 'common' },
+    { slug: 'avatar-owl', name: 'Owl Avatar', nameEs: 'Avatar Búho', description: 'A wise owl avatar', descriptionEs: 'Un avatar de búho sabio', type: 'avatar', icon: '🦉', cost: 550, rarity: 'common' },
+    { slug: 'avatar-frog', name: 'Frog Avatar', nameEs: 'Avatar Rana', description: 'A funny frog avatar', descriptionEs: 'Un avatar de rana divertido', type: 'avatar', icon: '🐸', cost: 550, rarity: 'common' },
+    { slug: 'avatar-monkey', name: 'Monkey Avatar', nameEs: 'Avatar Mono', description: 'A playful monkey avatar', descriptionEs: 'Un avatar de mono juguetón', type: 'avatar', icon: '🐒', cost: 600, rarity: 'common' },
     // ── AVATARS (Rare) ──
-    { slug: 'avatar-tiger', name: 'Tiger Avatar', nameEs: 'Avatar Tigre', description: 'A fierce tiger avatar', descriptionEs: 'Un avatar de tigre feroz', type: 'avatar', icon: '🐯', cost: 350, rarity: 'rare' },
-    { slug: 'avatar-lion', name: 'Lion Avatar', nameEs: 'Avatar León', description: 'The king of the jungle', descriptionEs: 'El rey de la selva', type: 'avatar', icon: '🦁', cost: 400, rarity: 'rare' },
-    { slug: 'avatar-wolf', name: 'Wolf Avatar', nameEs: 'Avatar Lobo', description: 'A fierce wolf avatar', descriptionEs: 'Un avatar de lobo feroz', type: 'avatar', icon: '🐺', cost: 350, rarity: 'rare' },
-    { slug: 'avatar-eagle', name: 'Eagle Avatar', nameEs: 'Avatar Águila', description: 'Soar above the rest', descriptionEs: 'Vuela por encima del resto', type: 'avatar', icon: '🦅', cost: 380, rarity: 'rare' },
-    { slug: 'avatar-dolphin', name: 'Dolphin Avatar', nameEs: 'Avatar Delfín', description: 'A smart dolphin avatar', descriptionEs: 'Un avatar de delfín inteligente', type: 'avatar', icon: '🐬', cost: 380, rarity: 'rare' },
-    { slug: 'avatar-horse', name: 'Horse Avatar', nameEs: 'Avatar Caballo', description: 'A majestic horse avatar', descriptionEs: 'Un avatar de caballo majestuoso', type: 'avatar', icon: '🐴', cost: 400, rarity: 'rare' },
-    { slug: 'avatar-gorilla', name: 'Gorilla Avatar', nameEs: 'Avatar Gorila', description: 'A powerful gorilla avatar', descriptionEs: 'Un avatar de gorila poderoso', type: 'avatar', icon: '🦍', cost: 450, rarity: 'rare' },
-    { slug: 'avatar-shark', name: 'Shark Avatar', nameEs: 'Avatar Tiburón', description: 'Rule the ocean', descriptionEs: 'Domina el océano', type: 'avatar', icon: '🦈', cost: 450, rarity: 'rare' },
-    { slug: 'avatar-octopus', name: 'Octopus Avatar', nameEs: 'Avatar Pulpo', description: 'Multitask like a pro', descriptionEs: 'Multitarea como un profesional', type: 'avatar', icon: '🐙', cost: 480, rarity: 'rare' },
-    { slug: 'avatar-parrot', name: 'Parrot Avatar', nameEs: 'Avatar Loro', description: 'Speak many languages', descriptionEs: 'Habla muchos idiomas', type: 'avatar', icon: '🦜', cost: 480, rarity: 'rare' },
+    { slug: 'avatar-tiger', name: 'Tiger Avatar', nameEs: 'Avatar Tigre', description: 'A fierce tiger avatar', descriptionEs: 'Un avatar de tigre feroz', type: 'avatar', icon: '🐯', cost: 900, rarity: 'rare' },
+    { slug: 'avatar-lion', name: 'Lion Avatar', nameEs: 'Avatar León', description: 'The king of the jungle', descriptionEs: 'El rey de la selva', type: 'avatar', icon: '🦁', cost: 1000, rarity: 'rare' },
+    { slug: 'avatar-wolf', name: 'Wolf Avatar', nameEs: 'Avatar Lobo', description: 'A fierce wolf avatar', descriptionEs: 'Un avatar de lobo feroz', type: 'avatar', icon: '🐺', cost: 900, rarity: 'rare' },
+    { slug: 'avatar-eagle', name: 'Eagle Avatar', nameEs: 'Avatar Águila', description: 'Soar above the rest', descriptionEs: 'Vuela por encima del resto', type: 'avatar', icon: '🦅', cost: 950, rarity: 'rare' },
+    { slug: 'avatar-dolphin', name: 'Dolphin Avatar', nameEs: 'Avatar Delfín', description: 'A smart dolphin avatar', descriptionEs: 'Un avatar de delfín inteligente', type: 'avatar', icon: '🐬', cost: 950, rarity: 'rare' },
+    { slug: 'avatar-horse', name: 'Horse Avatar', nameEs: 'Avatar Caballo', description: 'A majestic horse avatar', descriptionEs: 'Un avatar de caballo majestuoso', type: 'avatar', icon: '🐴', cost: 1000, rarity: 'rare' },
+    { slug: 'avatar-gorilla', name: 'Gorilla Avatar', nameEs: 'Avatar Gorila', description: 'A powerful gorilla avatar', descriptionEs: 'Un avatar de gorila poderoso', type: 'avatar', icon: '🦍', cost: 1100, rarity: 'rare' },
+    { slug: 'avatar-shark', name: 'Shark Avatar', nameEs: 'Avatar Tiburón', description: 'Rule the ocean', descriptionEs: 'Domina el océano', type: 'avatar', icon: '🦈', cost: 1100, rarity: 'rare' },
+    { slug: 'avatar-octopus', name: 'Octopus Avatar', nameEs: 'Avatar Pulpo', description: 'Multitask like a pro', descriptionEs: 'Multitarea como un profesional', type: 'avatar', icon: '🐙', cost: 1200, rarity: 'rare' },
+    { slug: 'avatar-parrot', name: 'Parrot Avatar', nameEs: 'Avatar Loro', description: 'Speak many languages', descriptionEs: 'Habla muchos idiomas', type: 'avatar', icon: '🦜', cost: 1200, rarity: 'rare' },
     // ── AVATARS (Epic) ──
-    { slug: 'avatar-dragon', name: 'Dragon Avatar', nameEs: 'Avatar Dragón', description: 'A legendary dragon avatar', descriptionEs: 'Un avatar de dragón legendario', type: 'avatar', icon: '🐉', cost: 900, rarity: 'epic' },
-    { slug: 'avatar-phoenix', name: 'Phoenix Avatar', nameEs: 'Avatar Fénix', description: 'Rise from the ashes', descriptionEs: 'Renace de las cenizas', type: 'avatar', icon: '🔥', cost: 1000, rarity: 'epic' },
-    { slug: 'avatar-robot', name: 'Robot Avatar', nameEs: 'Avatar Robot', description: 'Future is now', descriptionEs: 'El futuro es ahora', type: 'avatar', icon: '🤖', cost: 900, rarity: 'epic' },
-    { slug: 'avatar-alien', name: 'Alien Avatar', nameEs: 'Avatar Alienígena', description: 'Out of this world', descriptionEs: 'Fuera de este mundo', type: 'avatar', icon: '👽', cost: 950, rarity: 'epic' },
-    { slug: 'avatar-ninja', name: 'Ninja Avatar', nameEs: 'Avatar Ninja', description: 'Silent and deadly', descriptionEs: 'Silencioso y letal', type: 'avatar', icon: '🥷', cost: 1000, rarity: 'epic' },
-    { slug: 'avatar-wizard', name: 'Wizard Avatar', nameEs: 'Avatar Mago', description: 'Master of spells', descriptionEs: 'Maestro de hechizos', type: 'avatar', icon: '🧙', cost: 1050, rarity: 'epic' },
-    { slug: 'avatar-astronaut', name: 'Astronaut Avatar', nameEs: 'Avatar Astronauta', description: 'To infinity and beyond', descriptionEs: 'Hasta el infinito y más allá', type: 'avatar', icon: '👨‍🚀', cost: 1100, rarity: 'epic' },
-    { slug: 'avatar-superhero', name: 'Superhero Avatar', nameEs: 'Avatar Superhéroe', description: 'Save the day', descriptionEs: 'Salva el día', type: 'avatar', icon: '🦸', cost: 1200, rarity: 'epic' },
+    { slug: 'avatar-dragon', name: 'Dragon Avatar', nameEs: 'Avatar Dragón', description: 'A legendary dragon avatar', descriptionEs: 'Un avatar de dragón legendario', type: 'avatar', icon: '🐉', cost: 1800, rarity: 'epic' },
+    { slug: 'avatar-phoenix', name: 'Phoenix Avatar', nameEs: 'Avatar Fénix', description: 'Rise from the ashes', descriptionEs: 'Renace de las cenizas', type: 'avatar', icon: '🔥', cost: 2000, rarity: 'epic' },
+    { slug: 'avatar-robot', name: 'Robot Avatar', nameEs: 'Avatar Robot', description: 'Future is now', descriptionEs: 'El futuro es ahora', type: 'avatar', icon: '🤖', cost: 1800, rarity: 'epic' },
+    { slug: 'avatar-alien', name: 'Alien Avatar', nameEs: 'Avatar Alienígena', description: 'Out of this world', descriptionEs: 'Fuera de este mundo', type: 'avatar', icon: '👽', cost: 1900, rarity: 'epic' },
+    { slug: 'avatar-ninja', name: 'Ninja Avatar', nameEs: 'Avatar Ninja', description: 'Silent and deadly', descriptionEs: 'Silencioso y letal', type: 'avatar', icon: '🥷', cost: 2000, rarity: 'epic' },
+    { slug: 'avatar-wizard', name: 'Wizard Avatar', nameEs: 'Avatar Mago', description: 'Master of spells', descriptionEs: 'Maestro de hechizos', type: 'avatar', icon: '🧙', cost: 2100, rarity: 'epic' },
+    { slug: 'avatar-astronaut', name: 'Astronaut Avatar', nameEs: 'Avatar Astronauta', description: 'To infinity and beyond', descriptionEs: 'Hasta el infinito y más allá', type: 'avatar', icon: '👨‍🚀', cost: 2200, rarity: 'epic' },
+    { slug: 'avatar-superhero', name: 'Superhero Avatar', nameEs: 'Avatar Superhéroe', description: 'Save the day', descriptionEs: 'Salva el día', type: 'avatar', icon: '🦸', cost: 2400, rarity: 'epic' },
     // ── AVATARS (Legendary) ──
-    { slug: 'avatar-unicorn', name: 'Unicorn Avatar', nameEs: 'Avatar Unicornio', description: 'A magical unicorn avatar', descriptionEs: 'Un avatar de unicornio mágico', type: 'avatar', icon: '🦄', cost: 2000, rarity: 'legendary' },
-    { slug: 'avatar-crown', name: 'Crown Avatar', nameEs: 'Avatar Corona', description: 'Royal and majestic', descriptionEs: 'Real y majestuoso', type: 'avatar', icon: '👑', cost: 2500, rarity: 'legendary' },
-    { slug: 'avatar-diamond', name: 'Diamond Avatar', nameEs: 'Avatar Diamante', description: 'Unbreakable brilliance', descriptionEs: 'Brillantez irrompible', type: 'avatar', icon: '💎', cost: 3000, rarity: 'legendary' },
-    { slug: 'avatar-sun', name: 'Sun Avatar', nameEs: 'Avatar Sol', description: 'Shine like the sun', descriptionEs: 'Brilla como el sol', type: 'avatar', icon: '☀️', cost: 3500, rarity: 'legendary' },
-    { slug: 'avatar-galaxy', name: 'Galaxy Avatar', nameEs: 'Avatar Galaxia', description: 'The universe within you', descriptionEs: 'El universo dentro de ti', type: 'avatar', icon: '🌌', cost: 5000, rarity: 'legendary' },
+    { slug: 'avatar-unicorn', name: 'Unicorn Avatar', nameEs: 'Avatar Unicornio', description: 'A magical unicorn avatar', descriptionEs: 'Un avatar de unicornio mágico', type: 'avatar', icon: '🦄', cost: 4000, rarity: 'legendary' },
+    { slug: 'avatar-crown', name: 'Crown Avatar', nameEs: 'Avatar Corona', description: 'Royal and majestic', descriptionEs: 'Real y majestuoso', type: 'avatar', icon: '👑', cost: 5000, rarity: 'legendary' },
+    { slug: 'avatar-diamond', name: 'Diamond Avatar', nameEs: 'Avatar Diamante', description: 'Unbreakable brilliance', descriptionEs: 'Brillantez irrompible', type: 'avatar', icon: '💎', cost: 6000, rarity: 'legendary' },
+    { slug: 'avatar-sun', name: 'Sun Avatar', nameEs: 'Avatar Sol', description: 'Shine like the sun', descriptionEs: 'Brilla como el sol', type: 'avatar', icon: '☀️', cost: 7000, rarity: 'legendary' },
+    { slug: 'avatar-galaxy', name: 'Galaxy Avatar', nameEs: 'Avatar Galaxia', description: 'The universe within you', descriptionEs: 'El universo dentro de ti', type: 'avatar', icon: '🌌', cost: 10000, rarity: 'legendary' },
 
     // ── FRAMES (Common) ──
-    { slug: 'frame-silver', name: 'Silver Frame', nameEs: 'Marco Plateado', description: 'A classic silver frame', descriptionEs: 'Un marco plateado clásico', type: 'frame', icon: '🪙', cost: 150, rarity: 'common' },
-    { slug: 'frame-bronze', name: 'Bronze Frame', nameEs: 'Marco Bronce', description: 'A warm bronze frame', descriptionEs: 'Un marco de bronce cálido', type: 'frame', icon: '🥉', cost: 180, rarity: 'common' },
-    { slug: 'frame-leaf', name: 'Leaf Frame', nameEs: 'Marco Hoja', description: 'A nature-inspired frame', descriptionEs: 'Un marco inspirado en la naturaleza', type: 'frame', icon: '🍃', cost: 200, rarity: 'common' },
-    { slug: 'frame-wave', name: 'Wave Frame', nameEs: 'Marco Onda', description: 'Flow like the ocean', descriptionEs: 'Fluye como el océano', type: 'frame', icon: '🌊', cost: 200, rarity: 'common' },
+    { slug: 'frame-silver', name: 'Silver Frame', nameEs: 'Marco Plateado', description: 'A classic silver frame', descriptionEs: 'Un marco plateado clásico', type: 'frame', icon: '🪙', cost: 450, rarity: 'common' },
+    { slug: 'frame-bronze', name: 'Bronze Frame', nameEs: 'Marco Bronce', description: 'A warm bronze frame', descriptionEs: 'Un marco de bronce cálido', type: 'frame', icon: '🥉', cost: 550, rarity: 'common' },
+    { slug: 'frame-leaf', name: 'Leaf Frame', nameEs: 'Marco Hoja', description: 'A nature-inspired frame', descriptionEs: 'Un marco inspirado en la naturaleza', type: 'frame', icon: '🍃', cost: 600, rarity: 'common' },
+    { slug: 'frame-wave', name: 'Wave Frame', nameEs: 'Marco Onda', description: 'Flow like the ocean', descriptionEs: 'Fluye como el océano', type: 'frame', icon: '🌊', cost: 600, rarity: 'common' },
     // ── FRAMES (Rare) ──
-    { slug: 'frame-gold', name: 'Gold Frame', nameEs: 'Marco Dorado', description: 'A shiny gold frame for your avatar', descriptionEs: 'Un marco dorado brillante para tu avatar', type: 'frame', icon: '🖼️', cost: 500, rarity: 'rare' },
-    { slug: 'frame-thunder', name: 'Thunder Frame', nameEs: 'Marco Trueno', description: 'Electric energy frame', descriptionEs: 'Marco de energía eléctrica', type: 'frame', icon: '⚡', cost: 550, rarity: 'rare' },
-    { slug: 'frame-rose', name: 'Rose Frame', nameEs: 'Marco Rosa', description: 'Elegant rose frame', descriptionEs: 'Marco de rosa elegante', type: 'frame', icon: '🌹', cost: 500, rarity: 'rare' },
-    { slug: 'frame-snowflake', name: 'Snowflake Frame', nameEs: 'Marco Copo de Nieve', description: 'Frozen beauty frame', descriptionEs: 'Marco de belleza congelada', type: 'frame', icon: '❄️', cost: 550, rarity: 'rare' },
-    { slug: 'frame-rainbow', name: 'Rainbow Frame', nameEs: 'Marco Arcoíris', description: 'Colorful rainbow frame', descriptionEs: 'Marco arcoíris colorido', type: 'frame', icon: '🌈', cost: 600, rarity: 'rare' },
-    { slug: 'frame-star', name: 'Star Frame', nameEs: 'Marco Estrella', description: 'Shine bright like a star', descriptionEs: 'Brilla como una estrella', type: 'frame', icon: '⭐', cost: 650, rarity: 'rare' },
+    { slug: 'frame-gold', name: 'Gold Frame', nameEs: 'Marco Dorado', description: 'A shiny gold frame for your avatar', descriptionEs: 'Un marco dorado brillante para tu avatar', type: 'frame', icon: '🖼️', cost: 1250, rarity: 'rare' },
+    { slug: 'frame-thunder', name: 'Thunder Frame', nameEs: 'Marco Trueno', description: 'Electric energy frame', descriptionEs: 'Marco de energía eléctrica', type: 'frame', icon: '⚡', cost: 1400, rarity: 'rare' },
+    { slug: 'frame-rose', name: 'Rose Frame', nameEs: 'Marco Rosa', description: 'Elegant rose frame', descriptionEs: 'Marco de rosa elegante', type: 'frame', icon: '🌹', cost: 1250, rarity: 'rare' },
+    { slug: 'frame-snowflake', name: 'Snowflake Frame', nameEs: 'Marco Copo de Nieve', description: 'Frozen beauty frame', descriptionEs: 'Marco de belleza congelada', type: 'frame', icon: '❄️', cost: 1400, rarity: 'rare' },
+    { slug: 'frame-rainbow', name: 'Rainbow Frame', nameEs: 'Marco Arcoíris', description: 'Colorful rainbow frame', descriptionEs: 'Marco arcoíris colorido', type: 'frame', icon: '🌈', cost: 1500, rarity: 'rare' },
+    { slug: 'frame-star', name: 'Star Frame', nameEs: 'Marco Estrella', description: 'Shine bright like a star', descriptionEs: 'Brilla como una estrella', type: 'frame', icon: '⭐', cost: 1600, rarity: 'rare' },
     // ── FRAMES (Epic) ──
-    { slug: 'frame-diamond', name: 'Diamond Frame', nameEs: 'Marco Diamante', description: 'A sparkling diamond frame', descriptionEs: 'Un marco de diamante brillante', type: 'frame', icon: '💎', cost: 1100, rarity: 'epic' },
-    { slug: 'frame-fire', name: 'Fire Frame', nameEs: 'Marco de Fuego', description: 'A blazing fire frame', descriptionEs: 'Un marco de fuego ardiente', type: 'frame', icon: '🔥', cost: 1000, rarity: 'epic' },
-    { slug: 'frame-neon', name: 'Neon Frame', nameEs: 'Marco Neón', description: 'Glow in the dark', descriptionEs: 'Brilla en la oscuridad', type: 'frame', icon: '💡', cost: 1050, rarity: 'epic' },
-    { slug: 'frame-crown', name: 'Crown Frame', nameEs: 'Marco Corona', description: 'Rule with style', descriptionEs: 'Gobierna con estilo', type: 'frame', icon: '👑', cost: 1100, rarity: 'epic' },
-    { slug: 'frame-cosmic', name: 'Cosmic Frame', nameEs: 'Marco Cósmico', description: 'The power of the cosmos', descriptionEs: 'El poder del cosmos', type: 'frame', icon: '🌌', cost: 1200, rarity: 'epic' },
+    { slug: 'frame-diamond', name: 'Diamond Frame', nameEs: 'Marco Diamante', description: 'A sparkling diamond frame', descriptionEs: 'Un marco de diamante brillante', type: 'frame', icon: '💎', cost: 2200, rarity: 'epic' },
+    { slug: 'frame-fire', name: 'Fire Frame', nameEs: 'Marco de Fuego', description: 'A blazing fire frame', descriptionEs: 'Un marco de fuego ardiente', type: 'frame', icon: '🔥', cost: 2000, rarity: 'epic' },
+    { slug: 'frame-neon', name: 'Neon Frame', nameEs: 'Marco Neón', description: 'Glow in the dark', descriptionEs: 'Brilla en la oscuridad', type: 'frame', icon: '💡', cost: 2100, rarity: 'epic' },
+    { slug: 'frame-crown', name: 'Crown Frame', nameEs: 'Marco Corona', description: 'Rule with style', descriptionEs: 'Gobierna con estilo', type: 'frame', icon: '👑', cost: 2200, rarity: 'epic' },
+    { slug: 'frame-cosmic', name: 'Cosmic Frame', nameEs: 'Marco Cósmico', description: 'The power of the cosmos', descriptionEs: 'El poder del cosmos', type: 'frame', icon: '🌌', cost: 2400, rarity: 'epic' },
     // ── FRAMES (Legendary) ──
-    { slug: 'frame-legendary', name: 'Legendary Frame', nameEs: 'Marco Legendario', description: 'Only for legends', descriptionEs: 'Solo para leyendas', type: 'frame', icon: '🏆', cost: 2500, rarity: 'legendary' },
-    { slug: 'frame-eternal', name: 'Eternal Frame', nameEs: 'Marco Eterno', description: 'Timeless and infinite', descriptionEs: 'Atemporal e infinito', type: 'frame', icon: '♾️', cost: 3500, rarity: 'legendary' },
-    { slug: 'frame-chaos', name: 'Chaos Frame', nameEs: 'Marco Caos', description: 'Embrace the chaos', descriptionEs: 'Abraza el caos', type: 'frame', icon: '🌀', cost: 3000, rarity: 'legendary' },
+    { slug: 'frame-legendary', name: 'Legendary Frame', nameEs: 'Marco Legendario', description: 'Only for legends', descriptionEs: 'Solo para leyendas', type: 'frame', icon: '🏆', cost: 5000, rarity: 'legendary' },
+    { slug: 'frame-eternal', name: 'Eternal Frame', nameEs: 'Marco Eterno', description: 'Timeless and infinite', descriptionEs: 'Atemporal e infinito', type: 'frame', icon: '♾️', cost: 7000, rarity: 'legendary' },
+    { slug: 'frame-chaos', name: 'Chaos Frame', nameEs: 'Marco Caos', description: 'Embrace the chaos', descriptionEs: 'Abraza el caos', type: 'frame', icon: '🌀', cost: 6000, rarity: 'legendary' },
 
     // ── TITLES (Common) ──
-    { slug: 'title-beginner', name: 'Beginner', nameEs: 'Principiante', description: 'Just starting out', descriptionEs: 'Recién comenzando', type: 'title', icon: '🌱', cost: 100, rarity: 'common' },
-    { slug: 'title-learner', name: 'Learner', nameEs: 'Aprendiz', description: 'Eager to learn', descriptionEs: 'Ansioso por aprender', type: 'title', icon: '📚', cost: 120, rarity: 'common' },
-    { slug: 'title-student', name: 'Student', nameEs: 'Estudiante', description: 'Dedicated student', descriptionEs: 'Estudiante dedicado', type: 'title', icon: '🎓', cost: 150, rarity: 'common' },
-    { slug: 'title-explorer', name: 'Explorer', nameEs: 'Explorador', description: 'Explore new words', descriptionEs: 'Explora nuevas palabras', type: 'title', icon: '🧭', cost: 180, rarity: 'common' },
+    { slug: 'title-beginner', name: 'Beginner', nameEs: 'Principiante', description: 'Just starting out', descriptionEs: 'Recién comenzando', type: 'title', icon: '🌱', cost: 300, rarity: 'common' },
+    { slug: 'title-learner', name: 'Learner', nameEs: 'Aprendiz', description: 'Eager to learn', descriptionEs: 'Ansioso por aprender', type: 'title', icon: '📚', cost: 350, rarity: 'common' },
+    { slug: 'title-student', name: 'Student', nameEs: 'Estudiante', description: 'Dedicated student', descriptionEs: 'Estudiante dedicado', type: 'title', icon: '🎓', cost: 450, rarity: 'common' },
+    { slug: 'title-explorer', name: 'Explorer', nameEs: 'Explorador', description: 'Explore new words', descriptionEs: 'Explora nuevas palabras', type: 'title', icon: '🧭', cost: 550, rarity: 'common' },
     // ── TITLES (Rare) ──
-    { slug: 'title-word-master', name: 'Word Master', nameEs: 'Maestro de Palabras', description: 'A prestigious title', descriptionEs: 'Un título prestigioso', type: 'title', icon: '📝', cost: 600, rarity: 'rare' },
-    { slug: 'title-grammar-guru', name: 'Grammar Guru', nameEs: 'Gurú de Gramática', description: 'Master of grammar', descriptionEs: 'Maestro de la gramática', type: 'title', icon: '📖', cost: 600, rarity: 'rare' },
-    { slug: 'title-vocabulary-king', name: 'Vocabulary King', nameEs: 'Rey del Vocabulario', description: 'Rule the words', descriptionEs: 'Domina las palabras', type: 'title', icon: '👑', cost: 700, rarity: 'rare' },
-    { slug: 'title-listener', name: 'Sharp Listener', nameEs: 'Oyente Agudo', description: 'Hear every detail', descriptionEs: 'Escucha cada detalle', type: 'title', icon: '👂', cost: 650, rarity: 'rare' },
-    { slug: 'title-challenger', name: 'Challenger', nameEs: 'Desafiante', description: 'Never backs down', descriptionEs: 'Nunca se rinde', type: 'title', icon: '⚔️', cost: 700, rarity: 'rare' },
-    { slug: 'title-linguist', name: 'Linguist', nameEs: 'Lingüista', description: 'Language expert', descriptionEs: 'Experto en idiomas', type: 'title', icon: '🗣️', cost: 750, rarity: 'rare' },
+    { slug: 'title-word-master', name: 'Word Master', nameEs: 'Maestro de Palabras', description: 'A prestigious title', descriptionEs: 'Un título prestigioso', type: 'title', icon: '📝', cost: 1500, rarity: 'rare' },
+    { slug: 'title-grammar-guru', name: 'Grammar Guru', nameEs: 'Gurú de Gramática', description: 'Master of grammar', descriptionEs: 'Maestro de la gramática', type: 'title', icon: '📖', cost: 1500, rarity: 'rare' },
+    { slug: 'title-vocabulary-king', name: 'Vocabulary King', nameEs: 'Rey del Vocabulario', description: 'Rule the words', descriptionEs: 'Domina las palabras', type: 'title', icon: '👑', cost: 1750, rarity: 'rare' },
+    { slug: 'title-listener', name: 'Sharp Listener', nameEs: 'Oyente Agudo', description: 'Hear every detail', descriptionEs: 'Escucha cada detalle', type: 'title', icon: '👂', cost: 1600, rarity: 'rare' },
+    { slug: 'title-challenger', name: 'Challenger', nameEs: 'Desafiante', description: 'Never backs down', descriptionEs: 'Nunca se rinde', type: 'title', icon: '⚔️', cost: 1750, rarity: 'rare' },
+    { slug: 'title-linguist', name: 'Linguist', nameEs: 'Lingüista', description: 'Language expert', descriptionEs: 'Experto en idiomas', type: 'title', icon: '🗣️', cost: 1900, rarity: 'rare' },
     // ── TITLES (Epic) ──
-    { slug: 'title-polyglot', name: 'Polyglot', nameEs: 'Políglota', description: 'Master of languages', descriptionEs: 'Maestro de idiomas', type: 'title', icon: '🌐', cost: 1200, rarity: 'epic' },
-    { slug: 'title-wordsmith', name: 'Wordsmith', nameEs: 'Forjador de Palabras', description: 'Craft words with precision', descriptionEs: 'Forja palabras con precisión', type: 'title', icon: '⚒️', cost: 1300, rarity: 'epic' },
-    { slug: 'title-scholar', name: 'Scholar', nameEs: 'Erudito', description: 'Academic excellence', descriptionEs: 'Excelencia académica', type: 'title', icon: '🏛️', cost: 1400, rarity: 'epic' },
-    { slug: 'title-mentor', name: 'Mentor', nameEs: 'Mentor', description: 'Guide others to success', descriptionEs: 'Guía a otros al éxito', type: 'title', icon: '🧑‍🏫', cost: 1400, rarity: 'epic' },
+    { slug: 'title-polyglot', name: 'Polyglot', nameEs: 'Políglota', description: 'Master of languages', descriptionEs: 'Maestro de idiomas', type: 'title', icon: '🌐', cost: 2400, rarity: 'epic' },
+    { slug: 'title-wordsmith', name: 'Wordsmith', nameEs: 'Forjador de Palabras', description: 'Craft words with precision', descriptionEs: 'Forja palabras con precisión', type: 'title', icon: '⚒️', cost: 2600, rarity: 'epic' },
+    { slug: 'title-scholar', name: 'Scholar', nameEs: 'Erudito', description: 'Academic excellence', descriptionEs: 'Excelencia académica', type: 'title', icon: '🏛️', cost: 2800, rarity: 'epic' },
+    { slug: 'title-mentor', name: 'Mentor', nameEs: 'Mentor', description: 'Guide others to success', descriptionEs: 'Guía a otros al éxito', type: 'title', icon: '🧑‍🏫', cost: 2800, rarity: 'epic' },
     // ── TITLES (Legendary) ──
-    { slug: 'title-fluent', name: 'Fluent Speaker', nameEs: 'Hablante Fluido', description: 'Speak like a native', descriptionEs: 'Habla como un nativo', type: 'title', icon: '🗣️', cost: 2500, rarity: 'legendary' },
-    { slug: 'title-legend', name: 'Legend', nameEs: 'Leyenda', description: 'A true legend', descriptionEs: 'Una verdadera leyenda', type: 'title', icon: '⚡', cost: 3500, rarity: 'legendary' },
-    { slug: 'title-grand-master', name: 'Grand Master', nameEs: 'Gran Maestro', description: 'The ultimate achievement', descriptionEs: 'El logro definitivo', type: 'title', icon: '🌟', cost: 5000, rarity: 'legendary' },
+    { slug: 'title-fluent', name: 'Fluent Speaker', nameEs: 'Hablante Fluido', description: 'Speak like a native', descriptionEs: 'Habla como un nativo', type: 'title', icon: '🗣️', cost: 5000, rarity: 'legendary' },
+    { slug: 'title-legend', name: 'Legend', nameEs: 'Leyenda', description: 'A true legend', descriptionEs: 'Una verdadera leyenda', type: 'title', icon: '⚡', cost: 7000, rarity: 'legendary' },
+    { slug: 'title-grand-master', name: 'Grand Master', nameEs: 'Gran Maestro', description: 'The ultimate achievement', descriptionEs: 'El logro definitivo', type: 'title', icon: '🌟', cost: 10000, rarity: 'legendary' },
   ];
 
   for (const r of rewards) {
@@ -780,13 +780,19 @@ async function main() {
     orderBy: { order: 'asc' },
   });
 
+  // Create scenario-level progress records (scenarioId set, NO lessonId)
+  // AND lesson-level progress records (lessonId set, NO scenarioId)
+  // These MUST be separate records to avoid unique constraint conflicts
   for (let i = 0; i < firstBasicScenarios.length; i++) {
     const s = firstBasicScenarios[i];
     const isCompleted = i < 3; // First 3 completed
+
+    // Scenario progress record
     await db.userProgress.create({
       data: {
         userId: demoUser.id,
         scenarioId: s.id,
+        // DO NOT set lessonId here
         status: isCompleted ? 'completed' : i === 3 ? 'in_progress' : 'unlocked',
         progress: isCompleted ? 100 : i === 3 ? 45 : 0,
         stars: isCompleted ? (i === 0 ? 3 : i === 1 ? 2 : 1) : 0,
@@ -794,6 +800,29 @@ async function main() {
         completedAt: isCompleted ? new Date() : null,
       },
     });
+
+    // Lesson progress records for completed/in-progress scenarios
+    if (isCompleted || i === 3) {
+      const lessonsInScenario = await db.lesson.findMany({
+        where: { scenarioId: s.id },
+        orderBy: { order: 'asc' },
+        ...(i === 3 ? { take: 1 } : {}), // Only first lesson for in-progress
+      });
+      for (const lesson of lessonsInScenario) {
+        await db.userProgress.create({
+          data: {
+            userId: demoUser.id,
+            lessonId: lesson.id,
+            // DO NOT set scenarioId here - it would conflict with scenario progress records
+            status: 'completed',
+            progress: 100,
+            stars: i === 0 ? 3 : i === 1 ? 2 : 1,
+            xpEarned: lesson.xpReward,
+            completedAt: new Date(),
+          },
+        });
+      }
+    }
   }
 
   // Create ranking entry
@@ -817,6 +846,549 @@ async function main() {
 }
 
 // Helper function to generate questions for scenarios without specific templates
+// Vocabulary data for each scenario - real English-Spanish word pairs
+const scenarioVocabulary: Record<string, Array<{ en: string; es: string }>> = {
+  // ── BASIC SCENARIOS ──
+  'family': [
+    { en: 'mother', es: 'madre' }, { en: 'father', es: 'padre' }, { en: 'brother', es: 'hermano' },
+    { en: 'sister', es: 'hermana' }, { en: 'grandmother', es: 'abuela' }, { en: 'grandfather', es: 'abuelo' },
+    { en: 'uncle', es: 'tío' }, { en: 'aunt', es: 'tía' }, { en: 'cousin', es: 'primo' },
+    { en: 'daughter', es: 'hija' }, { en: 'son', es: 'hijo' }, { en: 'husband', es: 'esposo' },
+    { en: 'wife', es: 'esposa' }, { en: 'parents', es: 'padres' }, { en: 'baby', es: 'bebé' },
+  ],
+  'food': [
+    { en: 'bread', es: 'pan' }, { en: 'rice', es: 'arroz' }, { en: 'chicken', es: 'pollo' },
+    { en: 'fish', es: 'pescado' }, { en: 'milk', es: 'leche' }, { en: 'cheese', es: 'queso' },
+    { en: 'egg', es: 'huevo' }, { en: 'apple', es: 'manzana' }, { en: 'banana', es: 'plátano' },
+    { en: 'orange', es: 'naranja' }, { en: 'potato', es: 'papa' }, { en: 'tomato', es: 'tomate' },
+    { en: 'water', es: 'agua' }, { en: 'sugar', es: 'azúcar' }, { en: 'salt', es: 'sal' },
+  ],
+  'animals': [
+    { en: 'dog', es: 'perro' }, { en: 'cat', es: 'gato' }, { en: 'bird', es: 'pájaro' },
+    { en: 'horse', es: 'caballo' }, { en: 'cow', es: 'vaca' }, { en: 'pig', es: 'cerdo' },
+    { en: 'sheep', es: 'oveja' }, { en: 'duck', es: 'pato' }, { en: 'rabbit', es: 'conejo' },
+    { en: 'mouse', es: 'ratón' }, { en: 'snake', es: 'serpiente' }, { en: 'elephant', es: 'elefante' },
+    { en: 'lion', es: 'león' }, { en: 'bear', es: 'oso' }, { en: 'whale', es: 'ballena' },
+  ],
+  'school': [
+    { en: 'teacher', es: 'profesor' }, { en: 'student', es: 'estudiante' }, { en: 'book', es: 'libro' },
+    { en: 'pencil', es: 'lápiz' }, { en: 'desk', es: 'escritorio' }, { en: 'homework', es: 'tarea' },
+    { en: 'classroom', es: 'aula' }, { en: 'exam', es: 'examen' }, { en: 'library', es: 'biblioteca' },
+    { en: 'eraser', es: 'borrador' }, { en: 'notebook', es: 'cuaderno' }, { en: 'ruler', es: 'regla' },
+    { en: 'backpack', es: 'mochila' }, { en: 'lesson', es: 'lección' }, { en: 'subject', es: 'materia' },
+  ],
+  'house': [
+    { en: 'kitchen', es: 'cocina' }, { en: 'bedroom', es: 'dormitorio' }, { en: 'bathroom', es: 'baño' },
+    { en: 'living room', es: 'sala' }, { en: 'door', es: 'puerta' }, { en: 'window', es: 'ventana' },
+    { en: 'table', es: 'mesa' }, { en: 'chair', es: 'silla' }, { en: 'bed', es: 'cama' },
+    { en: 'sofa', es: 'sofá' }, { en: 'refrigerator', es: 'refrigerador' }, { en: 'stairs', es: 'escaleras' },
+    { en: 'roof', es: 'techo' }, { en: 'garden', es: 'jardín' }, { en: 'garage', es: 'garaje' },
+  ],
+  'clothes': [
+    { en: 'shirt', es: 'camisa' }, { en: 'pants', es: 'pantalones' }, { en: 'dress', es: 'vestido' },
+    { en: 'skirt', es: 'falda' }, { en: 'jacket', es: 'chaqueta' }, { en: 'shoes', es: 'zapatos' },
+    { en: 'hat', es: 'sombrero' }, { en: 'socks', es: 'calcetines' }, { en: 'coat', es: 'abrigo' },
+    { en: 'belt', es: 'cinturón' }, { en: 'gloves', es: 'guantes' }, { en: 'boots', es: 'botas' },
+    { en: 'scarf', es: 'bufanda' }, { en: 'sweater', es: 'suéter' }, { en: 'tie', es: 'corbata' },
+  ],
+  'transportation': [
+    { en: 'car', es: 'auto' }, { en: 'bus', es: 'autobús' }, { en: 'train', es: 'tren' },
+    { en: 'airplane', es: 'avión' }, { en: 'bicycle', es: 'bicicleta' }, { en: 'boat', es: 'barco' },
+    { en: 'taxi', es: 'taxi' }, { en: 'motorcycle', es: 'motocicleta' }, { en: 'subway', es: 'metro' },
+    { en: 'truck', es: 'camión' }, { en: 'helicopter', es: 'helicóptero' }, { en: 'ship', es: 'barco' },
+    { en: 'station', es: 'estación' }, { en: 'airport', es: 'aeropuerto' }, { en: 'ticket', es: 'boleto' },
+  ],
+  'body-parts': [
+    { en: 'head', es: 'cabeza' }, { en: 'arm', es: 'brazo' }, { en: 'leg', es: 'pierna' },
+    { en: 'hand', es: 'mano' }, { en: 'foot', es: 'pie' }, { en: 'eye', es: 'ojo' },
+    { en: 'ear', es: 'oreja' }, { en: 'nose', es: 'nariz' }, { en: 'mouth', es: 'boca' },
+    { en: 'shoulder', es: 'hombro' }, { en: 'knee', es: 'rodilla' }, { en: 'finger', es: 'dedo' },
+    { en: 'heart', es: 'corazón' }, { en: 'stomach', es: 'estómago' }, { en: 'back', es: 'espalda' },
+  ],
+  'daily-routine': [
+    { en: 'wake up', es: 'despertarse' }, { en: 'shower', es: 'ducha' }, { en: 'breakfast', es: 'desayuno' },
+    { en: 'brush teeth', es: 'cepillarse los dientes' }, { en: 'commute', es: 'viaje al trabajo' },
+    { en: 'lunch', es: 'almuerzo' }, { en: 'dinner', es: 'cena' }, { en: 'sleep', es: 'dormir' },
+    { en: 'exercise', es: 'ejercicio' }, { en: 'work', es: 'trabajar' }, { en: 'study', es: 'estudiar' },
+    { en: 'cook', es: 'cocinar' }, { en: 'clean', es: 'limpiar' }, { en: 'rest', es: 'descansar' },
+    { en: 'get dressed', es: 'vestirse' },
+  ],
+  'time': [
+    { en: 'morning', es: 'mañana' }, { en: 'afternoon', es: 'tarde' }, { en: 'evening', es: 'noche' },
+    { en: 'midnight', es: 'medianoche' }, { en: 'today', es: 'hoy' }, { en: 'tomorrow', es: 'mañana' },
+    { en: 'yesterday', es: 'ayer' }, { en: 'week', es: 'semana' }, { en: 'month', es: 'mes' },
+    { en: 'year', es: 'año' }, { en: 'hour', es: 'hora' }, { en: 'minute', es: 'minuto' },
+    { en: 'second', es: 'segundo' }, { en: 'Monday', es: 'lunes' }, { en: 'clock', es: 'reloj' },
+  ],
+  'weather': [
+    { en: 'rain', es: 'lluvia' }, { en: 'sun', es: 'sol' }, { en: 'cloud', es: 'nube' },
+    { en: 'snow', es: 'nieve' }, { en: 'wind', es: 'viento' }, { en: 'storm', es: 'tormenta' },
+    { en: 'temperature', es: 'temperatura' }, { en: 'hot', es: 'caliente' }, { en: 'cold', es: 'frío' },
+    { en: 'fog', es: 'niebla' }, { en: 'thunder', es: 'trueno' }, { en: 'lightning', es: 'relámpago' },
+    { en: 'hurricane', es: 'huracán' }, { en: 'sunny', es: 'soleado' }, { en: 'cloudy', es: 'nublado' },
+  ],
+  'shopping': [
+    { en: 'price', es: 'precio' }, { en: 'discount', es: 'descuento' }, { en: 'receipt', es: 'recibo' },
+    { en: 'cash', es: 'efectivo' }, { en: 'credit card', es: 'tarjeta de crédito' }, { en: 'store', es: 'tienda' },
+    { en: 'size', es: 'talla' }, { en: 'sale', es: 'oferta' }, { en: 'customer', es: 'cliente' },
+    { en: 'bag', es: 'bolsa' }, { en: 'change', es: 'cambio' }, { en: 'expensive', es: 'caro' },
+    { en: 'cheap', es: 'barato' }, { en: 'shopping cart', es: 'carrito' }, { en: 'brand', es: 'marca' },
+  ],
+  'restaurant': [
+    { en: 'menu', es: 'menú' }, { en: 'waiter', es: 'mesero' }, { en: 'order', es: 'pedido' },
+    { en: 'bill', es: 'cuenta' }, { en: 'tip', es: 'propina' }, { en: 'appetizer', es: 'entrada' },
+    { en: 'dessert', es: 'postre' }, { en: 'beverage', es: 'bebida' }, { en: 'reservation', es: 'reservación' },
+    { en: 'plate', es: 'plato' }, { en: 'fork', es: 'tenedor' }, { en: 'knife', es: 'cuchillo' },
+    { en: 'spoon', es: 'cuchara' }, { en: 'napkin', es: 'servilleta' }, { en: 'chef', es: 'chef' },
+  ],
+  'work': [
+    { en: 'office', es: 'oficina' }, { en: 'meeting', es: 'reunión' }, { en: 'salary', es: 'salario' },
+    { en: 'boss', es: 'jefe' }, { en: 'colleague', es: 'colega' }, { en: 'deadline', es: 'fecha límite' },
+    { en: 'project', es: 'proyecto' }, { en: 'email', es: 'correo' }, { en: 'schedule', es: 'horario' },
+    { en: 'contract', es: 'contrato' }, { en: 'resume', es: 'currículum' }, { en: 'interview', es: 'entrevista' },
+    { en: 'promotion', es: 'ascenso' }, { en: 'overtime', es: 'horas extra' }, { en: 'department', es: 'departamento' },
+  ],
+  'travel': [
+    { en: 'passport', es: 'pasaporte' }, { en: 'luggage', es: 'equipaje' }, { en: 'hotel', es: 'hotel' },
+    { en: 'reservation', es: 'reservación' }, { en: 'flight', es: 'vuelo' }, { en: 'destination', es: 'destino' },
+    { en: 'map', es: 'mapa' }, { en: 'tourist', es: 'turista' }, { en: 'souvenir', es: 'recuerdo' },
+    { en: 'customs', es: 'aduanas' }, { en: 'boarding pass', es: 'pase de abordar' }, { en: 'arrival', es: 'llegada' },
+    { en: 'departure', es: 'salida' }, { en: 'suitcase', es: 'maleta' }, { en: 'vacation', es: 'vacaciones' },
+  ],
+  'directions': [
+    { en: 'left', es: 'izquierda' }, { en: 'right', es: 'derecha' }, { en: 'straight', es: 'recto' },
+    { en: 'north', es: 'norte' }, { en: 'south', es: 'sur' }, { en: 'east', es: 'este' },
+    { en: 'west', es: 'oeste' }, { en: 'corner', es: 'esquina' }, { en: 'block', es: 'cuadra' },
+    { en: 'intersection', es: 'intersección' }, { en: 'traffic light', es: 'semáforo' },
+    { en: 'crosswalk', es: 'cruce peatonal' }, { en: 'map', es: 'mapa' }, { en: 'bridge', es: 'puente' },
+    { en: 'turn', es: 'girar' },
+  ],
+  'emotions': [
+    { en: 'happy', es: 'feliz' }, { en: 'sad', es: 'triste' }, { en: 'angry', es: 'enojado' },
+    { en: 'scared', es: 'asustado' }, { en: 'surprised', es: 'sorprendido' }, { en: 'excited', es: 'emocionado' },
+    { en: 'tired', es: 'cansado' }, { en: 'bored', es: 'aburrido' }, { en: 'nervous', es: 'nervioso' },
+    { en: 'proud', es: 'orgulloso' }, { en: 'jealous', es: 'celoso' }, { en: 'grateful', es: 'agradecido' },
+    { en: 'lonely', es: 'solitario' }, { en: 'confident', es: 'seguro' }, { en: 'worried', es: 'preocupado' },
+  ],
+  'hobbies': [
+    { en: 'reading', es: 'lectura' }, { en: 'painting', es: 'pintura' }, { en: 'cooking', es: 'cocinar' },
+    { en: 'swimming', es: 'natación' }, { en: 'dancing', es: 'bailar' }, { en: 'singing', es: 'cantar' },
+    { en: 'fishing', es: 'pesca' }, { en: 'hiking', es: 'senderismo' }, { en: 'gardening', es: 'jardinería' },
+    { en: 'photography', es: 'fotografía' }, { en: 'writing', es: 'escritura' }, { en: 'drawing', es: 'dibujo' },
+    { en: 'cycling', es: 'ciclismo' }, { en: 'knitting', es: 'tejer' }, { en: 'playing guitar', es: 'tocar guitarra' },
+  ],
+  'technology': [
+    { en: 'computer', es: 'computadora' }, { en: 'phone', es: 'teléfono' }, { en: 'internet', es: 'internet' },
+    { en: 'password', es: 'contraseña' }, { en: 'software', es: 'software' }, { en: 'keyboard', es: 'teclado' },
+    { en: 'screen', es: 'pantalla' }, { en: 'download', es: 'descargar' }, { en: 'upload', es: 'subir' },
+    { en: 'website', es: 'sitio web' }, { en: 'email', es: 'correo electrónico' }, { en: 'camera', es: 'cámara' },
+    { en: 'printer', es: 'impresora' }, { en: 'battery', es: 'batería' }, { en: 'device', es: 'dispositivo' },
+  ],
+  'conversations': [
+    { en: 'hello', es: 'hola' }, { en: 'goodbye', es: 'adiós' }, { en: 'please', es: 'por favor' },
+    { en: 'thank you', es: 'gracias' }, { en: 'excuse me', es: 'disculpe' }, { en: 'how are you', es: 'cómo estás' },
+    { en: 'I agree', es: 'estoy de acuerdo' }, { en: 'maybe', es: 'quizás' }, { en: 'of course', es: 'por supuesto' },
+    { en: 'no problem', es: 'no hay problema' }, { en: 'I think so', es: 'creo que sí' },
+    { en: 'what do you mean', es: 'qué quieres decir' }, { en: 'let me think', es: 'déjame pensar' },
+    { en: 'that sounds great', es: 'suena genial' }, { en: 'see you later', es: 'nos vemos luego' },
+  ],
+  'real-life': [
+    { en: 'appointment', es: 'cita' }, { en: 'emergency', es: 'emergencia' }, { en: 'address', es: 'dirección' },
+    { en: 'neighbor', es: 'vecino' }, { en: 'bill', es: 'factura' }, { en: 'form', es: 'formulario' },
+    { en: 'signature', es: 'firma' }, { en: 'delivery', es: 'entrega' }, { en: 'repair', es: 'reparación' },
+    { en: 'insurance', es: 'seguro' }, { en: 'complaint', es: 'queja' }, { en: 'service', es: 'servicio' },
+    { en: 'application', es: 'solicitud' }, { en: 'document', es: 'documento' }, { en: 'deadline', es: 'plazo' },
+  ],
+  // ── INTERMEDIATE SCENARIOS ──
+  'small-talk': [
+    { en: 'weather', es: 'clima' }, { en: 'weekend', es: 'fin de semana' }, { en: 'hobby', es: 'pasatiempo' },
+    { en: 'vacation', es: 'vacaciones' }, { en: 'family', es: 'familia' }, { en: 'plans', es: 'planes' },
+    { en: 'job', es: 'trabajo' }, { en: 'favorite', es: 'favorito' }, { en: 'nice to meet you', es: 'gusto en conocerte' },
+    { en: 'how about you', es: 'y tú' }, { en: 'sounds good', es: 'suena bien' }, { en: 'catch up', es: 'ponerse al día' },
+    { en: 'by the way', es: 'por cierto' }, { en: 'take care', es: 'cuídate' }, { en: 'long time no see', es: 'cuánto tiempo' },
+  ],
+  'at-the-office': [
+    { en: 'meeting room', es: 'sala de reuniones' }, { en: 'deadline', es: 'fecha límite' }, { en: 'report', es: 'informe' },
+    { en: 'presentation', es: 'presentación' }, { en: 'colleague', es: 'colega' }, { en: 'schedule', es: 'horario' },
+    { en: 'assignment', es: 'asignación' }, { en: 'feedback', es: 'retroalimentación' }, { en: 'conference call', es: 'llamada de conferencia' },
+    { en: 'printer', es: 'impresora' }, { en: 'spreadsheet', es: 'hoja de cálculo' }, { en: 'memo', es: 'memorándum' },
+    { en: 'break room', es: 'sala de descanso' }, { en: 'coworker', es: 'compañero de trabajo' }, { en: 'task', es: 'tarea' },
+  ],
+  'phone-calls': [
+    { en: 'dial', es: 'marcar' }, { en: 'hang up', es: 'colgar' }, { en: 'voicemail', es: 'buzón de voz' },
+    { en: 'ring', es: 'timbrar' }, { en: 'caller', es: 'llamante' }, { en: 'hold on', es: 'espera' },
+    { en: 'call back', es: 'devolver la llamada' }, { en: 'busy', es: 'ocupado' }, { en: 'receptionist', es: 'recepcionista' },
+    { en: 'extension', es: 'extensión' }, { en: 'message', es: 'mensaje' }, { en: 'conference call', es: 'conferencia' },
+    { en: 'missed call', es: 'llamada perdida' }, { en: 'connection', es: 'conexión' }, { en: 'leave a message', es: 'dejar un mensaje' },
+  ],
+  'making-plans': [
+    { en: 'schedule', es: 'programar' }, { en: 'available', es: 'disponible' }, { en: 'cancel', es: 'cancelar' },
+    { en: 'postpone', es: 'posponer' }, { en: 'confirm', es: 'confirmar' }, { en: 'invite', es: 'invitar' },
+    { en: 'arrange', es: 'organizar' }, { en: 'appointment', es: 'cita' }, { en: 'get together', es: 'reunirse' },
+    { en: 'pick up', es: 'recoger' }, { en: 'drop by', es: 'pasar por' }, { en: 'meet up', es: 'encontrarse' },
+    { en: 'free time', es: 'tiempo libre' }, { en: 'what time', es: 'a qué hora' }, { en: 'let me check', es: 'déjame verificar' },
+  ],
+  'shopping-mall': [
+    { en: 'escalator', es: 'escalera mecánica' }, { en: 'fitting room', es: 'probador' }, { en: 'checkout', es: 'caja' },
+    { en: 'aisle', es: 'pasillo' }, { en: 'display', es: 'escaparate' }, { en: 'return', es: 'devolución' },
+    { en: 'exchange', es: 'cambio' }, { en: 'warranty', es: 'garantía' }, { en: 'promotion', es: 'promoción' },
+    { en: 'floor', es: 'piso' }, { en: 'elevator', es: 'ascensor' }, { en: 'parking lot', es: 'estacionamiento' },
+    { en: 'food court', es: 'patio de comidas' }, { en: 'cash register', es: 'caja registradora' }, { en: 'try on', es: 'probarse' },
+  ],
+  'hotel-checkin': [
+    { en: 'check-in', es: 'registro' }, { en: 'check-out', es: 'salida' }, { en: 'room key', es: 'llave de habitación' },
+    { en: 'reservation', es: 'reservación' }, { en: 'lobby', es: 'vestíbulo' }, { en: 'suite', es: 'suite' },
+    { en: 'room service', es: 'servicio al cuarto' }, { en: 'bellboy', es: 'botones' }, { en: 'receptionist', es: 'recepcionista' },
+    { en: 'amenities', es: 'servicios' }, { en: 'concierge', es: 'conserje' }, { en: 'floor', es: 'piso' },
+    { en: 'deposit', es: 'depósito' }, { en: 'booking', es: 'reserva' }, { en: 'occupancy', es: 'ocupación' },
+  ],
+  'doctor-visit': [
+    { en: 'appointment', es: 'cita' }, { en: 'symptoms', es: 'síntomas' }, { en: 'prescription', es: 'receta' },
+    { en: 'medicine', es: 'medicina' }, { en: 'pain', es: 'dolor' }, { en: 'fever', es: 'fiebre' },
+    { en: 'headache', es: 'dolor de cabeza' }, { en: 'allergy', es: 'alergia' }, { en: 'pharmacy', es: 'farmacia' },
+    { en: 'insurance', es: 'seguro médico' }, { en: 'diagnosis', es: 'diagnóstico' }, { en: 'treatment', es: 'tratamiento' },
+    { en: 'blood pressure', es: 'presión arterial' }, { en: 'waiting room', es: 'sala de espera' }, { en: 'check-up', es: 'chequeo' },
+  ],
+  'bank-money': [
+    { en: 'account', es: 'cuenta' }, { en: 'deposit', es: 'depósito' }, { en: 'withdrawal', es: 'retiro' },
+    { en: 'balance', es: 'saldo' }, { en: 'interest', es: 'interés' }, { en: 'loan', es: 'préstamo' },
+    { en: 'transfer', es: 'transferencia' }, { en: 'ATM', es: 'cajero automático' }, { en: 'savings', es: 'ahorros' },
+    { en: 'check', es: 'cheque' }, { en: 'teller', es: 'cajero' }, { en: 'currency', es: 'moneda' },
+    { en: 'exchange rate', es: 'tipo de cambio' }, { en: 'mortgage', es: 'hipoteca' }, { en: 'investment', es: 'inversión' },
+  ],
+  'public-transport': [
+    { en: 'bus stop', es: 'parada de autobús' }, { en: 'schedule', es: 'horario' }, { en: 'fare', es: 'tarifa' },
+    { en: 'transfer', es: 'trasbordo' }, { en: 'route', es: 'ruta' }, { en: 'passenger', es: 'pasajero' },
+    { en: 'platform', es: 'andén' }, { en: 'delay', es: 'retraso' }, { en: 'commuter', es: 'viajante' },
+    { en: 'ticket machine', es: 'máquina de boletos' }, { en: 'seat', es: 'asiento' }, { en: 'crowded', es: 'lleno' },
+    { en: 'monthly pass', es: 'pase mensual' }, { en: 'departure', es: 'salida' }, { en: 'terminal', es: 'terminal' },
+  ],
+  'job-interview': [
+    { en: 'resume', es: 'currículum' }, { en: 'experience', es: 'experiencia' }, { en: 'qualification', es: 'cualificación' },
+    { en: 'strength', es: 'fortaleza' }, { en: 'weakness', es: 'debilidad' }, { en: 'salary expectation', es: 'expectativa salarial' },
+    { en: 'position', es: 'puesto' }, { en: 'candidate', es: 'candidato' }, { en: 'reference', es: 'referencia' },
+    { en: 'hiring', es: 'contratación' }, { en: 'skills', es: 'habilidades' }, { en: 'cover letter', es: 'carta de presentación' },
+    { en: 'background', es: 'antecedentes' }, { en: 'teamwork', es: 'trabajo en equipo' }, { en: 'notice period', es: 'preaviso' },
+  ],
+  'weather-chat': [
+    { en: 'forecast', es: 'pronóstico' }, { en: 'breeze', es: 'brisa' }, { en: 'humidity', es: 'humedad' },
+    { en: 'drizzle', es: 'llovizna' }, { en: 'downpour', es: 'aguacero' }, { en: 'chilly', es: 'fresco' },
+    { en: 'warm', es: 'cálido' }, { en: 'muggy', es: 'bochornoso' }, { en: 'clear sky', es: 'cielo despejado' },
+    { en: 'overcast', es: 'nublado' }, { en: 'season', es: 'estación' }, { en: 'drought', es: 'sequía' },
+    { en: 'flood', es: 'inundación' }, { en: 'climate', es: 'clima' }, { en: 'degrees', es: 'grados' },
+  ],
+  'cooking-recipes': [
+    { en: 'recipe', es: 'receta' }, { en: 'ingredient', es: 'ingrediente' }, { en: 'stir', es: 'revolver' },
+    { en: 'bake', es: 'hornear' }, { en: 'boil', es: 'hervir' }, { en: 'fry', es: 'freír' },
+    { en: 'chop', es: 'picar' }, { en: 'mix', es: 'mezclar' }, { en: 'season', es: 'sazonar' },
+    { en: 'peel', es: 'pelar' }, { en: 'pour', es: 'verter' }, { en: 'oven', es: 'horno' },
+    { en: 'pan', es: 'sartén' }, { en: 'tablespoon', es: 'cucharada' }, { en: 'teaspoon', es: 'cucharadita' },
+  ],
+  'sports-fitness': [
+    { en: 'exercise', es: 'ejercicio' }, { en: 'stretch', es: 'estiramiento' }, { en: 'workout', es: 'entrenamiento' },
+    { en: 'coach', es: 'entrenador' }, { en: 'team', es: 'equipo' }, { en: 'score', es: 'puntuación' },
+    { en: 'goal', es: 'gol' }, { en: 'muscle', es: 'músculo' }, { en: 'endurance', es: 'resistencia' },
+    { en: 'warm up', es: 'calentamiento' }, { en: 'cool down', es: 'enfriamiento' }, { en: 'reps', es: 'repeticiones' },
+    { en: 'cardio', es: 'cardio' }, { en: 'weightlifting', es: 'levantamiento de pesas' }, { en: 'yoga', es: 'yoga' },
+  ],
+  'music-movies': [
+    { en: 'song', es: 'canción' }, { en: 'movie', es: 'película' }, { en: 'actor', es: 'actor' },
+    { en: 'director', es: 'director' }, { en: 'album', es: 'álbum' }, { en: 'concert', es: 'concierto' },
+    { en: 'genre', es: 'género' }, { en: 'soundtrack', es: 'banda sonora' }, { en: 'plot', es: 'trama' },
+    { en: 'scene', es: 'escena' }, { en: 'review', es: 'reseña' }, { en: 'lyrics', es: 'letra' },
+    { en: 'melody', es: 'melodía' }, { en: 'box office', es: 'taquilla' }, { en: 'screening', es: 'función' },
+  ],
+  'news-media': [
+    { en: 'headline', es: 'titular' }, { en: 'article', es: 'artículo' }, { en: 'journalist', es: 'periodista' },
+    { en: 'broadcast', es: 'transmisión' }, { en: 'editorial', es: 'editorial' }, { en: 'report', es: 'reporte' },
+    { en: 'interview', es: 'entrevista' }, { en: 'breaking news', es: 'última hora' }, { en: 'source', es: 'fuente' },
+    { en: 'coverage', es: 'cobertura' }, { en: 'anchor', es: 'presentador' }, { en: 'column', es: 'columna' },
+    { en: 'press', es: 'prensa' }, { en: 'edition', es: 'edición' }, { en: 'subscriber', es: 'suscriptor' },
+  ],
+  'family-life': [
+    { en: 'childhood', es: 'infancia' }, { en: 'babysitter', es: 'niñera' }, { en: 'chores', es: 'quehaceres' },
+    { en: 'bedtime', es: 'hora de dormir' }, { en: 'siblings', es: 'hermanos' }, { en: 'tradition', es: 'tradición' },
+    { en: 'pregnancy', es: 'embarazo' }, { en: 'newborn', es: 'recién nacido' }, { en: 'adoption', es: 'adopción' },
+    { en: 'generation', es: 'generación' }, { en: 'reunion', es: 'reunión familiar' }, { en: 'anniversary', es: 'aniversario' },
+    { en: 'divorce', es: 'divorcio' }, { en: 'household', es: 'hogar' }, { en: 'upbringing', es: 'educación' },
+  ],
+  'pet-care': [
+    { en: 'veterinarian', es: 'veterinario' }, { en: 'leash', es: 'correa' }, { en: 'kibble', es: 'alimento' },
+    { en: 'litter box', es: 'arenero' }, { en: 'vaccination', es: 'vacunación' }, { en: 'grooming', es: 'aseo' },
+    { en: 'breed', es: 'raza' }, { en: 'shelter', es: 'refugio' }, { en: 'adoption', es: 'adopción' },
+    { en: 'training', es: 'entrenamiento' }, { en: 'treat', es: 'premio' }, { en: 'crate', es: 'jaula' },
+    { en: 'flea', es: 'pulga' }, { en: 'collar', es: 'collar' }, { en: 'spay', es: 'esterilizar' },
+  ],
+  'home-repairs': [
+    { en: 'plumber', es: 'plomero' }, { en: 'leak', es: 'fuga' }, { en: 'wrench', es: 'llave inglesa' },
+    { en: 'hammer', es: 'martillo' }, { en: 'nail', es: 'clavo' }, { en: 'screwdriver', es: 'destornillador' },
+    { en: 'paint', es: 'pintura' }, { en: 'pipe', es: 'tubería' }, { en: 'wire', es: 'cable' },
+    { en: 'drill', es: 'taladro' }, { en: 'faucet', es: 'grifo' }, { en: 'patch', es: 'parche' },
+    { en: 'toolbox', es: 'caja de herramientas' }, { en: 'maintenance', es: 'mantenimiento' }, { en: 'repair', es: 'reparación' },
+  ],
+  'gardening': [
+    { en: 'seed', es: 'semilla' }, { en: 'soil', es: 'tierra' }, { en: 'watering can', es: 'regadera' },
+    { en: 'pruning', es: 'poda' }, { en: 'fertilizer', es: 'fertilizante' }, { en: 'weed', es: 'maleza' },
+    { en: 'harvest', es: 'cosecha' }, { en: 'bloom', es: 'floración' }, { en: 'greenhouse', es: 'invernadero' },
+    { en: 'pot', es: 'maceta' }, { en: 'sprout', es: 'brote' }, { en: 'mulch', es: 'mantillo' },
+    { en: 'compost', es: 'composta' }, { en: 'shovel', es: 'pala' }, { en: 'lawn', es: 'césped' },
+  ],
+  'car-problems': [
+    { en: 'engine', es: 'motor' }, { en: 'tire', es: 'neumático' }, { en: 'brake', es: 'freno' },
+    { en: 'battery', es: 'batería' }, { en: 'oil change', es: 'cambio de aceite' }, { en: 'mechanic', es: 'mecánico' },
+    { en: 'flat tire', es: 'llanta ponchada' }, { en: 'overheat', es: 'sobrecalentarse' }, { en: 'tow truck', es: 'grúa' },
+    { en: 'steering', es: 'dirección' }, { en: 'exhaust', es: 'escape' }, { en: 'wiper', es: 'limpiaparabrisas' },
+    { en: 'headlight', es: 'faros' }, { en: 'inspection', es: 'inspección' }, { en: 'dashboard', es: 'tablero' },
+  ],
+  'neighborhood': [
+    { en: 'neighbor', es: 'vecino' }, { en: 'sidewalk', es: 'acera' }, { en: 'park', es: 'parque' },
+    { en: 'street', es: 'calle' }, { en: 'community', es: 'comunidad' }, { en: 'block party', es: 'fiesta del barrio' },
+    { en: 'local', es: 'local' }, { en: 'suburb', es: 'suburbio' }, { en: 'playground', es: 'parque infantil' },
+    { en: 'convenience store', es: 'tienda de conveniencia' }, { en: 'crosswalk', es: 'cruce' },
+    { en: 'mailbox', es: 'buzón' }, { en: 'trash', es: 'basura' }, { en: 'fence', es: 'cerca' },
+    { en: 'association', es: 'asociación' },
+  ],
+  'celebrations': [
+    { en: 'birthday', es: 'cumpleaños' }, { en: 'wedding', es: 'boda' }, { en: 'anniversary', es: 'aniversario' },
+    { en: 'graduation', es: 'graduación' }, { en: 'fireworks', es: 'fuegos artificiales' }, { en: 'gift', es: 'regalo' },
+    { en: 'toast', es: 'brindis' }, { en: 'ceremony', es: 'ceremonia' }, { en: 'decoration', es: 'decoración' },
+    { en: 'invitation', es: 'invitación' }, { en: 'celebration', es: 'celebración' }, { en: 'cake', es: 'pastel' },
+    { en: 'champagne', es: 'champán' }, { en: 'balloon', es: 'globo' }, { en: 'congratulations', es: 'felicidades' },
+  ],
+  'social-media': [
+    { en: 'post', es: 'publicación' }, { en: 'follow', es: 'seguir' }, { en: 'like', es: 'me gusta' },
+    { en: 'share', es: 'compartir' }, { en: 'comment', es: 'comentario' }, { en: 'notification', es: 'notificación' },
+    { en: 'profile', es: 'perfil' }, { en: 'timeline', es: 'línea de tiempo' }, { en: 'feed', es: 'feed' },
+    { en: 'hashtag', es: 'hashtag' }, { en: 'trending', es: 'tendencia' }, { en: 'viral', es: 'viral' },
+    { en: 'influencer', es: 'influencer' }, { en: 'privacy', es: 'privacidad' }, { en: 'direct message', es: 'mensaje directo' },
+  ],
+  'volunteer-work': [
+    { en: 'charity', es: 'caridad' }, { en: 'donation', es: 'donación' }, { en: 'community service', es: 'servicio comunitario' },
+    { en: 'shelter', es: 'refugio' }, { en: 'fundraiser', es: 'colecta de fondos' }, { en: 'outreach', es: 'alcance' },
+    { en: 'nonprofit', es: 'sin fines de lucro' }, { en: 'contribute', es: 'contribuir' }, { en: 'mentor', es: 'mentor' },
+    { en: 'initiative', es: 'iniciativa' }, { en: 'cause', es: 'causa' }, { en: 'impact', es: 'impacto' },
+    { en: 'dedication', es: 'dedicación' }, { en: 'solidarity', es: 'solidaridad' }, { en: 'awareness', es: 'conciencia' },
+  ],
+  'cultural-events': [
+    { en: 'festival', es: 'festival' }, { en: 'exhibition', es: 'exhibición' }, { en: 'performance', es: 'actuación' },
+    { en: 'tradition', es: 'tradición' }, { en: 'heritage', es: 'patrimonio' }, { en: 'parade', es: 'desfile' },
+    { en: 'gallery', es: 'galería' }, { en: 'concert', es: 'concierto' }, { en: 'museum', es: 'museo' },
+    { en: 'sculpture', es: 'escultura' }, { en: 'folklore', es: 'folclore' }, { en: 'audience', es: 'audiencia' },
+    { en: 'curator', es: 'curador' }, { en: 'masterpiece', es: 'obra maestra' }, { en: 'celebrate', es: 'celebrar' },
+  ],
+  // ── ADVANCED SCENARIOS ──
+  'business-negotiations': [
+    { en: 'leverage', es: 'apalancamiento' }, { en: 'compromise', es: 'compromiso' }, { en: 'counteroffer', es: 'contraoferta' },
+    { en: 'stakeholder', es: 'interesado' }, { en: 'terms', es: 'términos' }, { en: 'proposal', es: 'propuesta' },
+    { en: 'concession', es: 'concesión' }, { en: 'agreement', es: 'acuerdo' }, { en: 'dealbreaker', es: 'inaceptable' },
+    { en: 'bottom line', es: 'línea base' }, { en: 'bargain', es: 'regatear' }, { en: 'deadline', es: 'plazo' },
+    { en: 'clause', es: 'cláusula' }, { en: 'revenue', es: 'ingresos' }, { en: 'margin', es: 'margen' },
+  ],
+  'academic-writing': [
+    { en: 'thesis', es: 'tesis' }, { en: 'hypothesis', es: 'hipótesis' }, { en: 'methodology', es: 'metodología' },
+    { en: 'citation', es: 'cita' }, { en: 'abstract', es: 'resumen' }, { en: 'peer review', es: 'revisión por pares' },
+    { en: 'journal', es: 'revista académica' }, { en: 'findings', es: 'hallazgos' }, { en: 'literature review', es: 'revisión bibliográfica' },
+    { en: 'plagiarism', es: 'plagio' }, { en: 'dissertation', es: 'disertación' }, { en: 'appendix', es: 'apéndice' },
+    { en: 'bibliography', es: 'bibliografía' }, { en: 'conclusion', es: 'conclusión' }, { en: 'framework', es: 'marco' },
+  ],
+  'legal-english': [
+    { en: 'attorney', es: 'abogado' }, { en: 'lawsuit', es: 'demanda' }, { en: 'verdict', es: 'veredicto' },
+    { en: 'contract', es: 'contrato' }, { en: 'liability', es: 'responsabilidad' }, { en: 'statute', es: 'estatuto' },
+    { en: 'plaintiff', es: 'demandante' }, { en: 'defendant', es: 'demandado' }, { en: 'jurisdiction', es: 'jurisdicción' },
+    { en: 'evidence', es: 'evidencia' }, { en: 'testimony', es: 'testimonio' }, { en: 'appeal', es: 'apelación' },
+    { en: 'legislation', es: 'legislación' }, { en: 'compliance', es: 'cumplimiento' }, { en: 'provision', es: 'disposición' },
+  ],
+  'medical-english': [
+    { en: 'diagnosis', es: 'diagnóstico' }, { en: 'prognosis', es: 'pronóstico' }, { en: 'symptom', es: 'síntoma' },
+    { en: 'therapy', es: 'terapia' }, { en: 'surgery', es: 'cirugía' }, { en: 'prescription', es: 'receta' },
+    { en: 'chronic', es: 'crónico' }, { en: 'acute', es: 'agudo' }, { en: 'pathology', es: 'patología' },
+    { en: 'anesthesia', es: 'anestesia' }, { en: 'rehabilitation', es: 'rehabilitación' }, { en: 'prophylaxis', es: 'profilaxis' },
+    { en: 'side effect', es: 'efecto secundario' }, { en: 'outpatient', es: 'paciente ambulatorio' }, { en: 'ward', es: 'pabellón' },
+  ],
+  'engineering-talk': [
+    { en: 'blueprint', es: 'plano' }, { en: 'specification', es: 'especificación' }, { en: 'prototype', es: 'prototipo' },
+    { en: 'tolerance', es: 'tolerancia' }, { en: 'load', es: 'carga' }, { en: 'efficiency', es: 'eficiencia' },
+    { en: 'calibration', es: 'calibración' }, { en: 'structural', es: 'estructural' }, { en: 'infrastructure', es: 'infraestructura' },
+    { en: 'simulation', es: 'simulación' }, { en: 'algorithm', es: 'algoritmo' }, { en: 'parameter', es: 'parámetro' },
+    { en: 'optimization', es: 'optimización' }, { en: 'failure rate', es: 'tasa de fallos' }, { en: 'workflow', es: 'flujo de trabajo' },
+  ],
+  'financial-reports': [
+    { en: 'revenue', es: 'ingresos' }, { en: 'expense', es: 'gasto' }, { en: 'profit margin', es: 'margen de beneficio' },
+    { en: 'quarterly', es: 'trimestral' }, { en: 'balance sheet', es: 'balance general' }, { en: 'cash flow', es: 'flujo de caja' },
+    { en: 'dividend', es: 'dividendo' }, { en: 'equity', es: 'patrimonio' }, { en: 'depreciation', es: 'depreciación' },
+    { en: 'audit', es: 'auditoría' }, { en: 'forecast', es: 'pronóstico' }, { en: 'liability', es: 'pasivo' },
+    { en: 'asset', es: 'activo' }, { en: 'fiscal year', es: 'año fiscal' }, { en: 'overhead', es: 'gastos generales' },
+  ],
+  'marketing-strategy': [
+    { en: 'target audience', es: 'público objetivo' }, { en: 'brand awareness', es: 'conocimiento de marca' },
+    { en: 'campaign', es: 'campaña' }, { en: 'conversion', es: 'conversión' }, { en: 'engagement', es: 'interacción' },
+    { en: 'demographic', es: 'demográfico' }, { en: 'ROI', es: 'retorno de inversión' }, { en: 'segmentation', es: 'segmentación' },
+    { en: 'positioning', es: 'posicionamiento' }, { en: 'competitor', es: 'competidor' }, { en: 'value proposition', es: 'propuesta de valor' },
+    { en: 'funnel', es: 'embudo' }, { en: 'launch', es: 'lanzamiento' }, { en: 'retention', es: 'retención' },
+    { en: 'outreach', es: 'alcance' },
+  ],
+  'environmental-science': [
+    { en: 'ecosystem', es: 'ecosistema' }, { en: 'biodiversity', es: 'biodiversidad' }, { en: 'sustainability', es: 'sostenibilidad' },
+    { en: 'emission', es: 'emisión' }, { en: 'carbon footprint', es: 'huella de carbono' }, { en: 'conservation', es: 'conservación' },
+    { en: 'renewable', es: 'renovable' }, { en: 'pollution', es: 'contaminación' }, { en: 'habitat', es: 'hábitat' },
+    { en: 'deforestation', es: 'deforestación' }, { en: 'greenhouse effect', es: 'efecto invernadero' },
+    { en: 'endangered', es: 'en peligro' }, { en: 'erosion', es: 'erosión' }, { en: 'ozone layer', es: 'capa de ozono' },
+    { en: 'waste management', es: 'gestión de residuos' },
+  ],
+  'political-debate': [
+    { en: 'policy', es: 'política' }, { en: 'legislation', es: 'legislación' }, { en: 'democracy', es: 'democracia' },
+    { en: 'constituency', es: 'circunscripción' }, { en: 'referendum', es: 'referéndum' }, { en: 'partisan', es: 'partidista' },
+    { en: 'amendment', es: 'enmienda' }, { en: 'diplomacy', es: 'diplomacia' }, { en: 'sanction', es: 'sanción' },
+    { en: 'sovereignty', es: 'soberanía' }, { en: 'bipartisan', es: 'bipartidista' }, { en: 'rhetoric', es: 'retórica' },
+    { en: 'platform', es: 'plataforma' }, { en: 'mandate', es: 'mandato' }, { en: 'veto', es: 'veto' },
+  ],
+  'philosophical-discussion': [
+    { en: 'ethics', es: 'ética' }, { en: 'metaphysics', es: 'metafísica' }, { en: 'epistemology', es: 'epistemología' },
+    { en: 'morality', es: 'moralidad' }, { en: 'consciousness', es: 'conciencia' }, { en: 'rationality', es: 'racionalidad' },
+    { en: 'existentialism', es: 'existencialismo' }, { en: 'pragmatism', es: 'pragmatismo' },
+    { en: 'determinism', es: 'determinismo' }, { en: 'free will', es: 'libre albedrío' },
+    { en: 'utilitarianism', es: 'utilitarismo' }, { en: 'dialectic', es: 'dialéctica' },
+    { en: 'ontology', es: 'ontología' }, { en: 'skepticism', es: 'escepticismo' }, { en: 'virtue', es: 'virtud' },
+  ],
+  'tech-startup': [
+    { en: 'pitch deck', es: 'presentación de proyecto' }, { en: 'seed funding', es: 'financiamiento inicial' },
+    { en: 'MVP', es: 'producto mínimo viable' }, { en: 'pivot', es: 'pivotar' }, { en: 'scalable', es: 'escalable' },
+    { en: 'disruption', es: 'disrupción' }, { en: 'venture capital', es: 'capital de riesgo' },
+    { en: 'iteration', es: 'iteración' }, { en: 'burn rate', es: 'tasa de quema' }, { en: 'traction', es: 'tracción' },
+    { en: 'acquisition', es: 'adquisición' }, { en: 'equity', es: 'participación' }, { en: 'runway', es: 'runway' },
+    { en: 'incubator', es: 'incubadora' }, { en: 'prototype', es: 'prototipo' },
+  ],
+  'research-methods': [
+    { en: 'qualitative', es: 'cualitativo' }, { en: 'quantitative', es: 'cuantitativo' }, { en: 'variable', es: 'variable' },
+    { en: 'sample', es: 'muestra' }, { en: 'correlation', es: 'correlación' }, { en: 'hypothesis', es: 'hipótesis' },
+    { en: 'experiment', es: 'experimento' }, { en: 'validity', es: 'validez' }, { en: 'reliability', es: 'fiabilidad' },
+    { en: 'bias', es: 'sesgo' }, { en: 'control group', es: 'grupo de control' }, { en: 'statistical', es: 'estadístico' },
+    { en: 'survey', es: 'encuesta' }, { en: 'longitudinal', es: 'longitudinal' }, { en: 'peer review', es: 'revisión por pares' },
+  ],
+  'public-speaking': [
+    { en: 'audience', es: 'audiencia' }, { en: 'gesture', es: 'gesto' }, { en: 'persuade', es: 'persuadir' },
+    { en: 'rhetoric', es: 'retórica' }, { en: 'stage fright', es: 'miedo escénico' }, { en: 'keynote', es: 'discurso principal' },
+    { en: 'anecdote', es: 'anécdota' }, { en: 'delivery', es: 'entrega' }, { en: 'modulation', es: 'modulación' },
+    { en: 'engagement', es: 'participación' }, { en: 'body language', es: 'lenguaje corporal' },
+    { en: 'cue cards', es: 'tarjetas de apoyo' }, { en: 'eloquence', es: 'elocuencia' },
+    { en: 'forum', es: 'foro' }, { en: 'impromptu', es: 'improvisado' },
+  ],
+  'creative-writing': [
+    { en: 'narrative', es: 'narrativa' }, { en: 'character', es: 'personaje' }, { en: 'plot twist', es: 'giro argumental' },
+    { en: 'metaphor', es: 'metáfora' }, { en: 'dialogue', es: 'diálogo' }, { en: 'setting', es: 'escenario' },
+    { en: 'foreshadowing', es: 'presagio' }, { en: 'protagonist', es: 'protagonista' }, { en: 'climax', es: 'clímax' },
+    { en: 'imagery', es: 'imágenes' }, { en: 'pacing', es: 'ritmo' }, { en: 'tone', es: 'tono' },
+    { en: 'point of view', es: 'punto de vista' }, { en: 'suspense', es: 'suspenso' }, { en: 'draft', es: 'borrador' },
+  ],
+  'journalism': [
+    { en: 'headline', es: 'titular' }, { en: 'editorial', es: 'editorial' }, { en: 'byline', es: 'firma' },
+    { en: 'lead', es: 'entrada' }, { en: 'source', es: 'fuente' }, { en: 'fact-checking', es: 'verificación' },
+    { en: 'beat', es: 'área' }, { en: 'deadline', es: 'fecha límite' }, { en: 'circulation', es: 'circulación' },
+    { en: 'freelance', es: 'freelance' }, { en: 'press release', es: 'comunicado de prensa' }, { en: 'off the record', es: 'off the record' },
+    { en: 'op-ed', es: 'opinión' }, { en: 'syndicate', es: 'sindicato' }, { en: 'correspondent', es: 'corresponsal' },
+  ],
+  'international-relations': [
+    { en: 'diplomacy', es: 'diplomacia' }, { en: 'treaty', es: 'tratado' }, { en: 'sanction', es: 'sanción' },
+    { en: 'alliance', es: 'alianza' }, { en: 'ambassador', es: 'embajador' }, { en: 'sovereignty', es: 'soberanía' },
+    { en: 'bilateral', es: 'bilateral' }, { en: 'multilateral', es: 'multilateral' }, { en: 'embargo', es: 'embargo' },
+    { en: 'consulate', es: 'consulado' }, { en: 'protocol', es: 'protocolo' }, { en: 'negotiation', es: 'negociación' },
+    { en: 'refugee', es: 'refugiado' }, { en: 'asylum', es: 'asilo' }, { en: 'summit', es: 'cumbre' },
+  ],
+  'project-management': [
+    { en: 'milestone', es: 'hito' }, { en: 'deliverable', es: 'entregable' }, { en: 'stakeholder', es: 'interesado' },
+    { en: 'scope', es: 'alcance' }, { en: 'Gantt chart', es: 'diagrama de Gantt' }, { en: 'agile', es: 'ágil' },
+    { en: 'sprint', es: 'sprint' }, { en: 'resource', es: 'recurso' }, { en: 'risk assessment', es: 'evaluación de riesgos' },
+    { en: 'baseline', es: 'línea base' }, { en: 'kickoff', es: 'inicio' }, { en: 'status report', es: 'informe de estado' },
+    { en: 'bottleneck', es: 'cuello de botella' }, { en: 'timeline', es: 'cronograma' }, { en: 'budget', es: 'presupuesto' },
+  ],
+  'crisis-management': [
+    { en: 'contingency', es: 'contingencia' }, { en: 'evacuation', es: 'evacuación' }, { en: 'protocol', es: 'protocolo' },
+    { en: 'escalation', es: 'escalada' }, { en: 'mitigation', es: 'mitigación' }, { en: 'response', es: 'respuesta' },
+    { en: 'recovery', es: 'recuperación' }, { en: 'damage control', es: 'control de daños' }, { en: 'emergency', es: 'emergencia' },
+    { en: 'assessment', es: 'evaluación' }, { en: 'coordination', es: 'coordinación' }, { en: 'deployment', es: 'despliegue' },
+    { en: 'drill', es: 'simulacro' }, { en: 'aftermath', es: 'consecuencias' }, { en: 'resilience', es: 'resiliencia' },
+  ],
+  'art-critique': [
+    { en: 'composition', es: 'composición' }, { en: 'technique', es: 'técnica' }, { en: 'aesthetic', es: 'estética' },
+    { en: 'interpretation', es: 'interpretación' }, { en: 'medium', es: 'medio' }, { en: 'contrast', es: 'contraste' },
+    { en: 'perspective', es: 'perspectiva' }, { en: 'texture', es: 'textura' }, { en: 'abstract', es: 'abstracto' },
+    { en: 'figurative', es: 'figurativo' }, { en: 'palette', es: 'paleta' }, { en: 'symbolism', es: 'simbolismo' },
+    { en: 'avant-garde', es: 'vanguardia' }, { en: 'provocative', es: 'provocador' }, { en: 'craftsmanship', es: 'artesanía' },
+  ],
+  'scientific-presentation': [
+    { en: 'methodology', es: 'metodología' }, { en: 'finding', es: 'hallazgo' }, { en: 'data', es: 'datos' },
+    { en: 'analysis', es: 'análisis' }, { en: 'conclusion', es: 'conclusión' }, { en: 'implication', es: 'implicación' },
+    { en: 'limitation', es: 'limitación' }, { en: 'hypothesis', es: 'hipótesis' }, { en: 'significance', es: 'significancia' },
+    { en: 'correlation', es: 'correlación' }, { en: 'peer review', es: 'revisión por pares' }, { en: 'publication', es: 'publicación' },
+    { en: 'graph', es: 'gráfico' }, { en: 'statistical significance', es: 'significancia estadística' }, { en: 'reproducibility', es: 'reproducibilidad' },
+  ],
+  'investment-banking': [
+    { en: 'merger', es: 'fusión' }, { en: 'acquisition', es: 'adquisición' }, { en: 'IPO', es: 'oferta pública' },
+    { en: 'underwriting', es: 'suscripción' }, { en: 'portfolio', es: 'portafolio' }, { en: 'hedge fund', es: 'fondo de cobertura' },
+    { en: 'leverage', es: 'apalancamiento' }, { en: 'valuation', es: 'valoración' }, { en: 'bond', es: 'bono' },
+    { en: 'equity', es: 'capital' }, { en: 'dividend', es: 'dividendo' }, { en: 'yield', es: 'rendimiento' },
+    { en: 'liquidity', es: 'liquidez' }, { en: 'derivative', es: 'derivado' }, { en: 'arbitrage', es: 'arbitraje' },
+  ],
+  'diplomatic-english': [
+    { en: 'ambassador', es: 'embajador' }, { en: 'consulate', es: 'consulado' }, { en: 'protocol', es: 'protocolo' },
+    { en: 'detente', es: 'distensión' }, { en: 'bilateral', es: 'bilateral' }, { en: 'communique', es: 'comunicado' },
+    { en: 'convention', es: 'convención' }, { en: 'ratification', es: 'ratificación' }, { en: 'demarche', es: 'demarche' },
+    { en: 'accredited', es: 'acreditado' }, { en: 'legation', es: 'legación' }, { en: 'credentials', es: 'credenciales' },
+    { en: 'persona non grata', es: 'persona non grata' }, { en: 'modus vivendi', es: 'modus vivendi' }, { en: 'precedent', es: 'precedente' },
+  ],
+  'advanced-idioms': [
+    { en: 'bite the bullet', es: 'hacer de tripas corazón' }, { en: 'break the ice', es: 'romper el hielo' },
+    { en: 'burn bridges', es: 'quemar naves' }, { en: 'hit the nail on the head', es: 'dar en el clavo' },
+    { en: 'piece of cake', es: 'pan comido' }, { en: 'spill the beans', es: 'revelar el secreto' },
+    { en: 'under the weather', es: 'indispuesto' }, { en: 'once in a blue moon', es: 'una vez cada nunca' },
+    { en: 'the ball is in your court', es: 'la pelota está en tu tejado' }, { en: 'cost an arm and a leg', es: 'costar un ojo de la cara' },
+    { en: 'cut corners', es: 'ahorrar esfuerzo' }, { en: 'go the extra mile', es: 'esforzarse más' },
+    { en: 'let the cat out of the bag', es: 'descubrir el pastel' }, { en: 'on thin ice', es: 'en terreno peligroso' },
+    { en: 'throw in the towel', es: 'tirar la toalla' },
+  ],
+  'phrasal-verbs-master': [
+    { en: 'look forward to', es: 'esperar con ansias' }, { en: 'put up with', es: 'tolerar' },
+    { en: 'come across', es: 'encontrarse con' }, { en: 'turn down', es: 'rechazar' }, { en: 'carry out', es: 'llevar a cabo' },
+    { en: 'give up', es: 'rendirse' }, { en: 'take over', es: 'hacerse cargo' }, { en: 'bring up', es: 'mencionar' },
+    { en: 'figure out', es: 'resolver' }, { en: 'run into', es: 'encontrarse' }, { en: 'set up', es: 'establecer' },
+    { en: 'call off', es: 'cancelar' }, { en: 'point out', es: 'señalar' }, { en: 'work out', es: 'resolver' },
+    { en: 'make up', es: 'inventar' },
+  ],
+  'slang-colloquial': [
+    { en: 'hang out', es: 'pasar el rato' }, { en: 'bummer', es: 'decepción' }, { en: 'dough', es: 'dinero' },
+    { en: 'rip-off', es: 'estafa' }, { en: 'chill', es: 'relajarse' }, { en: 'awesome', es: 'increíble' },
+    { en: 'no-brainer', es: 'algo obvio' }, { en: 'beat', es: 'exhausto' }, { en: 'bucks', es: 'dólares' },
+    { en: 'couch potato', es: 'holgazán' }, { en: 'freak out', es: 'asustarse' }, { en: 'laid-back', es: 'relajado' },
+    { en: 'my bad', es: 'mi error' }, { en: 'pitch in', es: 'colaborar' }, { en: 'zonked', es: 'agotado' },
+  ],
+};
+
+// Helper to shuffle an array
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Helper to round to nearest 50
+function roundTo50(n: number): number {
+  return Math.round(n / 50) * 50;
+}
+
+// Helper to pick N random items from array
+function pickRandom<T>(arr: T[], n: number): T[] {
+  return shuffle(arr).slice(0, n);
+}
+
+// Helper to get wrong answers from vocabulary (different from correct)
+function getWrongOptions(vocab: Array<{ en: string; es: string }>, correctEn: string, count: number): string[] {
+  const others = vocab.filter(v => v.en !== correctEn);
+  return pickRandom(others, count).map(v => v.en);
+}
+
 function generateQuestionsForScenario(
   scenario: { id: string; slug: string; name: string; nameEs: string; level: { slug: string } },
   lessonType: string,
@@ -824,380 +1396,99 @@ function generateQuestionsForScenario(
   isIntermediate: boolean
 ) {
   const questions: Array<{
-    type: string;
-    prompt: string;
-    promptEs: string;
-    hintEn: string;
-    hintEs: string;
-    audioText: string;
-    options: string;
-    correctAnswer: string;
-    explanation: string;
-    explanationEs: string;
-    points: number;
+    type: string; prompt: string; promptEs: string; hintEn: string; hintEs: string;
+    audioText: string; options: string; correctAnswer: string; explanation: string; explanationEs: string; points: number;
   }> = [];
 
   const topic = scenario.name;
   const topicEs = scenario.nameEs;
+  let vocab = scenarioVocabulary[scenario.slug] || [];
 
-  if (lessonType === 'vocabulary') {
-    // Vocabulary questions (8+ diverse types)
-    questions.push({
-      type: 'multiple_choice',
-      prompt: `Which word is related to "${topic}"?`,
-      promptEs: `¿Qué palabra está relacionada con "${topicEs}"?`,
-      hintEn: `Think about things you find in ${topic.toLowerCase()} contexts`,
-      hintEs: `Piensa en cosas que encuentras en contextos de ${topicEs.toLowerCase()}`,
-      audioText: `Which word is related to ${topic}?`,
-      options: '["Related word","Unrelated word","Random word","Wrong word"]',
-      correctAnswer: 'Related word',
-      explanation: `This word is commonly used when talking about ${topic.toLowerCase()}`,
-      explanationEs: `Esta palabra se usa comúnmente cuando se habla de ${topicEs.toLowerCase()}`,
-      points: 10,
-    });
-    questions.push({
-      type: 'flashcard',
-      prompt: `Learn: ${topic} vocabulary`,
-      promptEs: `Aprende: vocabulario de ${topicEs}`,
-      hintEn: 'Read and remember this word',
-      hintEs: 'Lee y recuerda esta palabra',
-      audioText: topic,
-      options: '[]',
-      correctAnswer: topic.toLowerCase(),
-      explanation: `This is an important word related to ${topic.toLowerCase()}`,
-      explanationEs: `Esta es una palabra importante relacionada con ${topicEs.toLowerCase()}`,
-      points: 5,
-    });
-    questions.push({
-      type: 'fill_blank',
-      prompt: `I need to learn about ___ (${topic.toLowerCase()})`,
-      promptEs: `Necesito aprender sobre ___ (${topicEs.toLowerCase()})`,
-      hintEn: `The topic is ${topic}`,
-      hintEs: `El tema es ${topicEs}`,
-      audioText: `I need to learn about ${topic.toLowerCase()}`,
-      options: '[]',
-      correctAnswer: topic.toLowerCase(),
-      explanation: `${topic} is the topic of this lesson`,
-      explanationEs: `${topicEs} es el tema de esta lección`,
-      points: 10,
-    });
-    questions.push({
-      type: 'translate',
-      prompt: `Translate to English: ${topicEs.toLowerCase()}`,
-      promptEs: `Traduce al inglés: ${topicEs.toLowerCase()}`,
-      hintEn: 'Think about the English equivalent',
-      hintEs: 'Piensa en el equivalente en inglés',
-      audioText: `Translate to English: ${topicEs.toLowerCase()}`,
-      options: '[]',
-      correctAnswer: topic.toLowerCase(),
-      explanation: `${topicEs} = ${topic}`,
-      explanationEs: `${topicEs} = ${topic}`,
-      points: 10,
-    });
-    questions.push({
-      type: 'listen_write',
-      prompt: `Listen and write the word you hear about ${topic.toLowerCase()}`,
-      promptEs: `Escucha y escribe la palabra que oyes sobre ${topicEs.toLowerCase()}`,
-      hintEn: 'Listen carefully to the pronunciation',
-      hintEs: 'Escucha cuidadosamente la pronunciación',
-      audioText: topic.toLowerCase(),
-      options: '[]',
-      correctAnswer: topic.toLowerCase(),
-      explanation: `The word is "${topic.toLowerCase()}"`,
-      explanationEs: `La palabra es "${topic.toLowerCase()}"`,
-      points: 15,
-    });
-    questions.push({
-      type: 'pronunciation',
-      prompt: `Practice saying: "${topic}"`,
-      promptEs: `Practica decir: "${topicEs}"`,
-      hintEn: 'Focus on clear pronunciation',
-      hintEs: 'Enfócate en una pronunciación clara',
-      audioText: topic,
-      options: '[]',
-      correctAnswer: topic.toLowerCase(),
-      explanation: `Practice saying "${topic}" clearly`,
-      explanationEs: `Practica decir "${topicEs}" claramente`,
-      points: 10,
-    });
-    questions.push({
-      type: 'match_concepts',
-      prompt: `Match the ${topic.toLowerCase()} terms with their English names`,
-      promptEs: `Relaciona los términos de ${topicEs.toLowerCase()} con sus nombres en inglés`,
-      hintEn: `Connect each term with its correct English translation`,
-      hintEs: `Conecta cada término con su traducción correcta al inglés`,
-      audioText: `Match the ${topic.toLowerCase()} terms`,
-      options: `["${topicEs}-${topic}","lección-lesson","palabra-word"]`,
-      correctAnswer: `${topic.toLowerCase()} lesson word`,
-      explanation: `These are key vocabulary words for the ${topic.toLowerCase()} topic`,
-      explanationEs: `Estas son palabras clave del vocabulario para el tema de ${topicEs.toLowerCase()}`,
-      points: 15,
-    });
-    questions.push({
-      type: 'order_words',
-      prompt: `Put these ${topic.toLowerCase()} words in the correct order: learn, I, about, want, to`,
-      promptEs: `Pon estas palabras de ${topicEs.toLowerCase()} en el orden correcto: learn, I, about, want, to`,
-      hintEn: 'Start with the subject, then the verb',
-      hintEs: 'Empieza con el sujeto, luego el verbo',
-      audioText: `I want to learn about ${topic.toLowerCase()}`,
-      options: '["learn","I","about","want","to"]',
-      correctAnswer: 'I want to learn about',
-      explanation: `The correct sentence is "I want to learn about ${topic.toLowerCase()}"`,
-      explanationEs: `La oración correcta es "I want to learn about ${topic.toLowerCase()}"`,
-      points: 15,
-    });
-  } else if (lessonType === 'grammar') {
-    // Grammar questions (8+ diverse types)
-    questions.push({
-      type: 'build_sentence',
-      prompt: `Build a sentence about ${topic.toLowerCase()}`,
-      promptEs: `Construye una oración sobre ${topicEs.toLowerCase()}`,
-      hintEn: 'Put the words in the correct order',
-      hintEs: 'Pon las palabras en el orden correcto',
-      audioText: `Build a sentence about ${topic.toLowerCase()}`,
-      options: '["I","like","learning","about"]',
-      correctAnswer: 'I like learning about',
-      explanation: `The correct sentence structure is: I like learning about ${topic.toLowerCase()}`,
-      explanationEs: `La estructura correcta es: I like learning about ${topic.toLowerCase()}`,
-      points: 15,
-    });
-    questions.push({
-      type: 'find_error',
-      prompt: isBasic
-        ? `She go to ${topic.toLowerCase()} every day`
-        : `She have went to ${topic.toLowerCase()} yesterday`,
-      promptEs: isBasic
-        ? `Ella va a ${topicEs.toLowerCase()} todos los días (encuentra el error)`
-        : `Ella ha ido a ${topicEs.toLowerCase()} ayer (encuentra el error)`,
-      hintEn: isBasic ? 'Check the verb form for third person' : 'Check the tense consistency',
-      hintEs: isBasic ? 'Revisa la forma del verbo para tercera persona' : 'Revisa la consistencia del tiempo',
-      audioText: isBasic ? 'She goes to the topic every day' : 'She went to the topic yesterday',
-      options: '[]',
-      correctAnswer: isBasic
-        ? `She goes to ${topic.toLowerCase()} every day`
-        : `She went to ${topic.toLowerCase()} yesterday`,
-      explanation: isBasic ? 'Third person singular uses "goes" not "go"' : 'Past simple uses "went" not "have went"',
-      explanationEs: isBasic ? 'Tercera persona singular usa "goes" no "go"' : 'Pasado simple usa "went" no "have went"',
-      points: 15,
-    });
-    questions.push({
-      type: 'multiple_choice',
-      prompt: `Which sentence about ${topic.toLowerCase()} is correct?`,
-      promptEs: `¿Qué oración sobre ${topicEs.toLowerCase()} es correcta?`,
-      hintEn: 'Check grammar carefully',
-      hintEs: 'Revisa la gramática con cuidado',
-      audioText: `Which sentence about ${topic.toLowerCase()} is correct?`,
-      options: '["Correct sentence","Wrong sentence 1","Wrong sentence 2","Wrong sentence 3"]',
-      correctAnswer: 'Correct sentence',
-      explanation: `This is the grammatically correct sentence`,
-      explanationEs: `Esta es la oración gramaticalmente correcta`,
-      points: 10,
-    });
-    questions.push({
-      type: 'fill_blank',
-      prompt: isBasic
-        ? `I ___ learning about ${topic.toLowerCase()}`
-        : `I have ___ about ${topic.toLowerCase()} recently`,
-      promptEs: isBasic
-        ? `Yo ___ aprendiendo sobre ${topicEs.toLowerCase()}`
-        : `Yo he ___ sobre ${topicEs.toLowerCase()} recientemente`,
-      hintEn: isBasic ? 'Use "am" for first person present continuous' : 'Use the past participle form',
-      hintEs: isBasic ? 'Usa "am" para primera persona del presente continuo' : 'Usa la forma del participio pasado',
-      audioText: isBasic ? `I am learning about ${topic.toLowerCase()}` : `I have learned about ${topic.toLowerCase()} recently`,
-      options: '[]',
-      correctAnswer: isBasic ? 'am' : 'learned',
-      explanation: isBasic ? 'Use "am" with "learning" for present continuous' : 'Use "learned" as past participle with "have"',
-      explanationEs: isBasic ? 'Usa "am" con "learning" para el presente continuo' : 'Usa "learned" como participio pasado con "have"',
-      points: 10,
-    });
-    questions.push({
-      type: 'translate',
-      prompt: isBasic
-        ? `Translate: Yo quiero aprender sobre ${topicEs.toLowerCase()}`
-        : `Translate: Ella ha estudiado sobre ${topicEs.toLowerCase()}`,
-      promptEs: isBasic
-        ? `Traduce: Yo quiero aprender sobre ${topicEs.toLowerCase()}`
-        : `Traduce: Ella ha estudiado sobre ${topicEs.toLowerCase()}`,
-      hintEn: 'Think about the correct grammar structure in English',
-      hintEs: 'Piensa en la estructura gramatical correcta en inglés',
-      audioText: isBasic ? `I want to learn about ${topic.toLowerCase()}` : `She has studied about ${topic.toLowerCase()}`,
-      options: '[]',
-      correctAnswer: isBasic ? `I want to learn about ${topic.toLowerCase()}` : `She has studied about ${topic.toLowerCase()}`,
-      explanation: `The correct translation uses proper English grammar`,
-      explanationEs: `La traducción correcta usa la gramática apropiada del inglés`,
-      points: 15,
-    });
-    questions.push({
-      type: 'order_words',
-      prompt: `Put these words in order: about / learning / I / enjoy / ${topic.toLowerCase()}`,
-      promptEs: `Pon estas palabras en orden: about / learning / I / enjoy / ${topicEs.toLowerCase()}`,
-      hintEn: 'Start with the subject, then verb, then object',
-      hintEs: 'Empieza con el sujeto, luego el verbo, luego el objeto',
-      audioText: `I enjoy learning about ${topic.toLowerCase()}`,
-      options: `["about","learning","I","enjoy","${topic.toLowerCase()}"]`,
-      correctAnswer: `I enjoy learning about ${topic.toLowerCase()}`,
-      explanation: `The correct sentence is "I enjoy learning about ${topic.toLowerCase()}"`,
-      explanationEs: `La oración correcta es "I enjoy learning about ${topicEs.toLowerCase()}"`,
-      points: 15,
-    });
-    questions.push({
-      type: 'listen_write',
-      prompt: `Listen and write the sentence about ${topic.toLowerCase()}`,
-      promptEs: `Escucha y escribe la oración sobre ${topicEs.toLowerCase()}`,
-      hintEn: 'Pay attention to grammar and word order',
-      hintEs: 'Presta atención a la gramática y el orden de las palabras',
-      audioText: `I enjoy learning about ${topic.toLowerCase()}`,
-      options: '[]',
-      correctAnswer: `I enjoy learning about ${topic.toLowerCase()}`,
-      explanation: `The correct transcription is: I enjoy learning about ${topic.toLowerCase()}`,
-      explanationEs: `La transcripción correcta es: I enjoy learning about ${topicEs.toLowerCase()}`,
-      points: 20,
-    });
-    questions.push({
-      type: 'pronunciation',
-      prompt: `Practice saying: I enjoy learning about ${topic.toLowerCase()}`,
-      promptEs: `Practica diciendo: I enjoy learning about ${topicEs.toLowerCase()}`,
-      hintEn: 'Focus on clear pronunciation and natural rhythm',
-      hintEs: 'Enfócate en pronunciación clara y ritmo natural',
-      audioText: `I enjoy learning about ${topic.toLowerCase()}`,
-      options: '[]',
-      correctAnswer: `I enjoy learning about ${topic.toLowerCase()}`,
-      explanation: `Practice this sentence about ${topic.toLowerCase()} with clear pronunciation`,
-      explanationEs: `Practica esta oración sobre ${topicEs.toLowerCase()} con pronunciación clara`,
-      points: 10,
-    });
-  } else {
-    // Conversation/Challenge (8+ diverse types)
-    questions.push({
-      type: 'multiple_choice',
-      prompt: `In a ${topic.toLowerCase()} situation, what would you say?`,
-      promptEs: `En una situación de ${topicEs.toLowerCase()}, ¿qué dirías?`,
-      hintEn: 'Think about the appropriate response',
-      hintEs: 'Piensa en la respuesta apropiada',
-      audioText: `In a ${topic.toLowerCase()} situation, what would you say?`,
-      options: '["Appropriate response","Wrong response 1","Wrong response 2","Wrong response 3"]',
-      correctAnswer: 'Appropriate response',
-      explanation: `This is the most appropriate response in a ${topic.toLowerCase()} context`,
-      explanationEs: `Esta es la respuesta más apropiada en un contexto de ${topicEs.toLowerCase()}`,
-      points: 10,
-    });
-    questions.push({
-      type: 'listen_write',
-      prompt: `Listen and write what you hear about ${topic.toLowerCase()}`,
-      promptEs: `Escucha y escribe lo que oyes sobre ${topicEs.toLowerCase()}`,
-      hintEn: 'Listen carefully to the pronunciation',
-      hintEs: 'Escucha cuidadosamente la pronunciación',
-      audioText: `I enjoy learning about ${topic.toLowerCase()}`,
-      options: '[]',
-      correctAnswer: `I enjoy learning about ${topic.toLowerCase()}`,
-      explanation: `The correct transcription is: I enjoy learning about ${topic.toLowerCase()}`,
-      explanationEs: `La transcripción correcta es: I enjoy learning about ${topicEs.toLowerCase()}`,
-      points: 20,
-    });
-    questions.push({
-      type: 'translate',
-      prompt: isBasic
-        ? `Translate to English: ${topicEs.toLowerCase()}`
-        : `Translate: I want to learn more about ${topicEs.toLowerCase()}`,
-      promptEs: isBasic
-        ? `Traduce al inglés: ${topicEs.toLowerCase()}`
-        : `Traduce: I want to learn more about ${topicEs.toLowerCase()}`,
-      hintEn: 'Think about the English equivalent',
-      hintEs: 'Piensa en el equivalente en inglés',
-      audioText: isBasic ? topic.toLowerCase() : `I want to learn more about ${topic.toLowerCase()}`,
-      options: '[]',
-      correctAnswer: isBasic ? topic.toLowerCase() : `I want to learn more about ${topic.toLowerCase()}`,
-      explanation: `The correct translation involves the vocabulary for ${topic.toLowerCase()}`,
-      explanationEs: `La traducción correcta involucra el vocabulario de ${topicEs.toLowerCase()}`,
-      points: 15,
-    });
-    questions.push({
-      type: 'pronunciation',
-      prompt: `Practice saying: "${topic}"`,
-      promptEs: `Practica decir: "${topicEs}"`,
-      hintEn: 'Focus on clear pronunciation',
-      hintEs: 'Enfócate en una pronunciación clara',
-      audioText: topic,
-      options: '[]',
-      correctAnswer: topic.toLowerCase(),
-      explanation: `Practice saying "${topic}" clearly`,
-      explanationEs: `Practica decir "${topicEs}" claramente`,
-      points: 10,
-    });
-    questions.push({
-      type: 'build_sentence',
-      prompt: `Build a conversation starter about ${topic.toLowerCase()}: I / want / to / talk / about`,
-      promptEs: `Construye un inicio de conversación sobre ${topicEs.toLowerCase()}: I / want / to / talk / about`,
-      hintEn: 'Subject + verb + infinitive phrase',
-      hintEs: 'Sujeto + verbo + frase infinitiva',
-      audioText: `I want to talk about ${topic.toLowerCase()}`,
-      options: '["I","want","to","talk","about"]',
-      correctAnswer: 'I want to talk about',
-      explanation: `The correct sentence is "I want to talk about ${topic.toLowerCase()}"`,
-      explanationEs: `La oración correcta es "I want to talk about ${topicEs.toLowerCase()}"`,
-      points: 15,
-    });
-    questions.push({
-      type: 'find_error',
-      prompt: isBasic
-        ? `Find the mistake: I is learning about ${topic.toLowerCase()}`
-        : `Find the mistake: She don't like talking about ${topic.toLowerCase()}`,
-      promptEs: isBasic
-        ? `Encuentra el error: I is learning about ${topicEs.toLowerCase()}`
-        : `Encuentra el error: She don't like talking about ${topicEs.toLowerCase()}`,
-      hintEn: isBasic ? 'Check the verb "to be" for "I"' : "Third person singular needs doesn't",
-      hintEs: isBasic ? 'Revisa el verbo "to be" para "I"' : "Tercera persona singular necesita doesn't",
-      audioText: isBasic ? `I am learning about ${topic.toLowerCase()}` : `She doesn't like talking about ${topic.toLowerCase()}`,
-      options: '[]',
-      correctAnswer: isBasic
-        ? `I am learning about ${topic.toLowerCase()}`
-        : `She doesn't like talking about ${topic.toLowerCase()}`,
-      explanation: isBasic ? 'Use "am" with "I", not "is"' : "Use doesn't for third person negative, not don't",
-      explanationEs: isBasic ? 'Usa "am" con "I", no "is"' : "Usa doesn't para negación en tercera persona, no don't",
-      points: 15,
-    });
-    questions.push({
-      type: 'order_words',
-      prompt: `Put these words in order to ask about ${topic.toLowerCase()}: about / you / do / know / ${topic.toLowerCase()}`,
-      promptEs: `Pon estas palabras en orden para preguntar sobre ${topicEs.toLowerCase()}: about / you / do / know / ${topicEs.toLowerCase()}`,
-      hintEn: 'This is a question - start with the auxiliary verb',
-      hintEs: 'Esta es una pregunta - empieza con el verbo auxiliar',
-      audioText: `Do you know about ${topic.toLowerCase()}?`,
-      options: `["about","you","do","know","${topic.toLowerCase()}"]`,
-      correctAnswer: `do you know about ${topic.toLowerCase()}`,
-      explanation: `The correct question is "Do you know about ${topic.toLowerCase()}?"`,
-      explanationEs: `La pregunta correcta es "Do you know about ${topicEs.toLowerCase()}?"`,
-      points: 15,
-    });
-    questions.push({
-      type: 'flashcard',
-      prompt: `${topic} - key conversation phrase`,
-      promptEs: `${topicEs} - frase clave de conversación`,
-      hintEn: 'Remember this useful phrase for conversations',
-      hintEs: 'Recuerda esta frase útil para conversaciones',
-      audioText: topic,
-      options: '[]',
-      correctAnswer: topic.toLowerCase(),
-      explanation: `This is a key phrase when discussing ${topic.toLowerCase()}`,
-      explanationEs: `Esta es una frase clave al discutir ${topicEs.toLowerCase()}`,
-      points: 5,
-    });
-    questions.push({
-      type: 'match_concepts',
-      prompt: `Match the ${topic.toLowerCase()} conversation phrases with their meanings`,
-      promptEs: `Relaciona las frases de conversación de ${topicEs.toLowerCase()} con sus significados`,
-      hintEn: 'Connect each phrase with its correct meaning',
-      hintEs: 'Conecta cada frase con su significado correcto',
-      audioText: `Match the ${topic.toLowerCase()} phrases`,
-      options: `["tell me-cuéntame","I think-creo","let's talk-hablemos"]`,
-      correctAnswer: "tell me I think let's talk",
-      explanation: `These are useful conversation phrases related to ${topic.toLowerCase()}`,
-      explanationEs: `Estas son frases de conversación útiles relacionadas con ${topicEs.toLowerCase()}`,
-      points: 15,
-    });
+  if (vocab.length === 0) {
+    vocab = [
+      { en: topic.toLowerCase(), es: topicEs.toLowerCase() },
+      { en: 'lesson', es: 'lección' }, { en: 'word', es: 'palabra' },
+      { en: 'learn', es: 'aprender' }, { en: 'practice', es: 'practicar' },
+      { en: 'study', es: 'estudiar' }, { en: 'sentence', es: 'oración' },
+      { en: 'example', es: 'ejemplo' }, { en: 'question', es: 'pregunta' },
+      { en: 'answer', es: 'respuesta' }, { en: 'correct', es: 'correcto' },
+      { en: 'translate', es: 'traducir' }, { en: 'listen', es: 'escuchar' },
+      { en: 'speak', es: 'hablar' }, { en: 'read', es: 'leer' },
+    ];
   }
 
-    return questions;
+  const selectedWords = pickRandom(vocab, Math.min(12, vocab.length));
+  const w0 = selectedWords[0] || vocab[0];
+  const w1 = selectedWords[1] || vocab[1];
+  const w2 = selectedWords[2] || vocab[2];
+  const w3 = selectedWords[3] || vocab[3];
+  const w4 = selectedWords[4] || vocab[4];
+  const w5 = selectedWords[5] || vocab[5];
+  const w6 = selectedWords[6] || vocab[6];
+  const w7 = selectedWords[7] || vocab[7];
+
+  if (lessonType === 'vocabulary') {
+    const wrong1 = getWrongOptions(vocab, w0.en, 3);
+    questions.push({ type: 'multiple_choice', prompt: `What does "${w0.es}" mean in English?`, promptEs: `¿Qué significa "${w0.es}" en inglés?`, hintEn: `Think about the ${topic.toLowerCase()} vocabulary`, hintEs: `Piensa en el vocabulario de ${topicEs.toLowerCase()}`, audioText: `What does ${w0.es} mean in English?`, options: JSON.stringify([w0.en, ...wrong1]), correctAnswer: w0.en, explanation: `"${w0.es}" means "${w0.en}" in English`, explanationEs: `"${w0.es}" significa "${w0.en}" en inglés`, points: 10 });
+    questions.push({ type: 'flashcard', prompt: `${w1.en} - ${w1.es}`, promptEs: `${w1.es} - ${w1.en}`, hintEn: `Remember: "${w1.en}" is "${w1.es}" in Spanish`, hintEs: `Recuerda: "${w1.es}" es "${w1.en}" en inglés`, audioText: w1.en, options: '[]', correctAnswer: w1.en, explanation: `"${w1.en}" = "${w1.es}". This is an important ${topic.toLowerCase()} word.`, explanationEs: `"${w1.en}" = "${w1.es}". Esta es una palabra importante de ${topicEs.toLowerCase()}.`, points: 5 });
+    questions.push({ type: 'fill_blank', prompt: `The English word for "${w2.es}" is ___`, promptEs: `La palabra en inglés para "${w2.es}" es ___`, hintEn: `It starts with "${w2.en.charAt(0)}"`, hintEs: `Empieza con "${w2.en.charAt(0)}"`, audioText: `The English word for ${w2.es} is`, options: '[]', correctAnswer: w2.en, explanation: `"${w2.es}" = "${w2.en}"`, explanationEs: `"${w2.es}" = "${w2.en}"`, points: 10 });
+    questions.push({ type: 'translate', prompt: `Translate to English: ${w3.es}`, promptEs: `Traduce al inglés: ${w3.es}`, hintEn: `This is a ${topic.toLowerCase()} word`, hintEs: `Esta es una palabra de ${topicEs.toLowerCase()}`, audioText: `Translate to English: ${w3.es}`, options: '[]', correctAnswer: w3.en, explanation: `${w3.es} = ${w3.en}`, explanationEs: `${w3.es} = ${w3.en}`, points: 10 });
+    questions.push({ type: 'listen_write', prompt: `Listen and write the ${topic.toLowerCase()} word you hear`, promptEs: `Escucha y escribe la palabra de ${topicEs.toLowerCase()} que oyes`, hintEn: `This word means "${w4.es}" in Spanish`, hintEs: `Esta palabra significa "${w4.es}" en español`, audioText: w4.en, options: '[]', correctAnswer: w4.en, explanation: `The word is "${w4.en}" (${w4.es})`, explanationEs: `La palabra es "${w4.en}" (${w4.es})`, points: 15 });
+    const pronWords = [w0.en, w1.en, w2.en].join(' ');
+    questions.push({ type: 'pronunciation', prompt: `Practice saying these ${topic.toLowerCase()} words: ${pronWords}`, promptEs: `Practica diciendo estas palabras de ${topicEs.toLowerCase()}: ${pronWords}`, hintEn: 'Say each word clearly and slowly', hintEs: 'Di cada palabra clara y lentamente', audioText: pronWords, options: '[]', correctAnswer: pronWords, explanation: `These are important ${topic.toLowerCase()} words: ${pronWords}`, explanationEs: `Estas son palabras importantes de ${topicEs.toLowerCase()}: ${pronWords}`, points: 10 });
+    const matchWords = pickRandom(vocab, 3);
+    questions.push({ type: 'match_concepts', prompt: `Match the Spanish words with their English translations`, promptEs: `Relaciona las palabras en español con sus traducciones al inglés`, hintEn: matchWords.map(w => `${w.es}=${w.en}`).join(', '), hintEs: matchWords.map(w => `${w.es}=${w.en}`).join(', '), audioText: `Match the ${topic.toLowerCase()} words`, options: JSON.stringify(matchWords.map(w => `${w.es}-${w.en}`)), correctAnswer: matchWords.map(w => w.en).join(' '), explanation: matchWords.map(w => `${w.es} = ${w.en}`).join(', '), explanationEs: matchWords.map(w => `${w.es} = ${w.en}`).join(', '), points: 15 });
+    questions.push({ type: 'order_words', prompt: `Put these words in the correct order: need, ${w5.en}, I`, promptEs: `Pon estas palabras en el orden correcto: need, ${w5.en}, I`, hintEn: 'Start with the subject', hintEs: 'Empieza con el sujeto', audioText: `I need ${w5.en}`, options: JSON.stringify(shuffle(['I', 'need', w5.en])), correctAnswer: `I need ${w5.en}`, explanation: `The correct sentence is "I need ${w5.en}"`, explanationEs: `La oración correcta es "I need ${w5.en}"`, points: 15 });
+    questions.push({ type: 'build_sentence', prompt: `Build: She / likes / ${w6.en}`, promptEs: `Construye: She / likes / ${w6.en}`, hintEn: 'Subject + verb + object', hintEs: 'Sujeto + verbo + objeto', audioText: `She likes ${w6.en}`, options: JSON.stringify(shuffle(['She', 'likes', w6.en])), correctAnswer: `She likes ${w6.en}`, explanation: `The correct sentence is "She likes ${w6.en}"`, explanationEs: `La oración correcta es "She likes ${w6.en}"`, points: 15 });
+    questions.push({ type: 'find_error', prompt: isBasic ? `Find the mistake: She like ${w7.en}` : `Find the mistake: She have ${w7.en} yesterday`, promptEs: isBasic ? `Encuentra el error: She like ${w7.en}` : `Encuentra el error: She have ${w7.en} yesterday`, hintEn: isBasic ? 'Check the verb form for third person' : 'Check the past tense form', hintEs: isBasic ? 'Revisa la forma del verbo para tercera persona' : 'Revisa la forma del pasado', audioText: isBasic ? `She likes ${w7.en}` : `She had ${w7.en} yesterday`, options: '[]', correctAnswer: isBasic ? `She likes ${w7.en}` : `She had ${w7.en} yesterday`, explanation: isBasic ? 'Third person singular uses "likes" not "like"' : 'Past tense uses "had" not "have"', explanationEs: isBasic ? 'Tercera persona singular usa "likes" no "like"' : 'Pasado usa "had" no "have"', points: 15 });
+    const wrong2 = getWrongOptions(vocab, w3.en, 3);
+    questions.push({ type: 'multiple_choice', prompt: `Which word means "${w3.es}"?`, promptEs: `¿Qué palabra significa "${w3.es}"?`, hintEn: `Think about the ${topic.toLowerCase()} vocabulary`, hintEs: `Piensa en el vocabulario de ${topicEs.toLowerCase()}`, audioText: `Which word means ${w3.es}?`, options: JSON.stringify([w3.en, ...wrong2]), correctAnswer: w3.en, explanation: `"${w3.es}" = "${w3.en}"`, explanationEs: `"${w3.es}" = "${w3.en}"`, points: 10 });
+    questions.push({ type: 'flashcard', prompt: `${w5.en} - ${w5.es}`, promptEs: `${w5.es} - ${w5.en}`, hintEn: `Remember this ${topic.toLowerCase()} word`, hintEs: `Recuerda esta palabra de ${topicEs.toLowerCase()}`, audioText: w5.en, options: '[]', correctAnswer: w5.en, explanation: `"${w5.en}" = "${w5.es}"`, explanationEs: `"${w5.en}" = "${w5.es}"`, points: 5 });
+    questions.push({ type: 'fill_blank', prompt: `We call "${w0.es}" ___ in English`, promptEs: `Llamamos "${w0.es}" ___ en inglés`, hintEn: `It is a common ${topic.toLowerCase()} word`, hintEs: `Es una palabra común de ${topicEs.toLowerCase()}`, audioText: `We call ${w0.es} ${w0.en} in English`, options: '[]', correctAnswer: w0.en, explanation: `"${w0.es}" is called "${w0.en}" in English`, explanationEs: `"${w0.es}" se dice "${w0.en}" en inglés`, points: 10 });
+
+  } else if (lessonType === 'grammar') {
+    const gWords = pickRandom(vocab, 3);
+    const s1Words = ['I', 'am', 'learning', 'about', gWords[0].en];
+    questions.push({ type: 'build_sentence', prompt: `Build: I / am / learning / about / ${gWords[0].en}`, promptEs: `Construye: I / am / learning / about / ${gWords[0].en}`, hintEn: 'Present continuous: subject + am/is/are + verb-ing', hintEs: 'Presente continuo: sujeto + am/is/are + verbo-ing', audioText: `I am learning about ${gWords[0].en}`, options: JSON.stringify(shuffle(s1Words)), correctAnswer: `I am learning about ${gWords[0].en}`, explanation: `The correct sentence is "I am learning about ${gWords[0].en}"`, explanationEs: `La oración correcta es "I am learning about ${gWords[0].en}"`, points: 15 });
+    questions.push({ type: 'find_error', prompt: isBasic ? `Find the mistake: She go to the ${gWords[1].en} every day` : `Find the mistake: She have went to the ${gWords[1].en} yesterday`, promptEs: isBasic ? `Encuentra el error: She go to the ${gWords[1].en} every day` : `Encuentra el error: She have went to the ${gWords[1].en} yesterday`, hintEn: isBasic ? 'Check the verb form for third person singular' : 'Check the tense consistency', hintEs: isBasic ? 'Revisa la forma del verbo para tercera persona' : 'Revisa la consistencia del tiempo', audioText: isBasic ? `She goes to the ${gWords[1].en} every day` : `She went to the ${gWords[1].en} yesterday`, options: '[]', correctAnswer: isBasic ? `She goes to the ${gWords[1].en} every day` : `She went to the ${gWords[1].en} yesterday`, explanation: isBasic ? 'Third person singular uses "goes" not "go"' : 'Past simple uses "went" not "have went"', explanationEs: isBasic ? 'Tercera persona singular usa "goes" no "go"' : 'Pasado simple usa "went" no "have went"', points: 15 });
+    questions.push({ type: 'multiple_choice', prompt: `Which sentence about ${gWords[2].en} is correct?`, promptEs: `¿Qué oración sobre ${gWords[2].en} es correcta?`, hintEn: 'Check grammar carefully', hintEs: 'Revisa la gramática con cuidado', audioText: `Which sentence about ${gWords[2].en} is correct?`, options: JSON.stringify([`I need a ${gWords[2].en}`, `I need an ${gWords[2].en}`, `I needs a ${gWords[2].en}`, `I needing a ${gWords[2].en}`]), correctAnswer: `I need a ${gWords[2].en}`, explanation: `"I need a ${gWords[2].en}" uses the correct grammar: subject + verb + article + noun`, explanationEs: `"I need a ${gWords[2].en}" usa la gramática correcta: sujeto + verbo + artículo + sustantivo`, points: 10 });
+    questions.push({ type: 'fill_blank', prompt: isBasic ? `There ___ many ${gWords[0].en} here` : `The ${gWords[0].en} has been ___ recently`, promptEs: isBasic ? `Hay ___ muchos ${gWords[0].es} aquí` : `El/la ${gWords[0].es} ha sido ___ recientemente`, hintEn: isBasic ? 'Use "are" for plural nouns' : 'Use the past participle form', hintEs: isBasic ? 'Usa "are" para sustantivos plurales' : 'Usa la forma del participio pasado', audioText: isBasic ? `There are many ${gWords[0].en} here` : `The ${gWords[0].en} has been improved recently`, options: '[]', correctAnswer: isBasic ? 'are' : 'improved', explanation: isBasic ? 'Use "are" with plural nouns' : 'Use "improved" as past participle with "has been"', explanationEs: isBasic ? 'Usa "are" con sustantivos plurales' : 'Usa "improved" como participio pasado con "has been"', points: 10 });
+    questions.push({ type: 'translate', prompt: isBasic ? `Translate: Yo necesito ${gWords[1].es}` : `Translate: Ella ha estudiado sobre ${gWords[1].es}`, promptEs: isBasic ? `Traduce: Yo necesito ${gWords[1].es}` : `Traduce: Ella ha estudiado sobre ${gWords[1].es}`, hintEn: 'Think about the correct grammar structure in English', hintEs: 'Piensa en la estructura gramatical correcta en inglés', audioText: isBasic ? `I need ${gWords[1].en}` : `She has studied about ${gWords[1].en}`, options: '[]', correctAnswer: isBasic ? `I need ${gWords[1].en}` : `She has studied about ${gWords[1].en}`, explanation: 'The correct translation uses proper English grammar', explanationEs: 'La traducción correcta usa la gramática apropiada del inglés', points: 15 });
+    const s2Words = ['We', 'enjoy', gWords[2].en, 'very', 'much'];
+    questions.push({ type: 'order_words', prompt: `Put these words in order: enjoy / ${gWords[2].en} / We / very / much`, promptEs: `Pon estas palabras en orden: enjoy / ${gWords[2].es} / We / very / much`, hintEn: 'Start with the subject, then verb, then object', hintEs: 'Empieza con el sujeto, luego el verbo, luego el objeto', audioText: `We enjoy ${gWords[2].en} very much`, options: JSON.stringify(shuffle(s2Words)), correctAnswer: `We enjoy ${gWords[2].en} very much`, explanation: `The correct sentence is "We enjoy ${gWords[2].en} very much"`, explanationEs: `La oración correcta es "We enjoy ${gWords[2].en} very much"`, points: 15 });
+    questions.push({ type: 'listen_write', prompt: `Listen and write the sentence you hear`, promptEs: `Escucha y escribe la oración que oyes`, hintEn: 'Pay attention to grammar and word order', hintEs: 'Presta atención a la gramática y el orden de las palabras', audioText: `I enjoy learning about ${gWords[0].en}`, options: '[]', correctAnswer: `I enjoy learning about ${gWords[0].en}`, explanation: `The correct transcription is: I enjoy learning about ${gWords[0].en}`, explanationEs: `La transcripción correcta es: I enjoy learning about ${gWords[0].en}`, points: 20 });
+    questions.push({ type: 'pronunciation', prompt: `Practice saying: I enjoy learning about ${gWords[0].en}`, promptEs: `Practica diciendo: I enjoy learning about ${gWords[0].es}`, hintEn: 'Focus on clear pronunciation and natural rhythm', hintEs: 'Enfócate en pronunciación clara y ritmo natural', audioText: `I enjoy learning about ${gWords[0].en}`, options: '[]', correctAnswer: `I enjoy learning about ${gWords[0].en}`, explanation: `Practice this sentence about ${gWords[0].en} with clear pronunciation`, explanationEs: `Practica esta oración sobre ${gWords[0].es} con pronunciación clara`, points: 10 });
+    questions.push({ type: 'find_error', prompt: isBasic ? `Find the mistake: They has two ${gWords[2].en}` : `Find the mistake: If I would have ${gWords[2].en}, I would be happy`, promptEs: isBasic ? `Encuentra el error: They has two ${gWords[2].en}` : `Encuentra el error: If I would have ${gWords[2].en}, I would be happy`, hintEn: isBasic ? 'Check subject-verb agreement' : 'Conditional sentences use "had" not "would have" in the if-clause', hintEs: isBasic ? 'Revisa la concordancia sujeto-verbo' : 'Las condicionales usan "had" no "would have" en la cláusula if', audioText: isBasic ? `They have two ${gWords[2].en}` : `If I had ${gWords[2].en}, I would be happy`, options: '[]', correctAnswer: isBasic ? `They have two ${gWords[2].en}` : `If I had ${gWords[2].en}, I would be happy`, explanation: isBasic ? '"They" takes "have" not "has"' : 'In the if-clause of a second conditional, use "had" not "would have"', explanationEs: isBasic ? '"They" usa "have" no "has"' : 'En la cláusula if del segundo condicional, usa "had" no "would have"', points: 15 });
+    const s3Words = ['Do', 'you', 'like', gWords[1].en, '?'];
+    questions.push({ type: 'build_sentence', prompt: `Build a question: Do / you / like / ${gWords[1].en} / ?`, promptEs: `Construye una pregunta: Do / you / like / ${gWords[1].es} / ?`, hintEn: 'Question form: auxiliary + subject + verb + object', hintEs: 'Forma de pregunta: auxiliar + sujeto + verbo + objeto', audioText: `Do you like ${gWords[1].en}?`, options: JSON.stringify(shuffle(s3Words)), correctAnswer: `Do you like ${gWords[1].en}?`, explanation: `The correct question is "Do you like ${gWords[1].en}?"`, explanationEs: `La pregunta correcta es "Do you like ${gWords[1].en}?"`, points: 15 });
+    questions.push({ type: 'fill_blank', prompt: `She ___ ${gWords[0].en} every day (present simple, third person)`, promptEs: `Ella ___ ${gWords[0].es} todos los días (presente simple, tercera persona)`, hintEn: 'Add -s or -es to the base form for third person singular', hintEs: 'Agrega -s o -es a la forma base para tercera persona singular', audioText: `She uses ${gWords[0].en} every day`, options: '[]', correctAnswer: 'uses', explanation: 'Third person singular present simple adds -s or -es to the verb', explanationEs: 'La tercera persona singular del presente simple agrega -s o -es al verbo', points: 10 });
+    const gMatchWords = pickRandom(vocab, 3);
+    questions.push({ type: 'match_concepts', prompt: `Match the ${topic.toLowerCase()} words with their English translations`, promptEs: `Relaciona las palabras de ${topicEs.toLowerCase()} con sus traducciones al inglés`, hintEn: gMatchWords.map(w => `${w.es}=${w.en}`).join(', '), hintEs: gMatchWords.map(w => `${w.es}=${w.en}`).join(', '), audioText: `Match the ${topic.toLowerCase()} words`, options: JSON.stringify(gMatchWords.map(w => `${w.es}-${w.en}`)), correctAnswer: gMatchWords.map(w => w.en).join(' '), explanation: gMatchWords.map(w => `${w.es} = ${w.en}`).join(', '), explanationEs: gMatchWords.map(w => `${w.es} = ${w.en}`).join(', '), points: 15 });
+
+  } else {
+    const cWords = pickRandom(vocab, 5);
+    const wrongC = getWrongOptions(vocab, cWords[0].en, 3);
+    questions.push({ type: 'multiple_choice', prompt: `In a conversation about ${topic.toLowerCase()}, someone says "${cWords[0].es}". What do they mean?`, promptEs: `En una conversación sobre ${topicEs.toLowerCase()}, alguien dice "${cWords[0].es}". ¿Qué significa?`, hintEn: `Think about the English word for "${cWords[0].es}"`, hintEs: `Piensa en la palabra en inglés para "${cWords[0].es}"`, audioText: `What does ${cWords[0].es} mean?`, options: JSON.stringify([cWords[0].en, ...wrongC]), correctAnswer: cWords[0].en, explanation: `"${cWords[0].es}" means "${cWords[0].en}" in English`, explanationEs: `"${cWords[0].es}" significa "${cWords[0].en}" en inglés`, points: 10 });
+    questions.push({ type: 'listen_write', prompt: `Listen and write the ${topic.toLowerCase()} sentence you hear`, promptEs: `Escucha y escribe la oración de ${topicEs.toLowerCase()} que oyes`, hintEn: 'Pay attention to every word', hintEs: 'Presta atención a cada palabra', audioText: `Can you tell me about ${cWords[1].en}?`, options: '[]', correctAnswer: `Can you tell me about ${cWords[1].en}?`, explanation: `The correct transcription is: Can you tell me about ${cWords[1].en}?`, explanationEs: `La transcripción correcta es: Can you tell me about ${cWords[1].en}?`, points: 20 });
+    questions.push({ type: 'translate', prompt: isBasic ? `Translate to English: Quiero ${cWords[2].es}` : `Translate: Me gustaría saber más sobre ${cWords[2].es}`, promptEs: isBasic ? `Traduce al inglés: Quiero ${cWords[2].es}` : `Traduce: Me gustaría saber más sobre ${cWords[2].es}`, hintEn: 'Think about the correct grammar structure', hintEs: 'Piensa en la estructura gramatical correcta', audioText: isBasic ? `I want ${cWords[2].en}` : `I would like to know more about ${cWords[2].en}`, options: '[]', correctAnswer: isBasic ? `I want ${cWords[2].en}` : `I would like to know more about ${cWords[2].en}`, explanation: 'The correct translation uses proper English grammar', explanationEs: 'La traducción correcta usa la gramática apropiada del inglés', points: 15 });
+    questions.push({ type: 'pronunciation', prompt: `Practice saying: "${cWords[3].en}"`, promptEs: `Practica diciendo: "${cWords[3].es}"`, hintEn: 'Focus on clear pronunciation', hintEs: 'Enfócate en una pronunciación clara', audioText: cWords[3].en, options: '[]', correctAnswer: cWords[3].en, explanation: `Practice saying "${cWords[3].en}" (${cWords[3].es}) clearly`, explanationEs: `Practica decir "${cWords[3].en}" (${cWords[3].es}) claramente`, points: 10 });
+    const bWords = ['I', 'want', 'to', 'talk', 'about', cWords[0].en];
+    questions.push({ type: 'build_sentence', prompt: `Build: I / want / to / talk / about / ${cWords[0].en}`, promptEs: `Construye: I / want / to / talk / about / ${cWords[0].es}`, hintEn: 'Subject + verb + infinitive phrase', hintEs: 'Sujeto + verbo + frase infinitiva', audioText: `I want to talk about ${cWords[0].en}`, options: JSON.stringify(shuffle(bWords)), correctAnswer: `I want to talk about ${cWords[0].en}`, explanation: `The correct sentence is "I want to talk about ${cWords[0].en}"`, explanationEs: `La oración correcta es "I want to talk about ${cWords[0].en}"`, points: 15 });
+    questions.push({ type: 'find_error', prompt: isBasic ? `Find the mistake: I is learning about ${cWords[1].en}` : `Find the mistake: She don't like talking about ${cWords[1].en}`, promptEs: isBasic ? `Encuentra el error: I is learning about ${cWords[1].en}` : `Encuentra el error: She don't like talking about ${cWords[1].en}`, hintEn: isBasic ? 'Check the verb "to be" for "I"' : "Third person singular needs doesn't", hintEs: isBasic ? 'Revisa el verbo "to be" para "I"' : "Tercera persona singular necesita doesn't", audioText: isBasic ? `I am learning about ${cWords[1].en}` : `She doesn't like talking about ${cWords[1].en}`, options: '[]', correctAnswer: isBasic ? `I am learning about ${cWords[1].en}` : `She doesn't like talking about ${cWords[1].en}`, explanation: isBasic ? 'Use "am" with "I", not "is"' : "Use doesn't for third person negative, not don't", explanationEs: isBasic ? 'Usa "am" con "I", no "is"' : "Usa doesn't para negación en tercera persona, no don't", points: 15 });
+    const qWords = ['Do', 'you', 'know', 'about', cWords[2].en];
+    questions.push({ type: 'order_words', prompt: `Put these words in order to ask about ${cWords[2].en}: about / you / Do / know / ${cWords[2].en}`, promptEs: `Pon estas palabras en orden para preguntar sobre ${cWords[2].es}: about / you / Do / know / ${cWords[2].es}`, hintEn: 'This is a question - start with the auxiliary verb', hintEs: 'Esta es una pregunta - empieza con el verbo auxiliar', audioText: `Do you know about ${cWords[2].en}?`, options: JSON.stringify(shuffle(qWords)), correctAnswer: `Do you know about ${cWords[2].en}`, explanation: `The correct question is "Do you know about ${cWords[2].en}?"`, explanationEs: `La pregunta correcta es "Do you know about ${cWords[2].en}?"`, points: 15 });
+    questions.push({ type: 'flashcard', prompt: `${cWords[3].en} - ${cWords[3].es}`, promptEs: `${cWords[3].es} - ${cWords[3].en}`, hintEn: `Remember this useful ${topic.toLowerCase()} word for conversations`, hintEs: `Recuerda esta palabra útil de ${topicEs.toLowerCase()} para conversaciones`, audioText: cWords[3].en, options: '[]', correctAnswer: cWords[3].en, explanation: `"${cWords[3].en}" (${cWords[3].es}) is a key word when discussing ${topic.toLowerCase()}`, explanationEs: `"${cWords[3].en}" (${cWords[3].es}) es una palabra clave al discutir ${topicEs.toLowerCase()}`, points: 5 });
+    const cMatchWords = pickRandom(vocab, 3);
+    questions.push({ type: 'match_concepts', prompt: `Match the ${topic.toLowerCase()} conversation terms with their English translations`, promptEs: `Relaciona los términos de conversación de ${topicEs.toLowerCase()} con sus traducciones al inglés`, hintEn: cMatchWords.map(w => `${w.es}=${w.en}`).join(', '), hintEs: cMatchWords.map(w => `${w.es}=${w.en}`).join(', '), audioText: `Match the ${topic.toLowerCase()} terms`, options: JSON.stringify(cMatchWords.map(w => `${w.es}-${w.en}`)), correctAnswer: cMatchWords.map(w => w.en).join(' '), explanation: cMatchWords.map(w => `${w.es} = ${w.en}`).join(', '), explanationEs: cMatchWords.map(w => `${w.es} = ${w.en}`).join(', '), points: 15 });
+    questions.push({ type: 'fill_blank', prompt: `Can you explain what "${cWords[4].en}" means? It means ___ in Spanish`, promptEs: `¿Puedes explicar qué significa "${cWords[4].en}"? Significa ___ en español`, hintEn: `Think about the Spanish word for ${cWords[4].en}`, hintEs: `Piensa en la palabra en español para ${cWords[4].en}`, audioText: `${cWords[4].en} means ${cWords[4].es} in Spanish`, options: '[]', correctAnswer: cWords[4].es, explanation: `"${cWords[4].en}" means "${cWords[4].es}" in Spanish`, explanationEs: `"${cWords[4].en}" significa "${cWords[4].es}" en español`, points: 10 });
+    const wrongC2 = getWrongOptions(vocab, cWords[4].en, 3);
+    questions.push({ type: 'multiple_choice', prompt: `Your friend asks about ${cWords[4].en}. What is the best response?`, promptEs: `Tu amigo pregunta sobre ${cWords[4].en}. ¿Cuál es la mejor respuesta?`, hintEn: 'Choose the most informative and natural response', hintEs: 'Elige la respuesta más informativa y natural', audioText: `Your friend asks about ${cWords[4].en}. What is the best response?`, options: JSON.stringify([`It means "${cWords[4].es}"`, ...wrongC2.slice(0, 3)]), correctAnswer: `It means "${cWords[4].es}"`, explanation: `The best response is to explain that "${cWords[4].en}" means "${cWords[4].es}"`, explanationEs: `La mejor respuesta es explicar que "${cWords[4].en}" significa "${cWords[4].es}"`, points: 10 });
+    const pronWords2 = [cWords[0].en, cWords[1].en, cWords[2].en].join(' ');
+    questions.push({ type: 'pronunciation', prompt: `Practice saying these ${topic.toLowerCase()} words: ${pronWords2}`, promptEs: `Practica diciendo estas palabras de ${topicEs.toLowerCase()}: ${pronWords2}`, hintEn: 'Say each word clearly and slowly', hintEs: 'Di cada palabra clara y lentamente', audioText: pronWords2, options: '[]', correctAnswer: pronWords2, explanation: `These are important ${topic.toLowerCase()} conversation words`, explanationEs: `Estas son palabras importantes de conversación de ${topicEs.toLowerCase()}`, points: 10 });
+    questions.push({ type: 'listen_write', prompt: `Listen and write the ${topic.toLowerCase()} word you hear`, promptEs: `Escucha y escribe la palabra de ${topicEs.toLowerCase()} que oyes`, hintEn: `This word means "${cWords[3].es}" in Spanish`, hintEs: `Esta palabra significa "${cWords[3].es}" en español`, audioText: cWords[3].en, options: '[]', correctAnswer: cWords[3].en, explanation: `The word is "${cWords[3].en}" (${cWords[3].es})`, explanationEs: `La palabra es "${cWords[3].en}" (${cWords[3].es})`, points: 15 });
+  }
+
+  return questions;
 }
 
 main()

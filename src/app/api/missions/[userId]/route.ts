@@ -120,6 +120,7 @@ export async function GET(
                 where: {
                   userId,
                   lessonId: { not: null },
+                  scenarioId: null,
                   status: 'completed',
                   completedAt: { gte: weekStart },
                 },
@@ -132,6 +133,7 @@ export async function GET(
                 where: {
                   userId,
                   lessonId: { not: null },
+                  scenarioId: null,
                   status: 'completed',
                   completedAt: { gte: weekStart },
                 },
@@ -145,6 +147,7 @@ export async function GET(
                 where: {
                   userId,
                   scenarioId: { not: null },
+                  lessonId: null,
                   status: 'completed',
                   completedAt: { gte: weekStart },
                 },
@@ -208,11 +211,12 @@ export async function GET(
               progress = user.xp;
               break;
             case 'scenarios': {
-              // Count completed scenarios from UserProgress
+              // Count completed scenario progress records (scenarioId set, lessonId null)
               const completedScenarios = await db.userProgress.count({
                 where: {
                   userId,
                   scenarioId: { not: null },
+                  lessonId: null,
                   status: 'completed',
                 },
               });
