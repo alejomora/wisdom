@@ -808,11 +808,16 @@ function ExerciseView() {
     }
   }
 
+  const speechSpeed = useAppStore((s) => s.speechSpeed)
+  const setSpeechSpeed = useAppStore((s) => s.setSpeechSpeed)
+
   const speakText = (text: string) => {
     if ('speechSynthesis' in window) {
+      // Cancel any ongoing speech before starting new one
+      speechSynthesis.cancel()
       const utterance = new SpeechSynthesisUtterance(text)
       utterance.lang = 'en-US'
-      utterance.rate = 0.9
+      utterance.rate = speechSpeed === 'slow' ? 0.5 : 0.9
       speechSynthesis.speak(utterance)
     }
   }
@@ -1001,6 +1006,7 @@ function ExerciseView() {
               >
                 <Icons.volume size={20} />
                 <span className="font-medium">Play Audio</span>
+                {speechSpeed === 'slow' && <span className="text-[10px] opacity-70 ml-1">🐢</span>}
               </motion.button>
             ) : null}
 
@@ -1090,6 +1096,7 @@ function ExerciseView() {
             >
               <Icons.volume size={20} />
               <span className="font-medium">Listen First</span>
+              {speechSpeed === 'slow' && <span className="text-[10px] opacity-70 ml-1">🐢</span>}
             </motion.button>
 
             <motion.button
@@ -1150,7 +1157,7 @@ function ExerciseView() {
                   }}
                   className="px-6 py-3 rounded-xl bg-secondary border border-border"
                 >
-                  🔊 Listen
+                  🔊 Listen {speechSpeed === 'slow' && '🐢'}
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -1276,6 +1283,20 @@ function ExerciseView() {
             {currentQuestionIndex + 1}/{totalQuestions}
           </span>
 
+          {/* Speed toggle */}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setSpeechSpeed(speechSpeed === 'slow' ? 'normal' : 'slow')}
+            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
+              speechSpeed === 'slow'
+                ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                : 'bg-secondary text-muted-foreground border border-border hover:bg-secondary/80'
+            }`}
+          >
+            {speechSpeed === 'slow' ? '🐢 Slow' : '🐇 Normal'}
+          </motion.button>
+
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
@@ -1328,7 +1349,7 @@ function ExerciseView() {
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm"
                 >
                   <Icons.volume size={16} />
-                  Listen
+                  Listen {speechSpeed === 'slow' && '🐢'}
                 </motion.button>
               </div>
             )}
