@@ -450,8 +450,10 @@ function Dashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[
+          { icon: '⚔️', label: 'Battle', view: 'battle' as ViewName, color: 'from-red-500 to-orange-600' },
+          { icon: '📖', label: 'Readings', view: 'readings' as ViewName, color: 'from-teal-500 to-cyan-600' },
           { icon: '🏆', label: 'Rankings', view: 'rankings' as ViewName, color: 'from-yellow-500 to-amber-600' },
           { icon: '📋', label: 'Missions', view: 'missions' as ViewName, color: 'from-emerald-500 to-green-600' },
           { icon: '📊', label: 'Statistics', view: 'statistics' as ViewName, color: 'from-cyan-500 to-blue-600' },
@@ -2815,6 +2817,577 @@ function AdminView() {
 }
 
 // ============================================
+// BATTLE VIEW
+// ============================================
+function BattleView() {
+  const user = useAppStore((s) => s.user)
+  const navigate = useAppStore((s) => s.navigate)
+  const battleQuestions = useAppStore((s) => s.battleQuestions)
+  const battleCurrentIndex = useAppStore((s) => s.battleCurrentIndex)
+  const battleScore = useAppStore((s) => s.battleScore)
+  const battleTimeLeft = useAppStore((s) => s.battleTimeLeft)
+  const battleIsActive = useAppStore((s) => s.battleIsActive)
+  const battleOpponentScore = useAppStore((s) => s.battleOpponentScore)
+  const startBattle = useAppStore((s) => s.startBattle)
+  const answerBattleQuestion = useAppStore((s) => s.answerBattleQuestion)
+  const nextBattleQuestion = useAppStore((s) => s.nextBattleQuestion)
+  const endBattle = useAppStore((s) => s.endBattle)
+  const resetBattle = useAppStore((s) => s.resetBattle)
+  const playSound = useAppStore((s) => s.playSound)
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
+  const [showResult, setShowResult] = useState(false)
+  const [timer, setTimer] = useState(30)
+  const [isStarting, setIsStarting] = useState(false)
+
+  // Handle answer submission (shared logic)
+  const handleAnswer = (answer: string) => {
+    if (showResult) return
+    setSelectedAnswer(answer)
+    setShowResult(true)
+    answerBattleQuestion(answer)
+  }
+
+  // Timer countdown - only runs the interval
+  useEffect(() => {
+    if (!battleIsActive || showResult) return
+    const interval = setInterval(() => {
+      setTimer(prev => {
+        if (prev <= 1) {
+          clearInterval(interval)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [battleIsActive, showResult, battleCurrentIndex])
+
+  const handleStartBattle = async () => {
+    setIsStarting(true)
+    try {
+      await startBattle()
+      setTimer(30)
+    } catch (err) {
+      console.error(err)
+    }
+    setIsStarting(false)
+  }
+
+  const handleNext = () => {
+    setSelectedAnswer(null)
+    setShowResult(false)
+    setTimer(30)
+    nextBattleQuestion()
+  }
+
+  // Battle complete
+  if (battleQuestions.length > 0 && battleCurrentIndex >= battleQuestions.length) {
+    const won = battleScore > battleOpponentScore
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-8 text-center">
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="glass rounded-2xl p-8"
+        >
+          <span className="text-6xl block mb-4">{won ? '🏆' : '😅'}</span>
+          <h2 className="text-3xl font-black mb-2">{won ? '¡Victoria!' : '¡Buena Batalla!'}</h2>
+          <p className="text-muted-foreground mb-6">
+            {won ? '¡Derrotaste a tu oponente!' : 'Tu oponente fue más rápido esta vez'}
+          </p>
+          <div className="flex justify-center gap-8 mb-6">
+            <div className="text-center">
+              <p className="text-3xl font-bold text-emerald-400">{battleScore}</p>
+              <p className="text-xs text-muted-foreground">Tu puntaje</p>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-red-400">{battleOpponentScore}</p>
+              <p className="text-xs text-muted-foreground">Oponente</p>
+            </div>
+          </div>
+          <div className="flex gap-3 justify-center">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => { resetBattle(); handleStartBattle() }}
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold"
+            >
+              ⚔️ Revancha
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => { resetBattle(); navigate('dashboard') }}
+              className="px-6 py-3 rounded-xl bg-secondary border border-border font-bold"
+            >
+              🏠 Inicio
+            </motion.button>
+          </div>
+        </motion.div>
+      </div>
+    )
+  }
+
+  // Battle lobby
+  if (!battleIsActive) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass rounded-2xl p-8 text-center"
+        >
+          <span className="text-6xl block mb-4">⚔️</span>
+          <h2 className="text-3xl font-black mb-2">¡Batalla de Inglés!</h2>
+          <p className="text-muted-foreground mb-6">
+            Responde 5 preguntas lo más rápido posible. ¡Compite contra un oponente virtual!
+          </p>
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+              <p className="text-2xl font-bold text-emerald-400">5</p>
+              <p className="text-xs text-muted-foreground">Preguntas</p>
+            </div>
+            <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/20">
+              <p className="text-2xl font-bold text-orange-400">30s</p>
+              <p className="text-xs text-muted-foreground">Por pregunta</p>
+            </div>
+            <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+              <p className="text-2xl font-bold text-yellow-400">+25</p>
+              <p className="text-xs text-muted-foreground">XP/Correcta</p>
+            </div>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleStartBattle}
+            disabled={isStarting}
+            className="px-8 py-4 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold text-lg shadow-lg shadow-red-500/25"
+          >
+            {isStarting ? '⏳ Cargando...' : '⚔️ ¡A Batalla!'}
+          </motion.button>
+        </motion.div>
+      </div>
+    )
+  }
+
+  // Active battle
+  const currentQ = battleQuestions[battleCurrentIndex]
+  if (!currentQ) return null
+  const options = parseQuestionOptions(currentQ.options)
+  const progressPercent = ((battleCurrentIndex) / battleQuestions.length) * 100
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-4">
+      {/* Battle header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <span className="text-lg font-bold text-emerald-400">🟢 {battleScore}</span>
+        </div>
+        <div className="text-center">
+          <span className="text-xs text-muted-foreground">Pregunta {battleCurrentIndex + 1}/{battleQuestions.length}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-lg font-bold text-red-400">{battleOpponentScore} 🔴</span>
+        </div>
+      </div>
+
+      {/* Timer */}
+      <div className="mb-4 flex items-center gap-3">
+        <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+          <motion.div
+            animate={{ width: `${(timer / 30) * 100}%` }}
+            className={`h-full rounded-full transition-colors ${timer <= 5 ? 'bg-red-500' : timer <= 10 ? 'bg-orange-500' : 'bg-emerald-500'}`}
+          />
+        </div>
+        <span className={`text-lg font-bold min-w-[40px] text-right ${timer <= 5 ? 'text-red-400' : timer <= 10 ? 'text-orange-400' : 'text-emerald-400'}`}>
+          {timer}s
+        </span>
+      </div>
+
+      {/* Progress */}
+      <div className="h-1.5 bg-secondary rounded-full overflow-hidden mb-6">
+        <motion.div
+          animate={{ width: `${progressPercent}%` }}
+          className="xp-bar h-full rounded-full"
+        />
+      </div>
+
+      {/* Question */}
+      <motion.div
+        key={battleCurrentIndex}
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="glass rounded-2xl p-6 mb-4"
+      >
+        <p className="text-lg font-bold mb-2">{currentQ.prompt}</p>
+        {currentQ.promptEs && <p className="text-sm text-muted-foreground mb-4">{currentQ.promptEs}</p>}
+      </motion.div>
+
+      {/* Options */}
+      <div className="grid gap-3">
+        {(options.length > 0 ? options : [currentQ.correctAnswer, ...Array(3).fill('')].filter(Boolean)).map((option, i) => {
+          const isCorrect = option === currentQ.correctAnswer
+          const isSelected = selectedAnswer === option
+          let btnClass = 'glass border border-border hover:border-emerald-500/30'
+          if (showResult) {
+            if (isCorrect) btnClass = 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
+            else if (isSelected && !isCorrect) btnClass = 'bg-red-500/20 border-red-500/50 text-red-400'
+          }
+          return (
+            <motion.button
+              key={i}
+              whileHover={!showResult ? { scale: 1.02 } : {}}
+              whileTap={!showResult ? { scale: 0.98 } : {}}
+              onClick={() => handleAnswer(option)}
+              disabled={showResult}
+              className={`w-full p-4 rounded-xl text-left font-medium transition-all ${btnClass}`}
+            >
+              {option}
+            </motion.button>
+          )
+        })}
+      </div>
+
+      {/* Next button or Time's up */}
+      {showResult ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4"
+        >
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleNext}
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold"
+          >
+            {battleCurrentIndex < battleQuestions.length - 1 ? 'Siguiente →' : 'Ver Resultado'}
+          </motion.button>
+        </motion.div>
+      ) : timer === 0 && !selectedAnswer ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4"
+        >
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => handleAnswer('')}
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold"
+          >
+            ⏱️ ¡Se acabó el tiempo! Continuar
+          </motion.button>
+        </motion.div>
+      ) : null}
+
+      {/* Quit button */}
+      <button
+        onClick={() => { resetBattle(); navigate('dashboard') }}
+        className="w-full mt-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        ✕ Salir de la batalla
+      </button>
+    </div>
+  )
+}
+
+// ============================================
+// READINGS VIEW
+// ============================================
+function ReadingsView() {
+  const user = useAppStore((s) => s.user)
+  const navigate = useAppStore((s) => s.navigate)
+  const readings = useAppStore((s) => s.readings)
+  const currentReading = useAppStore((s) => s.currentReading)
+  const loadReadings = useAppStore((s) => s.loadReadings)
+  const selectReading = useAppStore((s) => s.selectReading)
+  const unlockSpanishTranslation = useAppStore((s) => s.unlockSpanishTranslation)
+  const unlockAudioReading = useAppStore((s) => s.unlockAudioReading)
+  const showSpanishTranslation = useAppStore((s) => s.showSpanishTranslation)
+  const setShowSpanishTranslation = useAppStore((s) => s.setShowSpanishTranslation)
+  const unlockedSpanishReadings = useAppStore((s) => s.unlockedSpanishReadings)
+  const unlockedAudioReadings = useAppStore((s) => s.unlockedAudioReadings)
+  const answerReadingQuestion = useAppStore((s) => s.answerReadingQuestion)
+  const playSound = useAppStore((s) => s.playSound)
+  const addXp = useAppStore((s) => s.addXp)
+  const speechSpeed = useAppStore((s) => s.speechSpeed)
+  const speechVoiceIndex = useAppStore((s) => s.speechVoiceIndex)
+  const [readingAnswers, setReadingAnswers] = useState<Record<number, number>>({})
+  const [showReadingResults, setShowReadingResults] = useState(false)
+  const [readingCompleted, setReadingCompleted] = useState(false)
+
+  useEffect(() => {
+    loadReadings()
+  }, [loadReadings])
+
+  const handleAnswerQuestion = (qIndex: number, aIndex: number) => {
+    if (readingCompleted) return
+    setReadingAnswers(prev => ({ ...prev, [qIndex]: aIndex }))
+  }
+
+  const handleCheckAnswers = () => {
+    if (!currentReading) return
+    let correct = 0
+    currentReading.questions.forEach((q, i) => {
+      if (readingAnswers[i] === q.correctAnswer) correct++
+    })
+    const xpEarned = correct * 10
+    addXp(xpEarned)
+    if (correct === currentReading.questions.length) playSound('reward')
+    else if (correct > 0) playSound('correct')
+    else playSound('wrong')
+    setShowReadingResults(true)
+    setReadingCompleted(true)
+  }
+
+  const handleSpeakPassage = () => {
+    if (!currentReading) return
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel()
+      const u = new SpeechSynthesisUtterance(currentReading.passage)
+      u.lang = 'en-US'
+      u.rate = speechSpeed === 'slow' ? 0.6 : 0.9
+      const voices = speechSynthesis.getVoices()
+      const engVoices = voices.filter(v => v.lang.startsWith('en'))
+      if (engVoices.length > 0 && speechVoiceIndex >= 0 && speechVoiceIndex < engVoices.length) {
+        u.voice = engVoices[speechVoiceIndex]
+      }
+      speechSynthesis.speak(u)
+    }
+  }
+
+  const hasAudio = currentReading ? unlockedAudioReadings.includes(currentReading.id) : false
+  const hasSpanish = currentReading ? unlockedSpanishReadings.includes(currentReading.id) : false
+
+  // Reading detail view
+  if (currentReading) {
+    const difficultyColors: Record<number, string> = {
+      1: 'text-emerald-400', 2: 'text-emerald-400', 3: 'text-orange-400',
+      4: 'text-red-400', 5: 'text-purple-400',
+    }
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-4 pb-24">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => { selectReading(null); setShowReadingResults(false); setReadingCompleted(false); setReadingAnswers({}) }}
+            className="p-2 rounded-xl hover:bg-secondary"
+          >
+            <Icons.arrowLeft size={20} />
+          </motion.button>
+          <div className="flex-1">
+            <h2 className="text-lg font-bold">{currentReading.title}</h2>
+            <p className="text-xs text-muted-foreground">{currentReading.titleEs} • Nivel: {currentReading.level}</p>
+          </div>
+        </div>
+
+        {/* Passage */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass rounded-2xl p-6 mb-4"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">📖 Passage</h3>
+            <div className="flex gap-2">
+              {/* Audio button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={hasAudio ? handleSpeakPassage : () => unlockAudioReading(currentReading.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
+                  hasAudio ? 'bg-cyan-500/10 border border-cyan-500/20 text-cyan-400' : 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-400'
+                }`}
+              >
+                {hasAudio ? '🔊 Escuchar' : '🔒 Audio (250 🪙)'}
+              </motion.button>
+              {/* Spanish toggle */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  if (hasSpanish) {
+                    setShowSpanishTranslation(!showSpanishTranslation)
+                  } else {
+                    unlockSpanishTranslation(currentReading.id)
+                  }
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
+                  hasSpanish ? 'bg-teal-500/10 border border-teal-500/20 text-teal-400' : 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-400'
+                }`}
+              >
+                {hasSpanish ? (showSpanishTranslation ? '🇬🇧 English' : '🇪🇸 Español') : '🔒 Traducción (250 🪙)'}
+              </motion.button>
+            </div>
+          </div>
+          <p className="text-sm leading-relaxed">
+            {showSpanishTranslation && hasSpanish ? currentReading.passageEs : currentReading.passage}
+          </p>
+        </motion.div>
+
+        {/* Questions */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">❓ Comprensión</h3>
+          {currentReading.questions.map((q, qIndex) => {
+            const userAnswer = readingAnswers[qIndex]
+            const isCorrect = showReadingResults && userAnswer === q.correctAnswer
+            const isWrong = showReadingResults && userAnswer !== undefined && userAnswer !== q.correctAnswer
+            return (
+              <motion.div
+                key={q.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: qIndex * 0.1 }}
+                className={`glass rounded-xl p-4 border ${
+                  isCorrect ? 'border-emerald-500/50' : isWrong ? 'border-red-500/50' : 'border-border'
+                }`}
+              >
+                <p className="font-medium text-sm mb-2">{q.question}</p>
+                <p className="text-xs text-muted-foreground mb-3">{q.questionEs}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {q.options.map((opt, oIndex) => {
+                    const isSelected = userAnswer === oIndex
+                    const showCorrect = showReadingResults && oIndex === q.correctAnswer
+                    let optClass = 'p-2 rounded-lg text-xs font-medium border border-border hover:border-emerald-500/30 transition-all'
+                    if (showCorrect) optClass = 'p-2 rounded-lg text-xs font-medium border border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                    else if (isSelected && isWrong) optClass = 'p-2 rounded-lg text-xs font-medium border border-red-500/50 bg-red-500/10 text-red-400'
+                    else if (isSelected && !showReadingResults) optClass = 'p-2 rounded-lg text-xs font-medium border border-cyan-500/50 bg-cyan-500/10 text-cyan-400'
+                    return (
+                      <button
+                        key={oIndex}
+                        onClick={() => handleAnswerQuestion(qIndex, oIndex)}
+                        disabled={readingCompleted}
+                        className={optClass}
+                      >
+                        {opt}
+                      </button>
+                    )
+                  })}
+                </div>
+                {showReadingResults && (
+                  <p className={`text-xs mt-2 ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {isCorrect ? '✅ ' : '❌ '}{q.explanationEs || q.explanation}
+                  </p>
+                )}
+              </motion.div>
+            )
+          })}
+        </div>
+
+        {/* Check answers button */}
+        {!readingCompleted && Object.keys(readingAnswers).length === currentReading.questions.length && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-6"
+          >
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleCheckAnswers}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold"
+            >
+              ✅ Verificar Respuestas
+            </motion.button>
+          </motion.div>
+        )}
+
+        {readingCompleted && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-6 text-center"
+          >
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => { selectReading(null); setShowReadingResults(false); setReadingCompleted(false); setReadingAnswers({}) }}
+              className="px-6 py-3 rounded-xl bg-secondary border border-border font-bold"
+            >
+              📖 Más Lecturas
+            </motion.button>
+          </motion.div>
+        )}
+      </div>
+    )
+  }
+
+  // Readings list
+  const difficultyIcon: Record<number, string> = { 1: '🟢', 2: '🟢', 3: '🟡', 4: '🔴', 5: '🔴' }
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center mb-8"
+      >
+        <span className="text-5xl block mb-3">📖</span>
+        <h2 className="text-2xl font-bold">Lecturas en Inglés</h2>
+        <p className="text-muted-foreground">Mejora tu comprensión leyendo textos reales</p>
+      </motion.div>
+
+      <div className="space-y-3">
+        {readings.map((reading, i) => {
+          const levelColors: Record<string, string> = {
+            basic: 'border-emerald-500/30 bg-emerald-500/5',
+            intermediate: 'border-orange-500/30 bg-orange-500/5',
+            advanced: 'border-purple-500/30 bg-purple-500/5',
+          }
+          const levelTextColors: Record<string, string> = {
+            basic: 'text-emerald-400',
+            intermediate: 'text-orange-400',
+            advanced: 'text-purple-400',
+          }
+          return (
+            <motion.button
+              key={reading.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => selectReading(reading.id)}
+              className={`w-full p-4 rounded-xl border text-left transition-all ${levelColors[reading.level] || 'border-border bg-secondary/50'}`}
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-2xl">
+                  📖
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-bold text-sm">{reading.title}</h4>
+                  <p className="text-xs text-muted-foreground">{reading.titleEs}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`text-[10px] font-bold uppercase ${levelTextColors[reading.level]}`}>
+                      {reading.level}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {difficultyIcon[reading.difficulty]} {reading.questions.length} preguntas
+                    </span>
+                    <span className="text-[10px] text-emerald-400">+{reading.xpReward} XP</span>
+                  </div>
+                </div>
+                <span className="text-muted-foreground">→</span>
+              </div>
+            </motion.button>
+          )
+        })}
+      </div>
+
+      {readings.length === 0 && (
+        <div className="text-center py-12 text-muted-foreground">
+          <span className="text-4xl block mb-2">📚</span>
+          <p>Cargando lecturas...</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ============================================
 // MAIN APP
 // ============================================
 export default function Home() {
@@ -2869,6 +3442,8 @@ export default function Home() {
       case 'dashboard': return <Dashboard />
       case 'scenario-map': return <ScenarioMap />
       case 'exercise': return <ExerciseView />
+      case 'battle': return <BattleView />
+      case 'readings': return <ReadingsView />
       case 'rankings': return <RankingsView />
       case 'statistics': return <StatisticsView />
       case 'missions': return <MissionsView />

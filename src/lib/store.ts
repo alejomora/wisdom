@@ -21,7 +21,9 @@ export type ViewName =
   | 'missions'
   | 'shop'
   | 'admin'
-  | 'exam';
+  | 'exam'
+  | 'battle'
+  | 'readings';
 
 export interface UserData {
   id: string;
@@ -196,6 +198,33 @@ interface PersistedPreferences {
   viewMode: ViewMode;
   infiniteLivesUntil: number;
   lastStreakGiftAt: number;
+  unlockedSpanishReadings: string[];
+  unlockedAudioReadings: string[];
+}
+
+// ============================================
+// READING TYPES
+// ============================================
+export interface ReadingData {
+  id: string;
+  title: string;
+  titleEs: string;
+  passage: string;
+  passageEs: string;
+  level: string;
+  difficulty: number;
+  xpReward: number;
+  questions: ReadingQuestion[];
+}
+
+export interface ReadingQuestion {
+  id: string;
+  question: string;
+  questionEs: string;
+  options: string[];
+  correctAnswer: number;
+  explanation: string;
+  explanationEs: string;
 }
 
 // ============================================
@@ -233,6 +262,22 @@ export interface AppStoreState {
   // Shop State
   shopItems: ShopItem[];
   inventory: InventoryItem[];
+
+  // Battle State
+  battleQuestions: Question[];
+  battleCurrentIndex: number;
+  battleScore: number;
+  battleTimeLeft: number;
+  battleIsActive: boolean;
+  battleResults: ExerciseResult[];
+  battleOpponentScore: number;
+
+  // Reading State
+  readings: ReadingData[];
+  currentReading: ReadingData | null;
+  showSpanishTranslation: boolean;
+  unlockedSpanishReadings: string[];
+  unlockedAudioReadings: string[];
 
   // UI State
   showConfetti: boolean;
@@ -301,6 +346,21 @@ export interface AppStoreState {
   setRewardData: (data: RewardData | null) => void;
   setIsLoading: (val: boolean) => void;
   setShowLevelUpAnimation: (val: boolean) => void;
+
+  // Actions - Battle
+  startBattle: () => Promise<void>;
+  answerBattleQuestion: (answer: string) => void;
+  nextBattleQuestion: () => void;
+  endBattle: () => void;
+  resetBattle: () => void;
+
+  // Actions - Readings
+  loadReadings: () => void;
+  selectReading: (readingId: string | null) => void;
+  unlockSpanishTranslation: (readingId: string) => void;
+  unlockAudioReading: (readingId: string) => void;
+  answerReadingQuestion: (readingId: string, questionIndex: number, answerIndex: number) => boolean;
+  setShowSpanishTranslation: (val: boolean) => void;
 }
 
 // ============================================
@@ -343,6 +403,108 @@ function syncUserToDb(userId: string, data: Record<string, unknown>) {
 }
 
 // ============================================
+// READINGS DATA
+// ============================================
+const READINGS_DATA: ReadingData[] = [
+  {
+    id: 'reading-1',
+    title: 'A Day at the Park',
+    titleEs: 'Un Día en el Parque',
+    passage: 'Sarah went to the park on a sunny Saturday morning. She brought a book and a sandwich for lunch. The park was full of children playing on the swings and families having picnics. Sarah found a quiet spot under a large oak tree and started reading. After a while, a friendly dog came up to her and wagged its tail. Sarah gave the dog a small piece of her sandwich. The dog\'s owner, an elderly man, came over and thanked her. They started talking about books and soon became friends. Sarah learned that the man\'s name was Mr. Thompson and he had been a teacher for thirty years. They decided to meet at the park every Saturday to discuss books.',
+    passageEs: 'Sarah fue al parque en una mañana soleada de sábado. Trajo un libro y un sándwich para el almuerzo. El parque estaba lleno de niños jugando en los columpios y familias haciendo picnics. Sarah encontró un lugar tranquilo bajo un gran roble y comenzó a leer. Después de un rato, un perro amigable se acercó a ella y movió su cola. Sarah le dio al perro un pequeño trozo de su sándwich. El dueño del perro, un hombre mayor, se acercó y le agradeció. Empezaron a hablar sobre libros y pronto se hicieron amigos. Sarah aprendió que el nombre del hombre era el Sr. Thompson y había sido profesor durante treinta años. Decidieron encontrarse en el parque cada sábado para hablar de libros.',
+    level: 'basic',
+    difficulty: 2,
+    xpReward: 50,
+    questions: [
+      { id: 'r1q1', question: 'What did Sarah bring to the park?', questionEs: '¿Qué trajo Sarah al parque?', options: ['A bike and a ball', 'A book and a sandwich', 'A phone and a drink', 'A guitar and a hat'], correctAnswer: 1, explanation: 'The text says "She brought a book and a sandwich for lunch."', explanationEs: 'El texto dice "Ella trajo un libro y un sándwich para el almuerzo."' },
+      { id: 'r1q2', question: 'Who did Sarah meet at the park?', questionEs: '¿A quién conoció Sarah en el parque?', options: ['A young woman', 'A child', 'An elderly man', 'A teacher from her school'], correctAnswer: 2, explanation: 'She met Mr. Thompson, described as "an elderly man."', explanationEs: 'Conoció al Sr. Thompson, descrito como "un hombre mayor."' },
+      { id: 'r1q3', question: 'What was Mr. Thompson\'s profession?', questionEs: '¿Cuál era la profesión del Sr. Thompson?', options: ['Doctor', 'Writer', 'Teacher', 'Chef'], correctAnswer: 2, explanation: 'The text states he "had been a teacher for thirty years."', explanationEs: 'El texto dice que "había sido profesor durante treinta años."' },
+      { id: 'r1q4', question: 'What did they decide to do every Saturday?', questionEs: '¿Qué decidieron hacer cada sábado?', options: ['Go swimming', 'Meet at the park to discuss books', 'Have lunch together', 'Walk the dog'], correctAnswer: 1, explanation: 'They "decided to meet at the park every Saturday to discuss books."', explanationEs: 'Decidieron "encontrarse en el parque cada sábado para hablar de libros."' },
+    ]
+  },
+  {
+    id: 'reading-2',
+    title: 'The Restaurant Order',
+    titleEs: 'El Pedido en el Restaurante',
+    passage: 'Carlos and Maria decided to try a new Italian restaurant downtown. When they arrived, the waiter greeted them warmly and showed them to a table by the window. Carlos ordered the spaghetti carbonara, which is his favorite pasta dish. Maria chose the mushroom risotto because she is a vegetarian. The waiter recommended a nice red wine to go with their meal. While they waited for their food, they enjoyed the bread and olive oil that was served as a starter. The food arrived after twenty minutes and it was delicious. For dessert, they shared a tiramisu, which was the best they had ever tasted. The total bill came to forty-five dollars, and they left a generous tip for the excellent service.',
+    passageEs: 'Carlos y María decidieron probar un nuevo restaurante italiano en el centro. Cuando llegaron, el camarero los recibió calurosamente y los llevó a una mesa junto a la ventana. Carlos pidió los espaguetis carbonara, que es su plato de pasta favorito. María eligió el risotto de champiñones porque es vegetariana. El camarero les recomendó un buen vino tinto para acompañar su comida. Mientras esperaban la comida, disfrutaron del pan y aceite de oliva que se sirvió como entrada. La comida llegó después de veinte minutos y estaba deliciosa. De postre, compartieron un tiramisú, que fue el mejor que habían probado. La cuenta total fue de cuarenta y cinco dólares, y dejaron una generosa propina por el excelente servicio.',
+    level: 'intermediate',
+    difficulty: 3,
+    xpReward: 60,
+    questions: [
+      { id: 'r2q1', question: 'Why did Maria choose the mushroom risotto?', questionEs: '¿Por qué María eligió el risotto de champiñones?', options: ['It was the cheapest option', 'She is a vegetarian', 'The waiter recommended it', 'She loves mushrooms'], correctAnswer: 1, explanation: 'Maria chose it "because she is a vegetarian."', explanationEs: 'María lo eligió "porque es vegetariana."' },
+      { id: 'r2q2', question: 'What did they have as a starter?', questionEs: '¿Qué tuvieron como entrada?', options: ['Soup and salad', 'Bread and olive oil', 'Cheese and crackers', 'Bruschetta'], correctAnswer: 1, explanation: 'They enjoyed "bread and olive oil that was served as a starter."', explanationEs: 'Disfrutaron de "pan y aceite de oliva que se sirvió como entrada."' },
+      { id: 'r2q3', question: 'What dessert did they share?', questionEs: '¿Qué postre compartieron?', options: ['Cheesecake', 'Gelato', 'Tiramisu', 'Panna cotta'], correctAnswer: 2, explanation: 'They shared a "tiramisu."', explanationEs: 'Compartieron un "tiramisú."' },
+      { id: 'r2q4', question: 'How much was the total bill?', questionEs: '¿Cuánto fue la cuenta total?', options: ['Thirty dollars', 'Forty-five dollars', 'Fifty dollars', 'Twenty-five dollars'], correctAnswer: 1, explanation: 'The total bill came to "forty-five dollars."', explanationEs: 'La cuenta total fue de "cuarenta y cinco dólares."' },
+    ]
+  },
+  {
+    id: 'reading-3',
+    title: 'Job Interview Success',
+    titleEs: 'Éxito en la Entrevista de Trabajo',
+    passage: 'Emma had been preparing for her job interview at TechCorp for two weeks. She researched the company thoroughly, practiced common interview questions, and picked out a professional outfit. On the day of the interview, she arrived fifteen minutes early. The hiring manager, Mrs. Chen, was impressed by Emma\'s punctuality. During the interview, Emma answered questions confidently and gave specific examples of her previous work experience. She asked thoughtful questions about the company\'s future projects. At the end of the interview, Mrs. Chen told Emma that she was one of the strongest candidates. Three days later, Emma received a phone call offering her the position. She was thrilled and accepted immediately. Emma learned that preparation and confidence are the keys to a successful interview.',
+    passageEs: 'Emma había estado preparándose para su entrevista de trabajo en TechCorp durante dos semanas. Investigó la empresa a fondo, practicó preguntas comunes de entrevistas y eligió un atuendo profesional. El día de la entrevista, llegó quince minutos antes. La gerente de contratación, la Sra. Chen, quedó impresionada por la puntualidad de Emma. Durante la entrevista, Emma respondió las preguntas con confianza y dio ejemplos específicos de su experiencia laboral anterior. Hizo preguntas reflexivas sobre los proyectos futuros de la empresa. Al final de la entrevista, la Sra. Chen le dijo a Emma que era una de las candidatas más fuertes. Tres días después, Emma recibió una llamada telefónica ofreciéndole el puesto. Estaba emocionada y aceptó inmediatamente. Emma aprendió que la preparación y la confianza son las claves de una entrevista exitosa.',
+    level: 'advanced',
+    difficulty: 4,
+    xpReward: 75,
+    questions: [
+      { id: 'r3q1', question: 'How long did Emma prepare for the interview?', questionEs: '¿Cuánto tiempo se preparó Emma para la entrevista?', options: ['One week', 'Two weeks', 'One month', 'Three days'], correctAnswer: 1, explanation: 'She had been preparing "for two weeks."', explanationEs: 'Había estado preparándose "durante dos semanas."' },
+      { id: 'r3q2', question: 'How early did Emma arrive for the interview?', questionEs: '¿Cuán temprano llegó Emma para la entrevista?', options: ['Five minutes', 'Ten minutes', 'Fifteen minutes', 'Thirty minutes'], correctAnswer: 2, explanation: 'She "arrived fifteen minutes early."', explanationEs: 'Llegó "quince minutos antes."' },
+      { id: 'r3q3', question: 'What impressed Mrs. Chen about Emma?', questionEs: '¿Qué impresionó a la Sra. Chen sobre Emma?', options: ['Her outfit', 'Her punctuality', 'Her resume', 'Her education'], correctAnswer: 1, explanation: 'Mrs. Chen "was impressed by Emma\'s punctuality."', explanationEs: 'La Sra. Chen "quedó impresionada por la puntualidad de Emma."' },
+      { id: 'r3q4', question: 'What did Emma learn from this experience?', questionEs: '¿Qué aprendió Emma de esta experiencia?', options: ['Interviews are scary', 'Always wear a suit', 'Preparation and confidence are key', 'Arrive early always'], correctAnswer: 2, explanation: 'She learned that "preparation and confidence are the keys to a successful interview."', explanationEs: 'Aprendió que "la preparación y la confianza son las claves de una entrevista exitosa."' },
+    ]
+  },
+  {
+    id: 'reading-4',
+    title: 'The Lost Dog',
+    titleEs: 'El Perro Perdido',
+    passage: 'Last Tuesday, eight-year-old Tom was walking home from school when he found a small brown dog sitting alone on the sidewalk. The dog looked scared and hungry. It had a collar but no tag. Tom carefully approached the dog and offered his sandwich. The dog wagged its tail and ate the sandwich happily. Tom decided to take the dog home. His mother called the animal shelter and the local veterinary clinic. An hour later, a woman named Mrs. Garcia arrived at their house. She had been looking for her dog, Biscuit, since morning. Biscuit had escaped from the garden when the gate was left open. Mrs. Garcia was so grateful that she brought Tom a box of cookies the next day. Tom was happy that Biscuit was safe at home.',
+    passageEs: 'El martes pasado, Tom, de ocho años, caminaba hacia casa desde la escuela cuando encontró un pequeño perro marrón sentado solo en la acera. El perro se veía asustado y hambriento. Tenía un collar pero sin chapa. Tom se acercó cuidadosamente al perro y le ofreció su sándwich. El perro movió su cola y comió el sándwich felizmente. Tom decidió llevar al perro a casa. Su madre llamó al refugio de animales y a la clínica veterinaria local. Una hora después, una mujer llamada Sra. García llegó a su casa. Había estado buscando a su perro, Biscuit, desde la mañana. Biscuit había escapado del jardín cuando la puerta se dejó abierta. La Sra. García estaba tan agradecida que le trajo a Tom una caja de galletas al día siguiente. Tom estaba feliz de que Biscuit estuviera seguro en casa.',
+    level: 'basic',
+    difficulty: 2,
+    xpReward: 50,
+    questions: [
+      { id: 'r4q1', question: 'How old is Tom?', questionEs: '¿Cuántos años tiene Tom?', options: ['Six', 'Seven', 'Eight', 'Nine'], correctAnswer: 2, explanation: 'Tom is described as "eight-year-old."', explanationEs: 'Tom es descrito como "de ocho años."' },
+      { id: 'r4q2', question: 'What did Tom give to the dog?', questionEs: '¿Qué le dio Tom al perro?', options: ['A bone', 'His sandwich', 'A toy', 'Some water'], correctAnswer: 1, explanation: 'Tom "offered his sandwich" to the dog.', explanationEs: 'Tom "le ofreció su sándwich" al perro.' },
+      { id: 'r4q3', question: 'What was the dog\'s name?', questionEs: '¿Cuál era el nombre del perro?', options: ['Rex', 'Spot', 'Biscuit', 'Brownie'], correctAnswer: 2, explanation: 'The dog\'s name was Biscuit.', explanationEs: 'El nombre del perro era Biscuit.' },
+      { id: 'r4q4', question: 'How did the dog escape?', questionEs: '¿Cómo escapó el perro?', options: ['It jumped the fence', 'The gate was left open', 'It dug under the fence', 'Someone took it'], correctAnswer: 1, explanation: 'Biscuit "had escaped from the garden when the gate was left open."', explanationEs: 'Biscuit "había escapado del jardín cuando la puerta se dejó abierta."' },
+    ]
+  },
+  {
+    id: 'reading-5',
+    title: 'Business Meeting Etiquette',
+    titleEs: 'Etiqueta en Reuniones de Negocios',
+    passage: 'In the corporate world, understanding business meeting etiquette is essential for professional success. First, always arrive on time or a few minutes early. Being late shows disrespect for others\' time. Second, come prepared with all necessary documents and a clear understanding of the meeting\'s agenda. Third, listen actively when others are speaking. Avoid checking your phone or working on your laptop unless it is directly related to the meeting. Fourth, when presenting your ideas, be concise and clear. Use data and examples to support your points. Fifth, respect differing opinions and engage in constructive debate rather than argument. Finally, after the meeting, send a brief summary email to all participants outlining the key decisions and action items. Following these guidelines will help you build a professional reputation and make your meetings more productive.',
+    passageEs: 'En el mundo corporativo, entender la etiqueta de las reuniones de negocios es esencial para el éxito profesional. Primero, siempre llegue a tiempo o unos minutos antes. Llegar tarde muestra falta de respeto por el tiempo de los demás. Segundo, venga preparado con todos los documentos necesarios y una comprensión clara de la agenda de la reunión. Tercero, escuche activamente cuando otros hablan. Evite revisar su teléfono o trabajar en su computadora a menos que esté directamente relacionado con la reunión. Cuarto, al presentar sus ideas, sea conciso y claro. Use datos y ejemplos para apoyar sus puntos. Quinto, respete las opiniones diferentes y participe en un debate constructivo en lugar de una discusión. Finalmente, después de la reunión, envíe un breve correo electrónico resumiendo las decisiones clave y los elementos de acción. Seguir estas pautas le ayudará a construir una reputación profesional y hacer que sus reuniones sean más productivas.',
+    level: 'advanced',
+    difficulty: 5,
+    xpReward: 80,
+    questions: [
+      { id: 'r5q1', question: 'According to the text, what shows disrespect?', questionEs: 'Según el texto, ¿qué muestra falta de respeto?', options: ['Speaking too much', 'Being late', 'Asking questions', 'Taking notes'], correctAnswer: 1, explanation: 'The text states "Being late shows disrespect for others\' time."', explanationEs: 'El texto dice "Llegar tarde muestra falta de respeto por el tiempo de los demás."' },
+      { id: 'r5q2', question: 'What should you do when presenting ideas?', questionEs: '¿Qué debe hacer al presentar ideas?', options: ['Speak loudly', 'Be concise and clear', 'Use many slides', 'Tell jokes'], correctAnswer: 1, explanation: 'The text advises to "be concise and clear" when presenting.', explanationEs: 'El texto aconseja "ser conciso y claro" al presentar.' },
+      { id: 'r5q3', question: 'What should you do after the meeting?', questionEs: '¿Qué debe hacer después de la reunión?', options: ['Go home immediately', 'Send a summary email', 'Call your boss', 'Plan the next meeting'], correctAnswer: 1, explanation: 'After the meeting, "send a brief summary email to all participants."', explanationEs: 'Después de la reunión, "envíe un breve correo electrónico resumiendo a todos los participantes."' },
+      { id: 'r5q4', question: 'How should you handle differing opinions?', questionEs: '¿Cómo debe manejar opiniones diferentes?', options: ['Ignore them', 'Argue strongly', 'Engage in constructive debate', 'Agree with everyone'], correctAnswer: 2, explanation: 'The text says to "respect differing opinions and engage in constructive debate."', explanationEs: 'El texto dice "respete las opiniones diferentes y participe en un debate constructivo."' },
+    ]
+  },
+  {
+    id: 'reading-6',
+    title: 'Planning a Vacation',
+    titleEs: 'Planear unas Vacaciones',
+    passage: 'The Rodriguez family is planning their summer vacation. They want to visit a place where they can relax and have fun. Mr. Rodriguez suggests going to the beach, but Mrs. Rodriguez prefers the mountains where it is cooler. Their teenage daughter, Sofia, wants to visit a big city like New York or Chicago. The youngest son, Diego, says he just wants to go anywhere there is a swimming pool. After discussing for an hour, they decide to compromise. They will go to a resort near a lake that has both a beach area and hiking trails in the nearby mountains. The resort also has an outdoor pool, which makes Diego happy. It is located two hours from a small city where Sofia can go shopping. Mrs. Rodriguez starts looking for flights and hotel reservations online. They plan to stay for one week in July.',
+    passageEs: 'La familia Rodríguez está planeando sus vacaciones de verano. Quieren visitar un lugar donde puedan relajarse y divertirse. El Sr. Rodríguez sugiere ir a la playa, pero la Sra. Rodríguez prefiere las montañas donde hace más fresco. Su hija adolescente, Sofía, quiere visitar una gran ciudad como Nueva York o Chicago. El hijo menor, Diego, dice que solo quiere ir a donde haya una piscina. Después de discutir por una hora, deciden llegar a un acuerdo. Irán a un resort cerca de un lago que tiene tanto área de playa como senderos para caminar en las montañas cercanas. El resort también tiene una piscina al aire libre, lo que hace feliz a Diego. Está ubicado a dos horas de una pequeña ciudad donde Sofía puede ir de compras. La Sra. Rodríguez empieza a buscar vuelos y reservas de hotel en línea. Planean quedarse una semana en julio.',
+    level: 'intermediate',
+    difficulty: 3,
+    xpReward: 60,
+    questions: [
+      { id: 'r6q1', question: 'What does Mr. Rodriguez suggest?', questionEs: '¿Qué sugiere el Sr. Rodríguez?', options: ['Going to the mountains', 'Going to the beach', 'Visiting a big city', 'Staying home'], correctAnswer: 1, explanation: 'Mr. Rodriguez "suggests going to the beach."', explanationEs: 'El Sr. Rodríguez "sugiere ir a la playa."' },
+      { id: 'r6q2', question: 'What does Diego want?', questionEs: '¿Qué quiere Diego?', options: ['To go to the beach', 'To visit a city', 'A swimming pool', 'To go hiking'], correctAnswer: 2, explanation: 'Diego "just wants to go anywhere there is a swimming pool."', explanationEs: 'Diego "solo quiere ir a donde haya una piscina."' },
+      { id: 'r6q3', question: 'What was their final decision?', questionEs: '¿Cuál fue su decisión final?', options: ['Go to the beach', 'Go to the mountains', 'Go to a lake resort', 'Visit New York'], correctAnswer: 2, explanation: 'They decided to "go to a resort near a lake."', explanationEs: 'Decidieron "ir a un resort cerca de un lago."' },
+      { id: 'r6q4', question: 'When are they planning to go?', questionEs: '¿Cuándo planean ir?', options: ['In June', 'In July', 'In August', 'In September'], correctAnswer: 1, explanation: 'They plan to stay for "one week in July."', explanationEs: 'Planean quedarse "una semana en julio."' },
+    ]
+  },
+];
+
+// ============================================
 // ZUSTAND STORE
 // ============================================
 export const useAppStore = create<AppStoreState>()(
@@ -379,6 +541,22 @@ export const useAppStore = create<AppStoreState>()(
       // ── Shop State ──────────────────────────────
       shopItems: [],
       inventory: [],
+
+      // ── Battle State ────────────────────────────
+      battleQuestions: [],
+      battleCurrentIndex: 0,
+      battleScore: 0,
+      battleTimeLeft: 30,
+      battleIsActive: false,
+      battleResults: [],
+      battleOpponentScore: 0,
+
+      // ── Reading State ───────────────────────────
+      readings: [],
+      currentReading: null,
+      showSpanishTranslation: false,
+      unlockedSpanishReadings: [],
+      unlockedAudioReadings: [],
 
       // ── UI State ────────────────────────────────
       showConfetti: false,
@@ -979,6 +1157,264 @@ export const useAppStore = create<AppStoreState>()(
         }
       },
 
+      // ────────────────────────────────────────────
+      // BATTLE ACTIONS
+      // ────────────────────────────────────────────
+      startBattle: async () => {
+        set({ isLoading: true });
+        try {
+          // Try to fetch random battle questions from API
+          const res = await fetch(`${API_BASE}/battle/questions`);
+          let battleQuestions: Question[] = [];
+
+          if (res.ok) {
+            const data = await res.json();
+            battleQuestions = (data.questions ?? data).slice(0, 5);
+          }
+
+          // Fallback: use existing questions from the store if API fails or returns empty
+          if (battleQuestions.length === 0) {
+            const storeQuestions = get().questions;
+            if (storeQuestions.length > 0) {
+              // Shuffle and pick up to 5
+              const shuffled = [...storeQuestions].sort(() => Math.random() - 0.5);
+              battleQuestions = shuffled.slice(0, 5);
+            }
+          }
+
+          // Generate a random opponent score for fun
+          const opponentScore = Math.floor(Math.random() * 4) + 1; // 1-4
+
+          set({
+            battleQuestions,
+            battleCurrentIndex: 0,
+            battleScore: 0,
+            battleTimeLeft: 30,
+            battleIsActive: true,
+            battleResults: [],
+            battleOpponentScore: opponentScore,
+            currentView: 'battle',
+            isLoading: false,
+          });
+        } catch (error) {
+          console.error('Failed to start battle:', error);
+          // Fallback: try to use existing questions
+          const storeQuestions = get().questions;
+          if (storeQuestions.length > 0) {
+            const shuffled = [...storeQuestions].sort(() => Math.random() - 0.5);
+            const battleQuestions = shuffled.slice(0, 5);
+            const opponentScore = Math.floor(Math.random() * 4) + 1;
+            set({
+              battleQuestions,
+              battleCurrentIndex: 0,
+              battleScore: 0,
+              battleTimeLeft: 30,
+              battleIsActive: true,
+              battleResults: [],
+              battleOpponentScore: opponentScore,
+              currentView: 'battle',
+              isLoading: false,
+            });
+          } else {
+            set({ isLoading: false });
+            get().setNotification({ type: 'error', message: 'No questions available for battle. Complete some lessons first!' });
+          }
+        }
+      },
+
+      answerBattleQuestion: (answer) => {
+        const { battleQuestions, battleCurrentIndex, battleResults, battleScore } = get();
+        const currentQuestion = battleQuestions[battleCurrentIndex];
+        if (!currentQuestion) return;
+
+        const normalizeAnswer = (ans: string) => ans.trim().toLowerCase().replace(/,\s*/g, ' ').replace(/\s+/g, ' ').trim();
+        const isCorrect = normalizeAnswer(answer) === normalizeAnswer(currentQuestion.correctAnswer);
+        const timeTaken = (30 - get().battleTimeLeft) * 1000; // approximate time taken
+
+        set({
+          battleScore: isCorrect ? battleScore + 1 : battleScore,
+          battleResults: [
+            ...battleResults,
+            {
+              questionId: currentQuestion.id,
+              isCorrect,
+              timeTaken,
+            },
+          ],
+        });
+
+        // Play sound
+        if (isCorrect) {
+          get().playSound('correct');
+        } else {
+          get().playSound('wrong');
+        }
+      },
+
+      nextBattleQuestion: () => {
+        const { battleCurrentIndex, battleQuestions } = get();
+        const nextIndex = battleCurrentIndex + 1;
+
+        if (nextIndex >= battleQuestions.length) {
+          // Battle complete
+          get().endBattle();
+        } else {
+          set({
+            battleCurrentIndex: nextIndex,
+            battleTimeLeft: 30,
+          });
+        }
+      },
+
+      endBattle: () => {
+        const { battleResults, battleScore, battleOpponentScore, user } = get();
+
+        // Calculate rewards
+        const correctCount = battleResults.filter((r) => r.isCorrect).length;
+        const won = battleScore > battleOpponentScore;
+
+        // XP: 15 per correct answer, bonus if won
+        const baseXp = correctCount * 15;
+        const winBonus = won ? 25 : 0;
+        const totalXp = baseXp + winBonus;
+
+        // Coins: 8 per correct answer, bonus if won
+        const baseCoins = correctCount * 8;
+        const coinWinBonus = won ? 15 : 0;
+        const totalCoins = baseCoins + coinWinBonus;
+
+        set({ battleIsActive: false });
+
+        if (user) {
+          // Add rewards
+          get().addXp(totalXp);
+          get().addCoins(totalCoins);
+
+          // Show reward modal
+          set({
+            showRewardModal: true,
+            rewardData: {
+              type: 'battle_complete',
+              title: won ? 'Victory!' : 'Battle Over!',
+              message: won
+                ? `You won! ${correctCount}/${battleResults.length} correct. +${totalXp} XP, +${totalCoins} coins`
+                : `You lost ${correctCount}/${battleResults.length} correct. +${totalXp} XP, +${totalCoins} coins`,
+              xp: totalXp,
+              coins: totalCoins,
+            },
+            showConfetti: won,
+          });
+
+          if (won) {
+            get().playSound('reward');
+          }
+        }
+      },
+
+      resetBattle: () => {
+        set({
+          battleQuestions: [],
+          battleCurrentIndex: 0,
+          battleScore: 0,
+          battleTimeLeft: 30,
+          battleIsActive: false,
+          battleResults: [],
+          battleOpponentScore: 0,
+        });
+      },
+
+      // ────────────────────────────────────────────
+      // READING ACTIONS
+      // ────────────────────────────────────────────
+      loadReadings: () => {
+        set({ readings: READINGS_DATA });
+      },
+
+      selectReading: (readingId) => {
+        if (!readingId) {
+          set({ currentReading: null, showSpanishTranslation: false });
+          return;
+        }
+        const { readings } = get();
+        const reading = readings.find((r) => r.id === readingId) ?? null;
+        set({
+          currentReading: reading,
+          showSpanishTranslation: false,
+        });
+      },
+
+      unlockSpanishTranslation: (readingId) => {
+        const { user, unlockedSpanishReadings } = get();
+        if (!user) return;
+        if (user.coins < 250) {
+          get().setNotification({ type: 'error', message: 'Not enough coins! You need 250 coins.' });
+          return;
+        }
+        if (unlockedSpanishReadings.includes(readingId)) return;
+
+        // Deduct coins and unlock
+        const updatedUser = { ...user, coins: user.coins - 250 };
+        const updatedUnlocked = [...unlockedSpanishReadings, readingId];
+
+        set({
+          user: updatedUser,
+          unlockedSpanishReadings: updatedUnlocked,
+        });
+
+        // Sync to DB
+        syncUserToDb(user.id, { coins: updatedUser.coins });
+        get().playSound('unlock');
+        get().setNotification({ type: 'success', message: 'Spanish translation unlocked!' });
+      },
+
+      unlockAudioReading: (readingId) => {
+        const { user, unlockedAudioReadings } = get();
+        if (!user) return;
+        if (user.coins < 250) {
+          get().setNotification({ type: 'error', message: 'Not enough coins! You need 250 coins.' });
+          return;
+        }
+        if (unlockedAudioReadings.includes(readingId)) return;
+
+        // Deduct coins and unlock
+        const updatedUser = { ...user, coins: user.coins - 250 };
+        const updatedUnlocked = [...unlockedAudioReadings, readingId];
+
+        set({
+          user: updatedUser,
+          unlockedAudioReadings: updatedUnlocked,
+        });
+
+        // Sync to DB
+        syncUserToDb(user.id, { coins: updatedUser.coins });
+        get().playSound('unlock');
+        get().setNotification({ type: 'success', message: 'Audio reading unlocked!' });
+      },
+
+      answerReadingQuestion: (readingId, questionIndex, answerIndex) => {
+        const { readings } = get();
+        const reading = readings.find((r) => r.id === readingId);
+        if (!reading) return false;
+
+        const question = reading.questions[questionIndex];
+        if (!question) return false;
+
+        const isCorrect = question.correctAnswer === answerIndex;
+
+        if (isCorrect) {
+          get().playSound('correct');
+          // Award XP for correct reading answer
+          const xpPerQuestion = Math.floor(reading.xpReward / reading.questions.length);
+          get().addXp(xpPerQuestion);
+        } else {
+          get().playSound('wrong');
+        }
+
+        return isCorrect;
+      },
+
+      setShowSpanishTranslation: (val) => set({ showSpanishTranslation: val }),
+
       setShowConfetti: (val) => set({ showConfetti: val }),
 
       setSpeechSpeed: (speed) => set({ speechSpeed: speed }),
@@ -1177,6 +1613,8 @@ export const useAppStore = create<AppStoreState>()(
         viewMode: state.viewMode,
         infiniteLivesUntil: state.infiniteLivesUntil,
         lastStreakGiftAt: state.lastStreakGiftAt,
+        unlockedSpanishReadings: state.unlockedSpanishReadings,
+        unlockedAudioReadings: state.unlockedAudioReadings,
       }),
       // Rehydrate persisted preferences back into the store
       merge: (persistedState, currentState) => {
@@ -1190,6 +1628,8 @@ export const useAppStore = create<AppStoreState>()(
           viewMode: persisted.viewMode ?? currentState.viewMode,
           infiniteLivesUntil: persisted.infiniteLivesUntil ?? currentState.infiniteLivesUntil,
           lastStreakGiftAt: persisted.lastStreakGiftAt ?? currentState.lastStreakGiftAt,
+          unlockedSpanishReadings: persisted.unlockedSpanishReadings ?? currentState.unlockedSpanishReadings,
+          unlockedAudioReadings: persisted.unlockedAudioReadings ?? currentState.unlockedAudioReadings,
         };
       },
     }
