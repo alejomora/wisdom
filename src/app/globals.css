@@ -103,6 +103,9 @@
   background: oklch(0.45 0.03 270);
 }
 
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
 /* Game-specific animations */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }

@@ -361,17 +361,17 @@ function LoginScreen() {
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass rounded-3xl p-8 w-full max-w-md relative z-10"
+        className="glass rounded-3xl p-4 sm:p-8 w-full max-w-md relative z-10"
       >
         <div className="text-center mb-8">
           <motion.div
-            className="text-6xl mb-4"
+            className="text-5xl sm:text-6xl mb-4"
             animate={{ rotate: [0, -10, 10, -10, 0] }}
             transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
           >
             🏆
           </motion.div>
-          <h1 className="text-4xl font-black bg-gradient-to-r from-emerald-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-emerald-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent">
             LingoQuest
           </h1>
           <p className="text-muted-foreground mt-2">Master English like a game</p>
@@ -475,21 +475,21 @@ function Header() {
         </div>
 
         {user && (
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-4 overflow-x-auto scrollbar-hide">
             {/* Streak */}
-            <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-orange-500/10 border border-orange-500/20">
+            <div className="flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-orange-500/10 border border-orange-500/20">
               <Icons.flame size={16} className="text-orange-400" />
               <span className="text-sm font-bold text-orange-400">{user.streak}</span>
             </div>
 
             {/* Energy */}
-            <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+            <div className="flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
               <span className="text-sm">⚡</span>
               <span className="text-sm font-bold text-cyan-400">{user.energy ?? 100}</span>
             </div>
 
             {/* Lives */}
-            <div className={`flex items-center gap-1 px-3 py-1.5 rounded-xl border ${
+            <div className={`flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl border ${
               hasInfiniteLives 
                 ? 'bg-pink-500/10 border-pink-500/20' 
                 : 'bg-red-500/10 border-red-500/20'
@@ -506,7 +506,7 @@ function Header() {
             </div>
 
             {/* XP */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+            <div className="flex items-center gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
               <span className="text-[10px] font-black text-emerald-400">XP</span>
               <span className="text-sm font-bold text-emerald-400">{user.xp}</span>
               <div className="w-16 h-1.5 bg-secondary rounded-full overflow-hidden hidden sm:block">
@@ -515,7 +515,7 @@ function Header() {
             </div>
 
             {/* Coins */}
-            <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+            <div className="flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
               <Icons.coin size={14} className="text-yellow-400" />
               <span className="text-sm font-bold text-yellow-400">{user.coins}</span>
             </div>
@@ -523,7 +523,7 @@ function Header() {
             {/* Sound toggle */}
             <button
               onClick={() => store.setState({ soundEnabled: !soundEnabled })}
-              className="p-2 rounded-xl hover:bg-secondary transition-colors text-muted-foreground"
+              className="p-2 rounded-xl hover:bg-secondary transition-colors text-muted-foreground hidden sm:flex"
             >
               {soundEnabled ? '🔊' : '🔇'}
             </button>
@@ -554,14 +554,14 @@ function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 glass border-t border-border/50">
-      <div className="max-w-5xl mx-auto flex items-center justify-around py-2">
+      <div className="max-w-5xl mx-auto flex items-center justify-around py-2.5">
         {navItems.map((item) => {
           const isActive = currentView === item.view || (item.view === 'dashboard' && currentView === 'scenario-map')
           return (
             <button
               key={item.view}
               onClick={() => navigate(item.view)}
-              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all ${
+              className={`flex flex-col items-center gap-1 px-3 py-2.5 sm:px-4 rounded-xl transition-all ${
                 isActive
                   ? 'text-emerald-400 bg-emerald-500/10'
                   : 'text-muted-foreground hover:text-foreground'
@@ -575,7 +575,7 @@ function BottomNav() {
         {user?.role === 'admin' && (
           <button
             onClick={() => navigate('admin')}
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all ${
+            className={`flex flex-col items-center gap-1 px-3 py-2.5 sm:px-4 rounded-xl transition-all ${
               currentView === 'admin' ? 'text-purple-400 bg-purple-500/10' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -619,16 +619,16 @@ function Dashboard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass rounded-2xl p-6 mb-6 relative overflow-hidden"
+        className="glass rounded-2xl p-4 sm:p-6 mb-6 relative overflow-hidden"
       >
         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="relative z-10">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden">
-              <AnimatedAvatar avatar={user?.avatar || '🎯'} size={80} showExpression={true} />
+          <div className="flex items-center gap-3 sm:gap-4 mb-4">
+            <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden">
+              <AnimatedAvatar avatar={user?.avatar || '🎯'} size={56} showExpression={true} />
             </div>
             <div>
-              <h2 className="text-xl font-bold">Welcome back, {user?.name}!</h2>
+              <h2 className="text-lg sm:text-xl font-bold">Welcome back, {user?.name}!</h2>
               <p className="text-muted-foreground text-sm">
                 Level {user?.level} • {user?.title}
               </p>
@@ -688,13 +688,13 @@ function Dashboard() {
               whileTap={!isLocked ? { scale: 0.97 } : {}}
               onClick={() => !isLocked && handleLevelClick(level.id)}
               disabled={isLocked}
-              className={`card-premium rounded-2xl p-6 text-left relative overflow-hidden ${
+              className={`card-premium rounded-2xl p-4 sm:p-6 text-left relative overflow-hidden ${
                 isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
               } bg-gradient-card border ${colors.border} shadow-lg ${colors.glow}`}
             >
               <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${colors.from} ${colors.to} opacity-10 rounded-full -translate-y-1/2 translate-x-1/2" />
-              <div className="text-4xl mb-3">{level.icon}</div>
-              <h4 className={`text-xl font-bold ${colors.text}`}>{level.name}</h4>
+              <div className="text-3xl sm:text-4xl mb-3">{level.icon}</div>
+              <h4 className={`text-lg sm:text-xl font-bold ${colors.text}`}>{level.name}</h4>
               <p className="text-sm text-muted-foreground mt-1">{level.descriptionEs}</p>
 
               {isLocked && (
@@ -845,8 +845,8 @@ function ScenarioMap() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-8"
       >
-        <span className="text-5xl mb-3 block">{currentLevel?.icon}</span>
-        <h2 className="text-2xl font-bold">{currentLevel?.name}</h2>
+        <span className="text-4xl sm:text-5xl mb-3 block">{currentLevel?.icon}</span>
+        <h2 className="text-xl sm:text-2xl font-bold">{currentLevel?.name}</h2>
         <p className="text-muted-foreground">{currentLevel?.descriptionEs}</p>
       </motion.div>
 
@@ -981,7 +981,7 @@ function ScenarioMap() {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="glass rounded-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto"
+              className="glass rounded-2xl p-4 sm:p-6 w-full max-w-md max-h-[80vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
@@ -1230,7 +1230,7 @@ function ExerciseView() {
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="glass rounded-3xl p-8 max-w-md w-full text-center"
+          className="glass rounded-3xl p-4 sm:p-8 max-w-md w-full text-center"
         >
           <motion.div
             initial={{ scale: 0 }}
@@ -1241,7 +1241,7 @@ function ExerciseView() {
             {exerciseStars >= 3 ? '🌟' : exerciseStars >= 2 ? '⭐' : exerciseStars >= 1 ? '👍' : '💪'}
           </motion.div>
 
-          <h2 className="text-2xl font-bold mb-2">
+          <h2 className="text-xl sm:text-2xl font-bold mb-2">
             {exerciseStars >= 3 ? 'Perfect!' : exerciseStars >= 2 ? 'Great Job!' : exerciseStars >= 1 ? 'Good Effort!' : 'Keep Practicing!'}
           </h2>
 
@@ -1258,17 +1258,17 @@ function ExerciseView() {
             ))}
           </div>
 
-          <div className="grid grid-cols-3 gap-4 my-6">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 my-6">
             <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-              <p className="text-2xl font-bold text-emerald-400">+{exerciseXpEarned}</p>
+              <p className="text-xl sm:text-2xl font-bold text-emerald-400">+{exerciseXpEarned}</p>
               <p className="text-xs text-muted-foreground">XP Earned</p>
             </div>
             <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
-              <p className="text-2xl font-bold text-cyan-400">{accuracy}%</p>
+              <p className="text-xl sm:text-2xl font-bold text-cyan-400">{accuracy}%</p>
               <p className="text-xs text-muted-foreground">Accuracy</p>
             </div>
             <div className="p-3 rounded-xl bg-pink-500/10 border border-pink-500/20">
-              <p className="text-2xl font-bold text-pink-400">{correctCount}/{totalCount}</p>
+              <p className="text-xl sm:text-2xl font-bold text-pink-400">{correctCount}/{totalCount}</p>
               <p className="text-xs text-muted-foreground">Correct</p>
             </div>
           </div>
@@ -1629,8 +1629,8 @@ function ExerciseView() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Progress bar */}
-      <div className="sticky top-0 z-30 glass border-b border-border/50 p-3">
-        <div className="max-w-2xl mx-auto flex items-center gap-3">
+      <div className="sticky top-0 z-30 glass border-b border-border/50 p-2 sm:p-3">
+        <div className="max-w-2xl mx-auto flex items-center gap-2 sm:gap-3 flex-wrap">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
@@ -1660,7 +1660,7 @@ function ExerciseView() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => setSpeechSpeed(speechSpeed === 'slow' ? 'normal' : 'slow')}
-            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
+            className={`hidden sm:flex px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
               speechSpeed === 'slow'
                 ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
                 : 'bg-secondary text-muted-foreground border border-border hover:bg-secondary/80'
@@ -1670,7 +1670,7 @@ function ExerciseView() {
           </motion.button>
 
           {/* Voice selector */}
-          <div className="relative">
+          <div className="relative hidden sm:block">
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -1694,7 +1694,7 @@ function ExerciseView() {
                   initial={{ opacity: 0, y: -5, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -5, scale: 0.95 }}
-                  className="absolute right-0 top-full mt-2 w-64 rounded-xl bg-popover border border-border shadow-xl z-50 overflow-hidden"
+                  className="absolute right-0 top-full mt-2 w-56 sm:w-64 rounded-xl bg-popover border border-border shadow-xl z-50 overflow-hidden"
                 >
                   <div className="p-2 border-b border-border">
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Voice Selection</p>
@@ -1943,7 +1943,7 @@ function RankingsView() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
-      <h2 className="text-2xl font-bold mb-6 text-center">🏆 Rankings</h2>
+      <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center">🏆 Rankings</h2>
 
       {loading ? (
         <div className="space-y-4">
@@ -2020,7 +2020,7 @@ function StatisticsView() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
-      <h2 className="text-2xl font-bold mb-6 text-center">📊 Statistics</h2>
+      <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center">📊 Statistics</h2>
 
       <div className="grid grid-cols-2 gap-3">
         {stats.map((stat, i) => (
@@ -2198,7 +2198,7 @@ function MissionsView() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
-      <h2 className="text-2xl font-bold mb-2 text-center">📋 Missions</h2>
+      <h2 className="text-xl sm:text-2xl font-bold mb-2 text-center">📋 Missions</h2>
       <p className="text-xs text-muted-foreground text-center mb-6">
         Complete missions to earn XP and coins. Claim your rewards when done!
       </p>
@@ -2243,7 +2243,7 @@ function MissionsView() {
         </div>
       ) : currentMissions.length === 0 ? (
         <div className="text-center py-12">
-          <span className="text-5xl block mb-4">📋</span>
+          <span className="text-4xl sm:text-5xl block mb-4">📋</span>
           <p className="text-muted-foreground">No missions available</p>
         </div>
       ) : (
@@ -2303,7 +2303,7 @@ function ProfileView() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass rounded-2xl p-6 text-center mb-6"
+        className="glass rounded-2xl p-4 sm:p-6 text-center mb-6"
       >
         {/* Avatar with Animated Frame */}
         <div className="mx-auto mb-4 flex justify-center">
@@ -2313,7 +2313,7 @@ function ProfileView() {
             </div>
           </AnimatedFrame>
         </div>
-        <h2 className="text-2xl font-bold">{user.name}</h2>
+        <h2 className="text-xl sm:text-2xl font-bold">{user.name}</h2>
         <p className="text-emerald-400 font-medium">{user.title}</p>
         <p className="text-xs text-muted-foreground mt-1">Level {user.level} • {user.email}</p>
 
@@ -2397,7 +2397,7 @@ function ProfileView() {
           {/* Achievements */}
           <div className="mb-4">
             <h3 className="text-lg font-bold mb-3">🏆 Achievements</h3>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
               {['👶', '🔥', '⚡', '🌟', '💯', '⭐', '💫', '🧠', '🎓', '📈'].map((icon, i) => (
                 <div key={i} className="aspect-square rounded-xl bg-secondary/50 border border-border flex items-center justify-center text-xl">
                   {i < 3 ? icon : '🔒'}
@@ -2459,7 +2459,7 @@ function ProfileView() {
 
           {filteredInventory.length === 0 ? (
             <div className="text-center py-12">
-              <span className="text-5xl block mb-4">🎒</span>
+              <span className="text-4xl sm:text-5xl block mb-4">🎒</span>
               <p className="text-muted-foreground mb-2">No items yet</p>
               <p className="text-xs text-muted-foreground mb-4">Visit the shop to buy avatars, frames, and titles!</p>
               <motion.button
@@ -2688,7 +2688,7 @@ function ShopView() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">🛍️ Tienda</h2>
+        <h2 className="text-xl sm:text-2xl font-bold">🛍️ Tienda</h2>
         <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
           <Icons.coin size={14} className="text-yellow-400" />
           <span className="text-sm font-bold text-yellow-400">{user?.coins || 0}</span>
@@ -2754,7 +2754,7 @@ function ShopView() {
             </div>
           ) : filteredItems.length === 0 ? (
             <div className="text-center py-12">
-              <span className="text-5xl block mb-4">🛍️</span>
+              <span className="text-4xl sm:text-5xl block mb-4">🛍️</span>
               <p className="text-muted-foreground">No hay artículos disponibles</p>
             </div>
           ) : (
@@ -2787,7 +2787,7 @@ function ShopView() {
                       </div>
                     )}
 
-                    <span className="text-4xl block mb-2">{item.icon}</span>
+                    <span className="text-3xl sm:text-4xl block mb-2">{item.icon}</span>
                     <p className="font-bold text-sm">{item.nameEs || item.name}</p>
                     <p className="text-[9px] text-muted-foreground mt-0.5">{item.descriptionEs || item.description}</p>
                     <p className={`text-[10px] uppercase font-bold mt-1 ${rarityLabels[item.rarity] || ''}`}>
@@ -2832,7 +2832,7 @@ function ShopView() {
       {activeTab === 'vidas' && (
         <div className="space-y-3">
           <div className="text-center mb-4">
-            <span className="text-4xl">❤️</span>
+            <span className="text-3xl sm:text-4xl">❤️</span>
             <p className="text-sm text-muted-foreground mt-2">Compra vidas para seguir jugando</p>
             <p className="text-xs text-muted-foreground">Vidas actuales: <span className="text-red-400 font-bold">{user?.lives || 0}</span></p>
           </div>
@@ -2867,7 +2867,7 @@ function ShopView() {
       {activeTab === 'energia' && (
         <div className="space-y-3">
           <div className="text-center mb-4">
-            <span className="text-5xl block mb-3">⚡</span>
+            <span className="text-4xl sm:text-5xl block mb-3">⚡</span>
             <h3 className="text-lg font-bold">Recargar Energía</h3>
             <p className="text-sm text-muted-foreground">Recupera energía para seguir aprendiendo</p>
           </div>
@@ -2880,7 +2880,7 @@ function ShopView() {
             disabled={(user?.coins || 0) < 500}
             className="w-full p-6 rounded-xl border border-cyan-500/30 bg-cyan-500/5 text-center disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <span className="text-5xl block mb-3">⚡</span>
+            <span className="text-4xl sm:text-5xl block mb-3">⚡</span>
             <p className="font-bold text-cyan-400">Recarga Completa</p>
             <p className="text-xs text-muted-foreground mt-1">Recupera toda tu energía</p>
             <div className="mt-3 px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-sm font-bold inline-block">
@@ -2894,7 +2894,7 @@ function ShopView() {
       {activeTab === 'monedas' && (
         <div className="space-y-3">
           <div className="text-center mb-4">
-            <span className="text-4xl">🪙</span>
+            <span className="text-3xl sm:text-4xl">🪙</span>
             <p className="text-sm text-muted-foreground mt-2">¡Gana monedas gratis viendo un video!</p>
           </div>
           {watchingVideo && (
@@ -2940,7 +2940,7 @@ function ShopView() {
       {activeTab === 'lecturas' && (
         <div className="space-y-3">
           <div className="text-center mb-4">
-            <span className="text-4xl">📖</span>
+            <span className="text-3xl sm:text-4xl">📖</span>
             <p className="text-sm text-muted-foreground mt-2">Compra lecturas individuales por nivel</p>
             <p className="text-xs text-muted-foreground">La primera de cada nivel es gratis</p>
           </div>
@@ -3092,7 +3092,7 @@ function AdminView() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
-      <h2 className="text-2xl font-bold mb-6 text-center">🛡️ Admin Panel</h2>
+      <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center">🛡️ Admin Panel</h2>
 
       {/* Section Tabs */}
       <div className="flex gap-2 mb-6">
@@ -3148,7 +3148,7 @@ function AdminView() {
                 </div>
               </div>
 
-              <div className="glass rounded-2xl p-6 border border-border">
+              <div className="glass rounded-2xl p-4 sm:p-6 border border-border">
                 <h3 className="font-bold mb-4">Platform Overview</h3>
                 <div className="space-y-3 text-sm text-muted-foreground">
                   <p>📚 3 Levels (75 Scenarios)</p>
@@ -3186,7 +3186,7 @@ function AdminView() {
             </div>
           ) : filteredUsers.length === 0 ? (
             <div className="text-center py-12">
-              <span className="text-4xl block mb-3">👥</span>
+              <span className="text-3xl sm:text-4xl block mb-3">👥</span>
               <p className="text-muted-foreground">No users found</p>
             </div>
           ) : (
@@ -3299,7 +3299,7 @@ function AdminView() {
 
       {/* Create User Section */}
       {activeSection === 'create' && (
-        <form onSubmit={handleCreateUser} className="glass rounded-2xl p-6 border border-border">
+        <form onSubmit={handleCreateUser} className="glass rounded-2xl p-4 sm:p-6 border border-border">
           <h3 className="font-bold mb-4">➕ Create New User</h3>
           <div className="space-y-4">
             <div>
@@ -3436,7 +3436,7 @@ function BattleView() {
         <motion.div
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="glass rounded-2xl p-8"
+          className="glass rounded-2xl p-4 sm:p-8"
         >
           {/* Fun result animation */}
           <motion.div
@@ -3446,7 +3446,7 @@ function BattleView() {
             <span className="text-7xl block mb-4">{won ? '🏆' : tied ? '🤝' : '😅'}</span>
           </motion.div>
           
-          <h2 className="text-3xl font-black mb-2">
+          <h2 className="text-2xl sm:text-3xl font-black mb-2">
             {won ? '¡VICTORIA!' : tied ? '¡EMPATE!' : '¡BUENA BATALLA!'}
           </h2>
           <p className="text-muted-foreground mb-6">
@@ -3454,22 +3454,22 @@ function BattleView() {
           </p>
           
           {/* VS Result */}
-          <div className="flex items-center justify-center gap-6 mb-6">
+          <div className="flex items-center justify-center gap-3 sm:gap-6 mb-6">
             <div className={`text-center p-4 rounded-xl ${won ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-secondary border border-border'}`}>
               <div className="mx-auto mb-2 w-14 h-14 rounded-full overflow-hidden">
                 <AnimatedAvatar avatar={user?.avatar || '🎯'} size={56} showExpression={won} />
               </div>
               <p className="text-sm font-bold">{user?.name}</p>
-              <p className="text-3xl font-black text-emerald-400">{battleScore}</p>
+              <p className="text-2xl sm:text-3xl font-black text-emerald-400">{battleScore}</p>
               <p className="text-[10px] text-muted-foreground">correctas</p>
             </div>
-            <div className="text-2xl font-black text-muted-foreground animate-avatar-bounce">VS</div>
+            <div className="text-xl sm:text-2xl font-black text-muted-foreground animate-avatar-bounce">VS</div>
             <div className={`text-center p-4 rounded-xl ${!won ? 'bg-red-500/10 border border-red-500/30' : 'bg-secondary border border-border'}`}>
               <div className="mx-auto mb-2 w-14 h-14 rounded-full overflow-hidden">
                 <AnimatedAvatar avatar="🤖" size={56} showExpression={!won} />
               </div>
               <p className="text-sm font-bold">{battleOpponent?.name || 'Oponente'}</p>
-              <p className="text-3xl font-black text-red-400">{battleOpponentScore}</p>
+              <p className="text-2xl sm:text-3xl font-black text-red-400">{battleOpponentScore}</p>
               <p className="text-[10px] text-muted-foreground">correctas</p>
             </div>
           </div>
@@ -3514,44 +3514,44 @@ function BattleView() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass rounded-2xl p-8 text-center"
+          className="glass rounded-2xl p-4 sm:p-8 text-center"
         >
-          <span className="text-6xl block mb-4">⚔️</span>
-          <h2 className="text-3xl font-black mb-2">¡Batalla de Inglés!</h2>
+          <span className="text-5xl sm:text-6xl block mb-4">⚔️</span>
+          <h2 className="text-2xl sm:text-3xl font-black mb-2">¡Batalla de Inglés!</h2>
           <p className="text-muted-foreground mb-6">
             Responde 5 preguntas de selección lo más rápido posible. ¡Compite contra un oponente virtual!
           </p>
           
           {/* VS Display */}
-          <div className="flex items-center justify-center gap-4 mb-6">
+          <div className="flex items-center justify-center gap-2 sm:gap-4 mb-6">
             <div className="text-center">
-              <div className="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center mx-auto mb-2 overflow-hidden">
-                <AnimatedAvatar avatar={user?.avatar || '🎯'} size={70} showExpression={true} />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center mx-auto mb-2 overflow-hidden">
+                <AnimatedAvatar avatar={user?.avatar || '🎯'} size={56} showExpression={true} />
               </div>
               <p className="text-sm font-bold text-emerald-400">{user?.name || 'Tú'}</p>
               <p className="text-[10px] text-muted-foreground">Nivel {user?.currentLevelId === 'advanced' ? 'Avanzado' : user?.currentLevelId === 'intermediate' ? 'Intermedio' : 'Básico'}</p>
             </div>
-            <div className="text-4xl font-black text-red-400 animate-avatar-bounce">VS</div>
+            <div className="text-3xl sm:text-4xl font-black text-red-400 animate-avatar-bounce">VS</div>
             <div className="text-center">
-              <div className="w-20 h-20 rounded-full bg-red-500/20 border-2 border-red-500/40 flex items-center justify-center mx-auto mb-2 overflow-hidden">
-                <AnimatedAvatar avatar="🤖" size={70} showExpression={true} />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-500/20 border-2 border-red-500/40 flex items-center justify-center mx-auto mb-2 overflow-hidden">
+                <AnimatedAvatar avatar="🤖" size={56} showExpression={true} />
               </div>
               <p className="text-sm font-bold text-red-400">Oponente</p>
               <p className="text-[10px] text-muted-foreground">Virtual</p>
             </div>
           </div>
           
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
             <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-              <p className="text-2xl font-bold text-emerald-400">5</p>
+              <p className="text-xl sm:text-2xl font-bold text-emerald-400">5</p>
               <p className="text-xs text-muted-foreground">Preguntas</p>
             </div>
             <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/20">
-              <p className="text-2xl font-bold text-orange-400">30s</p>
+              <p className="text-xl sm:text-2xl font-bold text-orange-400">30s</p>
               <p className="text-xs text-muted-foreground">Por pregunta</p>
             </div>
             <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-              <p className="text-2xl font-bold text-yellow-400">+25</p>
+              <p className="text-xl sm:text-2xl font-bold text-yellow-400">+25</p>
               <p className="text-xs text-muted-foreground">XP/Correcta</p>
             </div>
           </div>
@@ -3631,7 +3631,7 @@ function BattleView() {
         key={battleCurrentIndex}
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
-        className="glass rounded-2xl p-6 mb-4"
+        className="glass rounded-2xl p-4 sm:p-6 mb-4"
       >
         <p className="text-lg font-bold mb-2">{currentQ.prompt}</p>
         {currentQ.promptEs && <p className="text-sm text-muted-foreground mb-4">{currentQ.promptEs}</p>}
@@ -3816,11 +3816,11 @@ function ReadingsView() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass rounded-2xl p-6 mb-4"
+          className="glass rounded-2xl p-4 sm:p-6 mb-4"
         >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">📖 Passage</h3>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
               {/* Audio button */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -3961,8 +3961,8 @@ function ReadingsView() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-6"
       >
-        <span className="text-5xl block mb-3">📖</span>
-        <h2 className="text-2xl font-bold">Lecturas en Inglés</h2>
+        <span className="text-4xl sm:text-5xl block mb-3">📖</span>
+        <h2 className="text-xl sm:text-2xl font-bold">Lecturas en Inglés</h2>
         <p className="text-muted-foreground text-sm">Mejora tu comprensión leyendo textos reales</p>
         <p className="text-xs text-muted-foreground mt-1">La primera lectura de cada nivel es gratis 🎉</p>
       </motion.div>
@@ -4067,7 +4067,7 @@ function ReadingsView() {
 
       {filteredReadings.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
-          <span className="text-4xl block mb-2">📚</span>
+          <span className="text-3xl sm:text-4xl block mb-2">📚</span>
           <p>Cargando lecturas...</p>
         </div>
       )}
@@ -4113,13 +4113,13 @@ function SessionTimer() {
   const progress = ((15 * 60 - timeLeft) / (15 * 60)) * 100
 
   return (
-    <div className="fixed top-20 right-4 z-50">
+    <div className="fixed top-16 right-2 sm:right-4 z-50">
       <motion.div
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         className="glass rounded-2xl p-3 border border-cyan-500/30 shadow-lg shadow-cyan-500/10"
       >
-        <div className="relative w-16 h-16 flex items-center justify-center">
+        <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center">
           <svg className="absolute inset-0 w-full h-full -rotate-90">
             <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="3" className="text-secondary" />
             <circle
@@ -4243,7 +4243,7 @@ function MiniGameBoxes() {
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="glass rounded-3xl p-6 w-full max-w-sm relative overflow-hidden"
+        className="glass rounded-3xl p-4 sm:p-6 w-full max-w-sm relative overflow-hidden"
       >
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-amber-500/5 pointer-events-none" />
@@ -4427,7 +4427,7 @@ function MiniGameWheel() {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/90">
-      <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-3xl p-6 w-full max-w-sm text-center relative overflow-hidden">
+      <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-3xl p-4 sm:p-6 w-full max-w-sm text-center relative overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 pointer-events-none" />
         
@@ -4435,7 +4435,7 @@ function MiniGameWheel() {
           <h2 className="text-xl font-bold mb-2">🎡 Rueda de la Fortuna</h2>
           <p className="text-xs text-muted-foreground mb-4">¡Gira y gana premios! Pero cuidado con el perro 🐕</p>
 
-          <div className="relative w-56 h-56 mx-auto mb-4">
+          <div className="relative w-48 sm:w-56 h-48 sm:h-56 mx-auto mb-4">
             {/* LED lights around the wheel */}
             <div className="absolute inset-0 rounded-full">
               {Array.from({ length: 16 }).map((_, i) => (
@@ -4456,7 +4456,7 @@ function MiniGameWheel() {
 
             {/* Wheel */}
             <div
-              className="w-48 h-48 rounded-full overflow-hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+              className="w-40 sm:w-48 h-40 sm:h-48 rounded-full overflow-hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
               style={{
                 transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
                 transition: spinning ? 'transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none',
@@ -4640,7 +4640,7 @@ function MiniGameMemory() {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/90">
-      <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-3xl p-6 w-full max-w-sm relative overflow-hidden">
+      <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-3xl p-4 sm:p-6 w-full max-w-sm relative overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-cyan-500/5 pointer-events-none" />
 
@@ -4660,7 +4660,7 @@ function MiniGameMemory() {
             </div>
           </div>
 
-          <div className="grid grid-cols-4 gap-2 mb-4">
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-4">
             {cards.map((card) => (
               <motion.button
                 key={card.id}
@@ -4818,7 +4818,7 @@ function MiniGameTrivia() {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/90">
-      <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-3xl p-6 w-full max-w-sm relative overflow-hidden">
+      <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-3xl p-4 sm:p-6 w-full max-w-sm relative overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-emerald-500/5 pointer-events-none" />
 
@@ -5046,10 +5046,10 @@ export default function Home() {
               initial={{ scale: 0.8, y: 30 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.8, y: 30 }}
-              className="glass rounded-3xl p-6 max-w-sm w-full text-center"
+              className="glass rounded-3xl p-4 sm:p-6 max-w-sm w-full text-center"
             >
-              <div className="text-5xl mb-2">🎁</div>
-              <h2 className="text-2xl font-black mb-2">Streak Reward!</h2>
+              <div className="text-4xl sm:text-5xl mb-2">🎁</div>
+              <h2 className="text-xl sm:text-2xl font-black mb-2">Streak Reward!</h2>
               <p className="text-sm text-muted-foreground mb-6">
                 You reached a 7-day streak! Pick one gift box:
               </p>
@@ -5094,8 +5094,8 @@ export default function Home() {
               transition={{ type: 'spring', stiffness: 200 }}
               className="text-center"
             >
-              <div className="text-8xl mb-4">🎉</div>
-              <h2 className="text-4xl font-black neon-green">LEVEL UP!</h2>
+              <div className="text-6xl sm:text-8xl mb-4">🎉</div>
+              <h2 className="text-3xl sm:text-4xl font-black neon-green">LEVEL UP!</h2>
               <p className="text-xl text-muted-foreground mt-2">Keep up the great work!</p>
             </motion.div>
           </motion.div>
