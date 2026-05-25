@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAppStore, parseQuestionOptions, type ViewName, type Question, type ViewMode } from '@/lib/store'
+import { useAppStore, parseQuestionOptions, type ViewName, type Question, type ViewMode, computeTitle, TITLE_TIERS } from '@/lib/store'
 
 // ============================================
 // ICONS (inline SVG to avoid import issues)
@@ -473,6 +473,33 @@ function Dashboard() {
             <p className="text-xs font-medium mt-2 text-muted-foreground">{item.label}</p>
           </motion.button>
         ))}
+      </div>
+
+      {/* Mini Juegos */}
+      <div className="mt-6">
+        <h3 className="text-lg font-bold mb-3 flex items-center gap-2">🎮 Mini Juegos</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { icon: '🎁', label: 'Cajas Sorpresa', gameType: 'boxes' },
+            { icon: '🎡', label: 'Rueda', gameType: 'wheel' },
+            { icon: '🧠', label: 'Memoria', gameType: 'memory' },
+            { icon: '⚡', label: 'Trivia', gameType: 'trivia' },
+          ].map((game, i) => (
+            <motion.button
+              key={game.gameType}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 + i * 0.05 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => useAppStore.getState().activateMiniGame(game.gameType)}
+              className="glass rounded-xl p-4 text-center hover:bg-secondary/50 transition-colors border border-cyan-500/10"
+            >
+              <span className="text-2xl">{game.icon}</span>
+              <p className="text-xs font-medium mt-2 text-cyan-400">{game.label}</p>
+            </motion.button>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -2274,9 +2301,16 @@ function ShopView() {
   const buyReward = useAppStore((s) => s.buyReward)
   const equipReward = useAppStore((s) => s.equipReward)
   const playSound = useAppStore((s) => s.playSound)
+  const buyLives = useAppStore((s) => s.buyLives)
+  const buyEnergy = useAppStore((s) => s.buyEnergy)
+  const buyCoinPack = useAppStore((s) => s.buyCoinPack)
+  const buyReadingPack = useAppStore((s) => s.buyReadingPack)
+  const [activeTab, setActiveTab] = useState<string>('cosmeticos')
   const [shopFilter, setShopFilter] = useState<string>('all')
   const [buyingId, setBuyingId] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [watchingVideo, setWatchingVideo] = useState(false)
+  const [videoProgress, setVideoProgress] = useState(0)
 
   useEffect(() => {
     loadShop()
@@ -2301,11 +2335,11 @@ function ShopView() {
     legendary: 'shadow-yellow-500/20',
   }
 
-  const shopTypes = ['all', 'avatar', 'frame', 'title']
+  const shopTypes = ['all', 'avatar', 'frame']
 
   const filteredItems = shopFilter === 'all'
-    ? shopItems
-    : shopItems.filter((item) => item.type === shopFilter)
+    ? shopItems.filter((item) => item.type !== 'title')
+    : shopItems.filter((item) => item.type === shopFilter && item.type !== 'title')
 
   // Check if an item is equipped
   const isEquipped = (rewardId: string) => inventory.some((i) => i.rewardId === rewardId && i.equipped)
@@ -2320,6 +2354,28 @@ function ShopView() {
     await equipReward(rewardId)
   }
 
+  const handleWatchVideo = (coinAmount: number) => {
+    if (watchingVideo) return
+    setWatchingVideo(true)
+    setVideoProgress(0)
+    const duration = 3000
+    const interval = 50
+    const steps = duration / interval
+    let step = 0
+    const timer = setInterval(() => {
+      step++
+      setVideoProgress(Math.min((step / steps) * 100, 100))
+      if (step >= steps) {
+        clearInterval(timer)
+        buyCoinPack(coinAmount)
+        playSound('reward')
+        setSuccessMsg(`¡Ganaste ${coinAmount} monedas! 🎉`)
+        setWatchingVideo(false)
+        setVideoProgress(0)
+      }
+    }, interval)
+  }
+
   // Show success message briefly
   useEffect(() => {
     if (successMsg) {
@@ -2328,10 +2384,38 @@ function ShopView() {
     }
   }, [successMsg])
 
+  const tabs = [
+    { id: 'cosmeticos', label: '💄 Cosméticos', icon: '💄' },
+    { id: 'vidas', label: '❤️ Vidas', icon: '❤️' },
+    { id: 'energia', label: '⚡ Energía', icon: '⚡' },
+    { id: 'monedas', label: '🪙 Monedas', icon: '🪙' },
+    { id: 'lecturas', label: '📖 Lecturas', icon: '📖' },
+  ]
+
+  const livesPacks = [
+    { amount: 5, cost: 1000, label: '5 Vidas', icon: '❤️' },
+    { amount: 10, cost: 1800, label: '10 Vidas', icon: '❤️‍🔥' },
+    { amount: 15, cost: 2500, label: '15 Vidas', icon: '💖' },
+    { amount: 20, cost: 3000, label: '20 Vidas', icon: '💘' },
+  ]
+
+  const coinPacks = [
+    { amount: 1000, label: '1,000 Monedas', icon: '🪙' },
+    { amount: 3000, label: '3,000 Monedas', icon: '💰' },
+    { amount: 5000, label: '5,000 Monedas', icon: '💎' },
+    { amount: 10000, label: '10,000 Monedas', icon: '👑' },
+  ]
+
+  const readingPacks = [
+    { level: 'basic', label: 'Básico (4 lecturas)', icon: '🌱', cost: 1600, count: 4 },
+    { level: 'intermediate', label: 'Intermedio (4 lecturas)', icon: '🔥', cost: 1800, count: 4 },
+    { level: 'advanced', label: 'Avanzado (4 lecturas)', icon: '🧠', cost: 2000, count: 4 },
+  ]
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">🛍️ Shop</h2>
+        <h2 className="text-2xl font-bold">🛍️ Tienda</h2>
         <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
           <Icons.coin size={14} className="text-yellow-400" />
           <span className="text-sm font-bold text-yellow-400">{user?.coins || 0}</span>
@@ -2352,108 +2436,287 @@ function ShopView() {
         )}
       </AnimatePresence>
 
-      {/* Filter tabs */}
+      {/* Main tabs */}
       <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-        {shopTypes.map((type) => (
+        {tabs.map((tab) => (
           <button
-            key={type}
-            onClick={() => setShopFilter(type)}
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
-              shopFilter === type
+              activeTab === tab.id
                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                 : 'bg-secondary/50 text-muted-foreground border border-transparent'
             }`}
           >
-            {type === 'all' ? '📦 All' : type === 'avatar' ? '👤 Avatars' : type === 'frame' ? '🖼️ Frames' : '🏷️ Titles'}
+            {tab.label}
           </button>
         ))}
       </div>
 
-      {isLoading ? (
-        <div className="grid grid-cols-2 gap-3">
-          {Array.from({length: 6}).map((_, i) => (
-            <div key={i} className="animate-pulse h-44 rounded-xl bg-secondary" />
-          ))}
-        </div>
-      ) : filteredItems.length === 0 ? (
-        <div className="text-center py-12">
-          <span className="text-5xl block mb-4">🛍️</span>
-          <p className="text-muted-foreground">No items available</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {filteredItems.map((item, i) => {
-            const owned = item.purchased
-            const equipped = isEquipped(item.id)
-            const canAfford = (user?.coins || 0) >= item.cost
-            const isBuying = buyingId === item.id
+      {/* Cosméticos tab */}
+      {activeTab === 'cosmeticos' && (
+        <>
+          {/* Sub-filter for cosmetics */}
+          <div className="flex gap-2 mb-4">
+            {shopTypes.map((type) => (
+              <button
+                key={type}
+                onClick={() => setShopFilter(type)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                  shopFilter === type
+                    ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                    : 'bg-secondary/50 text-muted-foreground border border-transparent'
+                }`}
+              >
+                {type === 'all' ? '📦 Todos' : type === 'avatar' ? '👤 Avatares' : '🖼️ Marcos'}
+              </button>
+            ))}
+          </div>
 
-            return (
-              <motion.div
-                key={item.id}
+          {isLoading ? (
+            <div className="grid grid-cols-2 gap-3">
+              {Array.from({length: 6}).map((_, i) => (
+                <div key={i} className="animate-pulse h-44 rounded-xl bg-secondary" />
+              ))}
+            </div>
+          ) : filteredItems.length === 0 ? (
+            <div className="text-center py-12">
+              <span className="text-5xl block mb-4">🛍️</span>
+              <p className="text-muted-foreground">No hay artículos disponibles</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {filteredItems.map((item, i) => {
+                const owned = item.purchased
+                const equipped = isEquipped(item.id)
+                const canAfford = (user?.coins || 0) >= item.cost
+                const isBuying = buyingId === item.id
+
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.03 }}
+                    whileHover={!owned ? { scale: 1.05 } : {}}
+                    className={`relative p-4 rounded-xl border text-center transition-all ${
+                      rarityColors[item.rarity] || rarityColors.common
+                    } ${equipped ? `ring-2 ring-emerald-500/50 shadow-lg ${rarityGlow[item.rarity] || ''}` : ''}`}
+                  >
+                    {owned && !equipped && (
+                      <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center z-10">
+                        <Icons.check size={12} className="text-white" />
+                      </div>
+                    )}
+                    {equipped && (
+                      <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center z-10">
+                        <Icons.check size={12} className="text-white" />
+                      </div>
+                    )}
+
+                    <span className="text-4xl block mb-2">{item.icon}</span>
+                    <p className="font-bold text-sm">{item.nameEs || item.name}</p>
+                    <p className="text-[9px] text-muted-foreground mt-0.5">{item.descriptionEs || item.description}</p>
+                    <p className={`text-[10px] uppercase font-bold mt-1 ${rarityLabels[item.rarity] || ''}`}>
+                      {item.rarity}
+                    </p>
+
+                    {owned ? (
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => handleEquip(item.id)}
+                        className={`mt-3 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          equipped
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            : 'bg-secondary text-foreground hover:bg-emerald-500/10 hover:text-emerald-400'
+                        }`}
+                      >
+                        {equipped ? '✓ Equipado' : 'Equipar'}
+                      </motion.button>
+                    ) : (
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => handleBuy(item.id)}
+                        disabled={!canAfford || isBuying}
+                        className="mt-3 px-3 py-1.5 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-1 mx-auto"
+                      >
+                        {isBuying ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <>{item.cost} 🪙</>
+                        )}
+                      </motion.button>
+                    )}
+                  </motion.div>
+                )
+              })}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Vidas tab */}
+      {activeTab === 'vidas' && (
+        <div className="space-y-3">
+          <div className="text-center mb-4">
+            <span className="text-4xl">❤️</span>
+            <p className="text-sm text-muted-foreground mt-2">Compra vidas para seguir jugando</p>
+            <p className="text-xs text-muted-foreground">Vidas actuales: <span className="text-red-400 font-bold">{user?.lives || 0}</span></p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {livesPacks.map((pack, i) => {
+              const canAfford = (user?.coins || 0) >= pack.cost
+              return (
+                <motion.button
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.05 }}
+                  whileHover={canAfford ? { scale: 1.05 } : {}}
+                  whileTap={canAfford ? { scale: 0.95 } : {}}
+                  onClick={() => { buyLives(pack.amount); playSound('reward'); setSuccessMsg(`¡Compraste ${pack.amount} vidas!`) }}
+                  disabled={!canAfford}
+                  className="p-4 rounded-xl border border-red-500/30 bg-red-500/5 text-center disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <span className="text-3xl block mb-2">{pack.icon}</span>
+                  <p className="font-bold text-sm text-red-400">{pack.label}</p>
+                  <div className="mt-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-xs font-bold inline-block">
+                    {pack.cost} 🪙
+                  </div>
+                </motion.button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Energía tab */}
+      {activeTab === 'energia' && (
+        <div className="space-y-3">
+          <div className="text-center mb-4">
+            <span className="text-5xl block mb-3">⚡</span>
+            <h3 className="text-lg font-bold">Recargar Energía</h3>
+            <p className="text-sm text-muted-foreground">Recupera energía para seguir aprendiendo</p>
+          </div>
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={(user?.coins || 0) >= 500 ? { scale: 1.03 } : {}}
+            whileTap={(user?.coins || 0) >= 500 ? { scale: 0.97 } : {}}
+            onClick={() => { buyEnergy(); playSound('reward'); setSuccessMsg('¡Energía recargada! ⚡') }}
+            disabled={(user?.coins || 0) < 500}
+            className="w-full p-6 rounded-xl border border-cyan-500/30 bg-cyan-500/5 text-center disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <span className="text-5xl block mb-3">⚡</span>
+            <p className="font-bold text-cyan-400">Recarga Completa</p>
+            <p className="text-xs text-muted-foreground mt-1">Recupera toda tu energía</p>
+            <div className="mt-3 px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-sm font-bold inline-block">
+              500 🪙
+            </div>
+          </motion.button>
+        </div>
+      )}
+
+      {/* Monedas tab */}
+      {activeTab === 'monedas' && (
+        <div className="space-y-3">
+          <div className="text-center mb-4">
+            <span className="text-4xl">🪙</span>
+            <p className="text-sm text-muted-foreground mt-2">¡Gana monedas gratis viendo un video!</p>
+          </div>
+          {watchingVideo && (
+            <div className="mb-4 p-4 rounded-xl glass border border-yellow-500/20">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-6 h-6 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm font-medium text-yellow-400">Viendo video...</p>
+              </div>
+              <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${videoProgress}%` }}
+                  className="h-full bg-gradient-to-r from-yellow-500 to-amber-500 rounded-full"
+                />
+              </div>
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            {coinPacks.map((pack, i) => (
+              <motion.button
+                key={i}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.03 }}
-                whileHover={!owned ? { scale: 1.05 } : {}}
-                className={`relative p-4 rounded-xl border text-center transition-all ${
-                  rarityColors[item.rarity] || rarityColors.common
-                } ${equipped ? `ring-2 ring-emerald-500/50 shadow-lg ${rarityGlow[item.rarity] || ''}` : ''}`}
+                transition={{ delay: i * 0.05 }}
+                whileHover={!watchingVideo ? { scale: 1.05 } : {}}
+                whileTap={!watchingVideo ? { scale: 0.95 } : {}}
+                onClick={() => handleWatchVideo(pack.amount)}
+                disabled={watchingVideo}
+                className="p-4 rounded-xl border border-yellow-500/30 bg-yellow-500/5 text-center disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {/* Owned badge */}
-                {owned && !equipped && (
-                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center z-10">
-                    <Icons.check size={12} className="text-white" />
-                  </div>
-                )}
-                {equipped && (
-                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center z-10">
-                    <Icons.check size={12} className="text-white" />
-                  </div>
-                )}
+                <span className="text-3xl block mb-2">{pack.icon}</span>
+                <p className="font-bold text-sm text-yellow-400">{pack.label}</p>
+                <div className="mt-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-xs font-bold inline-block">
+                  🎬 Ver Video
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      )}
 
-                <span className="text-4xl block mb-2">{item.icon}</span>
-                <p className="font-bold text-sm">{item.nameEs || item.name}</p>
-                <p className="text-[9px] text-muted-foreground mt-0.5">{item.descriptionEs || item.description}</p>
-                <p className={`text-[10px] uppercase font-bold mt-1 ${rarityLabels[item.rarity] || ''}`}>
-                  {item.rarity}
-                </p>
-
-                {owned ? (
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => handleEquip(item.id)}
-                    className={`mt-3 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                      equipped
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                        : 'bg-secondary text-foreground hover:bg-emerald-500/10 hover:text-emerald-400'
-                    }`}
-                  >
-                    {equipped ? '✓ Equipped' : 'Equip'}
-                  </motion.button>
-                ) : (
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => handleBuy(item.id)}
-                    disabled={!canAfford || isBuying}
-                    className="mt-3 px-3 py-1.5 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-1 mx-auto"
-                  >
-                    {isBuying ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>{item.cost} 🪙</>
-                    )}
-                  </motion.button>
-                )}
-              </motion.div>
-            )
-          })}
+      {/* Lecturas tab */}
+      {activeTab === 'lecturas' && (
+        <div className="space-y-3">
+          <div className="text-center mb-4">
+            <span className="text-4xl">📖</span>
+            <p className="text-sm text-muted-foreground mt-2">Compra paquetes de lecturas por nivel</p>
+            <p className="text-xs text-muted-foreground">La primera de cada nivel es gratis</p>
+          </div>
+          <div className="space-y-3">
+            {readingPacks.map((pack, i) => {
+              const canAfford = (user?.coins || 0) >= pack.cost
+              const levelColors: Record<string, string> = {
+                basic: 'border-emerald-500/30 bg-emerald-500/5',
+                intermediate: 'border-orange-500/30 bg-orange-500/5',
+                advanced: 'border-purple-500/30 bg-purple-500/5',
+              }
+              const levelText: Record<string, string> = {
+                basic: 'text-emerald-400',
+                intermediate: 'text-orange-400',
+                advanced: 'text-purple-400',
+              }
+              return (
+                <motion.button
+                  key={i}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  whileHover={canAfford ? { scale: 1.02 } : {}}
+                  whileTap={canAfford ? { scale: 0.98 } : {}}
+                  onClick={() => { buyReadingPack(pack.level, pack.count); playSound('reward'); setSuccessMsg(`¡Paquete ${pack.label} desbloqueado!`) }}
+                  disabled={!canAfford}
+                  className={`w-full p-4 rounded-xl border text-left disabled:opacity-40 disabled:cursor-not-allowed ${levelColors[pack.level]}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="text-3xl">{pack.icon}</span>
+                    <div className="flex-1">
+                      <p className={`font-bold ${levelText[pack.level]}`}>{pack.label}</p>
+                      <p className="text-xs text-muted-foreground">{pack.count} lecturas adicionales</p>
+                    </div>
+                    <div className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-xs font-bold">
+                      {pack.cost} 🪙
+                    </div>
+                  </div>
+                </motion.button>
+              )
+            })}
+          </div>
         </div>
       )}
 
       {/* Bottom info */}
       <div className="mt-6 p-4 rounded-xl glass border border-border text-center">
         <p className="text-xs text-muted-foreground">
-          💡 Earn coins by completing exercises. Equip your items in <button onClick={() => useAppStore.getState().navigate('profile')} className="text-emerald-400 hover:underline">Profile → My Items</button>
+          💡 Gana monedas completando ejercicios. Equipa tus artículos en <button onClick={() => useAppStore.getState().navigate('profile')} className="text-emerald-400 hover:underline">Perfil → Mis Artículos</button>
         </p>
       </div>
     </div>
@@ -3113,9 +3376,13 @@ function ReadingsView() {
   const addXp = useAppStore((s) => s.addXp)
   const speechSpeed = useAppStore((s) => s.speechSpeed)
   const speechVoiceIndex = useAppStore((s) => s.speechVoiceIndex)
+  const buyReading = useAppStore((s) => s.buyReading)
+  const isReadingUnlocked = useAppStore((s) => s.isReadingUnlocked)
   const [readingAnswers, setReadingAnswers] = useState<Record<number, number>>({})
   const [showReadingResults, setShowReadingResults] = useState(false)
   const [readingCompleted, setReadingCompleted] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [selectedLevel, setSelectedLevel] = useState<string>('basic')
 
   useEffect(() => {
     loadReadings()
@@ -3144,6 +3411,11 @@ function ReadingsView() {
   const handleSpeakPassage = () => {
     if (!currentReading) return
     if ('speechSynthesis' in window) {
+      if (isSpeaking) {
+        speechSynthesis.cancel()
+        setIsSpeaking(false)
+        return
+      }
       speechSynthesis.cancel()
       const u = new SpeechSynthesisUtterance(currentReading.passage)
       u.lang = 'en-US'
@@ -3153,7 +3425,16 @@ function ReadingsView() {
       if (engVoices.length > 0 && speechVoiceIndex >= 0 && speechVoiceIndex < engVoices.length) {
         u.voice = engVoices[speechVoiceIndex]
       }
+      u.onend = () => setIsSpeaking(false)
       speechSynthesis.speak(u)
+      setIsSpeaking(true)
+    }
+  }
+
+  const handleStopSpeaking = () => {
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel()
+      setIsSpeaking(false)
     }
   }
 
@@ -3162,10 +3443,6 @@ function ReadingsView() {
 
   // Reading detail view
   if (currentReading) {
-    const difficultyColors: Record<number, string> = {
-      1: 'text-emerald-400', 2: 'text-emerald-400', 3: 'text-orange-400',
-      4: 'text-red-400', 5: 'text-purple-400',
-    }
     return (
       <div className="max-w-2xl mx-auto px-4 py-4 pb-24">
         {/* Header */}
@@ -3173,7 +3450,7 @@ function ReadingsView() {
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => { selectReading(null); setShowReadingResults(false); setReadingCompleted(false); setReadingAnswers({}) }}
+            onClick={() => { selectReading(null); setShowReadingResults(false); setReadingCompleted(false); setReadingAnswers({}); handleStopSpeaking() }}
             className="p-2 rounded-xl hover:bg-secondary"
           >
             <Icons.arrowLeft size={20} />
@@ -3197,12 +3474,12 @@ function ReadingsView() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={hasAudio ? handleSpeakPassage : () => unlockAudioReading(currentReading.id)}
+                onClick={hasAudio ? (isSpeaking ? handleStopSpeaking : handleSpeakPassage) : () => unlockAudioReading(currentReading.id)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
                   hasAudio ? 'bg-cyan-500/10 border border-cyan-500/20 text-cyan-400' : 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-400'
                 }`}
               >
-                {hasAudio ? '🔊 Escuchar' : '🔒 Audio (250 🪙)'}
+                {hasAudio ? (isSpeaking ? '⏹️ Detener Lectura' : '🔊 Escuchar Lectura') : '🔒 Audio (250 🪙)'}
               </motion.button>
               {/* Spanish toggle */}
               <motion.button
@@ -3219,7 +3496,7 @@ function ReadingsView() {
                   hasSpanish ? 'bg-teal-500/10 border border-teal-500/20 text-teal-400' : 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-400'
                 }`}
               >
-                {hasSpanish ? (showSpanishTranslation ? '🇬🇧 English' : '🇪🇸 Español') : '🔒 Traducción (250 🪙)'}
+                {hasSpanish ? (showSpanishTranslation ? '🇬🇧 English' : '🇪🇸 Español') : '🔒 Traducción (200 🪙)'}
               </motion.button>
             </div>
           </div>
@@ -3304,7 +3581,7 @@ function ReadingsView() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => { selectReading(null); setShowReadingResults(false); setReadingCompleted(false); setReadingAnswers({}) }}
+              onClick={() => { selectReading(null); setShowReadingResults(false); setReadingCompleted(false); setReadingAnswers({}); handleStopSpeaking() }}
               className="px-6 py-3 rounded-xl bg-secondary border border-border font-bold"
             >
               📖 Más Lecturas
@@ -3315,74 +3592,731 @@ function ReadingsView() {
     )
   }
 
-  // Readings list
+  // Readings list - organized by level with purchase system
   const difficultyIcon: Record<number, string> = { 1: '🟢', 2: '🟢', 3: '🟡', 4: '🔴', 5: '🔴' }
+  const levels = ['basic', 'intermediate', 'advanced'] as const
+  const levelConfig: Record<string, { label: string; icon: string; color: string; borderColor: string; bgColor: string; textColor: string }> = {
+    basic: { label: 'Básico', icon: '🌱', color: 'emerald', borderColor: 'border-emerald-500/30', bgColor: 'bg-emerald-500/5', textColor: 'text-emerald-400' },
+    intermediate: { label: 'Intermedio', icon: '🔥', color: 'orange', borderColor: 'border-orange-500/30', bgColor: 'bg-orange-500/5', textColor: 'text-orange-400' },
+    advanced: { label: 'Avanzado', icon: '🧠', color: 'purple', borderColor: 'border-purple-500/30', bgColor: 'bg-purple-500/5', textColor: 'text-purple-400' },
+  }
+
+  const filteredReadings = readings.filter(r => r.level === selectedLevel)
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-8"
+        className="text-center mb-6"
       >
         <span className="text-5xl block mb-3">📖</span>
         <h2 className="text-2xl font-bold">Lecturas en Inglés</h2>
-        <p className="text-muted-foreground">Mejora tu comprensión leyendo textos reales</p>
+        <p className="text-muted-foreground text-sm">Mejora tu comprensión leyendo textos reales</p>
+        <p className="text-xs text-muted-foreground mt-1">La primera lectura de cada nivel es gratis 🎉</p>
       </motion.div>
 
-      <div className="space-y-3">
-        {readings.map((reading, i) => {
-          const levelColors: Record<string, string> = {
-            basic: 'border-emerald-500/30 bg-emerald-500/5',
-            intermediate: 'border-orange-500/30 bg-orange-500/5',
-            advanced: 'border-purple-500/30 bg-purple-500/5',
-          }
-          const levelTextColors: Record<string, string> = {
-            basic: 'text-emerald-400',
-            intermediate: 'text-orange-400',
-            advanced: 'text-purple-400',
-          }
+      {/* Level tabs */}
+      <div className="flex gap-2 mb-4">
+        {levels.map((level) => {
+          const cfg = levelConfig[level]
           return (
-            <motion.button
+            <button
+              key={level}
+              onClick={() => setSelectedLevel(level)}
+              className={`flex-1 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                selectedLevel === level
+                  ? `${cfg.bgColor} ${cfg.borderColor} border ${cfg.textColor}`
+                  : 'bg-secondary/50 text-muted-foreground border border-transparent'
+              }`}
+            >
+              {cfg.icon} {cfg.label}
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="space-y-3">
+        {filteredReadings.map((reading, i) => {
+          const cfg = levelConfig[reading.level] || levelConfig.basic
+          const unlocked = isReadingUnlocked(reading.id)
+          const isFirst = i === 0
+          const hasAudioForReading = unlockedAudioReadings.includes(reading.id)
+          const hasSpanishForReading = unlockedSpanishReadings.includes(reading.id)
+
+          return (
+            <motion.div
               key={reading.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => selectReading(reading.id)}
-              className={`w-full p-4 rounded-xl border text-left transition-all ${levelColors[reading.level] || 'border-border bg-secondary/50'}`}
+              className={`w-full p-4 rounded-xl border text-left transition-all ${cfg.borderColor} ${cfg.bgColor}`}
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-2xl">
-                  📖
+                <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-2xl relative">
+                  {unlocked ? '📖' : '🔒'}
+                  {isFirst && unlocked && (
+                    <span className="absolute -top-1 -right-1 text-[10px]">🆓</span>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-sm">{reading.title}</h4>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-sm">{reading.title}</h4>
+                    {!unlocked && <Icons.lock size={14} className="text-yellow-400" />}
+                  </div>
                   <p className="text-xs text-muted-foreground">{reading.titleEs}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className={`text-[10px] font-bold uppercase ${levelTextColors[reading.level]}`}>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <span className={`text-[10px] font-bold uppercase ${cfg.textColor}`}>
                       {reading.level}
                     </span>
                     <span className="text-[10px] text-muted-foreground">
                       {difficultyIcon[reading.difficulty]} {reading.questions.length} preguntas
                     </span>
                     <span className="text-[10px] text-emerald-400">+{reading.xpReward} XP</span>
+                    {hasAudioForReading && <span className="text-[10px] text-cyan-400">🔊 Audio</span>}
+                    {hasSpanishForReading && <span className="text-[10px] text-teal-400">🇪🇸 Traducción</span>}
                   </div>
                 </div>
-                <span className="text-muted-foreground">→</span>
+                <div className="flex flex-col items-end gap-1">
+                  {unlocked ? (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => selectReading(reading.id)}
+                      className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold"
+                    >
+                      Leer →
+                    </motion.button>
+                  ) : isFirst ? (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => selectReading(reading.id)}
+                      className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-xs font-bold"
+                    >
+                      🆓 Gratis
+                    </motion.button>
+                  ) : (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => buyReading(reading.id)}
+                      disabled={(user?.coins || 0) < 500}
+                      className="px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      🔓 500 🪙
+                    </motion.button>
+                  )}
+                </div>
               </div>
-            </motion.button>
+            </motion.div>
           )
         })}
       </div>
 
-      {readings.length === 0 && (
+      {filteredReadings.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           <span className="text-4xl block mb-2">📚</span>
           <p>Cargando lecturas...</p>
         </div>
       )}
+
+      {/* Reading pack offer */}
+      <div className="mt-6 p-4 rounded-xl glass border border-border text-center">
+        <p className="text-xs text-muted-foreground">
+          💡 La primera lectura de cada nivel es gratis. Compra lecturas individuales por 500 monedas o paquetes en la <button onClick={() => useAppStore.getState().navigate('shop')} className="text-emerald-400 hover:underline">Tienda</button>
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ============================================
+// SESSION TIMER
+// ============================================
+function SessionTimer() {
+  const sessionStartTime = useAppStore((s) => s.sessionStartTime)
+  const showMiniGame = useAppStore((s) => s.showMiniGame)
+  const activateMiniGame = useAppStore((s) => s.activateMiniGame)
+  const [timeLeft, setTimeLeft] = useState(15 * 60)
+  const [timerComplete, setTimerComplete] = useState(false)
+
+  useEffect(() => {
+    if (!sessionStartTime || showMiniGame) return
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000)
+      const remaining = Math.max(0, 15 * 60 - elapsed)
+      setTimeLeft(remaining)
+      if (remaining <= 0) {
+        setTimerComplete(true)
+        clearInterval(interval)
+      }
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [sessionStartTime, showMiniGame])
+
+  if (!sessionStartTime || showMiniGame) return null
+
+  const minutes = Math.floor(timeLeft / 60)
+  const seconds = timeLeft % 60
+  const progress = ((15 * 60 - timeLeft) / (15 * 60)) * 100
+
+  return (
+    <div className="fixed top-20 right-4 z-50">
+      <motion.div
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="glass rounded-2xl p-3 border border-cyan-500/30 shadow-lg shadow-cyan-500/10"
+      >
+        <div className="relative w-16 h-16 flex items-center justify-center">
+          <svg className="absolute inset-0 w-full h-full -rotate-90">
+            <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="3" className="text-secondary" />
+            <circle
+              cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="3"
+              strokeDasharray={`${2 * Math.PI * 28}`}
+              strokeDashoffset={`${2 * Math.PI * 28 * (1 - progress / 100)}`}
+              strokeLinecap="round"
+              className={timerComplete ? 'text-yellow-400' : 'text-cyan-400'}
+            />
+          </svg>
+          <div className="text-center">
+            {timerComplete ? (
+              <span className="text-lg">🎉</span>
+            ) : (
+              <p className="text-[10px] font-bold text-cyan-400">
+                {minutes}:{seconds.toString().padStart(2, '0')}
+              </p>
+            )}
+          </div>
+        </div>
+        {timerComplete && (
+          <motion.button
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => activateMiniGame('boxes')}
+            className="w-full mt-1 px-2 py-1 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-[9px] font-bold"
+          >
+            🎁 ¡Jugar!
+          </motion.button>
+        )}
+        {!timerComplete && (
+          <p className="text-[8px] text-center text-muted-foreground mt-1">Mini Juego</p>
+        )}
+      </motion.div>
+    </div>
+  )
+}
+
+// ============================================
+// MINI GAME: BOXES
+// ============================================
+function MiniGameBoxes() {
+  const showMiniGame = useAppStore((s) => s.showMiniGame)
+  const miniGameType = useAppStore((s) => s.miniGameType)
+  const closeMiniGame = useAppStore((s) => s.closeMiniGame)
+  const addXp = useAppStore((s) => s.addXp)
+  const addCoins = useAppStore((s) => s.addCoins)
+  const playSound = useAppStore((s) => s.playSound)
+  const [boxes, setBoxes] = useState<Array<{opened: boolean; isDog: boolean; prize: string; amount: number}>>([])
+  const [gameOver, setGameOver] = useState(false)
+  const [prizesWon, setPrizesWon] = useState<Array<{prize: string; amount: number}>>([])
+  const livesUsed = useRef(false)
+  const [prevGameActive, setPrevGameActive] = useState(false)
+
+  // Reset game state when mini game activates (React-recommended pattern for adjusting state based on props)
+  const gameActive = showMiniGame && miniGameType === 'boxes'
+  if (gameActive && !prevGameActive) {
+    const prizeOptions = [
+      { isDog: false, prize: 'Vidas', amount: 5 },
+      { isDog: false, prize: 'Monedas', amount: 1000 },
+      { isDog: false, prize: 'Monedas', amount: 500 },
+      { isDog: true, prize: 'Perro Bravo', amount: 0 },
+      { isDog: true, prize: 'Perro Bravo', amount: 0 },
+      { isDog: true, prize: 'Perro Bravo', amount: 0 },
+    ]
+    const shuffled = [...prizeOptions].sort(() => Math.random() - 0.5)
+    setBoxes(shuffled.map(p => ({ ...p, opened: false })))
+    setGameOver(false)
+    setPrizesWon([])
+    livesUsed.current = false
+    setPrevGameActive(true)
+  }
+  if (!gameActive && prevGameActive) {
+    setPrevGameActive(false)
+  }
+
+  if (!showMiniGame || miniGameType !== 'boxes') return null
+
+  const handleOpenBox = (index: number) => {
+    if (boxes[index].opened || gameOver) return
+    const newBoxes = [...boxes]
+    newBoxes[index] = { ...newBoxes[index], opened: true }
+    setBoxes(newBoxes)
+
+    if (newBoxes[index].isDog) {
+      playSound('bark')
+      setGameOver(true)
+    } else {
+      playSound('reward')
+      const prize = newBoxes[index]
+      setPrizesWon(prev => [...prev, { prize: prize.prize, amount: prize.amount }])
+      if (prize.prize === 'Monedas') addCoins(prize.amount)
+      if (prize.prize === 'Vidas') {
+        if (!livesUsed.current) {
+          livesUsed.current = true
+          useAppStore.getState().buyLives(prize.amount)
+        }
+      }
+    }
+  }
+
+  const prizesOpened = boxes.filter(b => b.opened && !b.isDog).length
+  const allPrizesFound = prizesOpened >= 3
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/90">
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="glass rounded-2xl p-6 w-full max-w-sm"
+      >
+        <h2 className="text-xl font-bold text-center mb-4">🎁 ¡Cajas Sorpresa!</h2>
+        <p className="text-sm text-muted-foreground text-center mb-4">Destapa las cajas para ganar premios. ¡Cuidado con el perro bravo!</p>
+
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {boxes.map((box, i) => (
+            <motion.button
+              key={i}
+              whileHover={!box.opened ? { scale: 1.1 } : {}}
+              whileTap={!box.opened ? { scale: 0.9 } : {}}
+              onClick={() => handleOpenBox(i)}
+              disabled={box.opened || gameOver}
+              className={`aspect-square rounded-xl flex items-center justify-center text-3xl transition-all ${
+                box.opened
+                  ? box.isDog
+                    ? 'bg-red-500/20 border-2 border-red-500/30'
+                    : 'bg-emerald-500/20 border-2 border-emerald-500/30'
+                  : 'bg-gradient-to-br from-yellow-500/20 to-amber-500/20 border-2 border-yellow-500/30 hover:border-yellow-400/50 cursor-pointer'
+              }`}
+            >
+              {box.opened ? (
+                box.isDog ? '🐕' : box.prize === 'Vidas' ? '❤️' : '🪙'
+              ) : (
+                <motion.span
+                  animate={{ rotate: [0, -5, 5, -5, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
+                >
+                  🎁
+                </motion.span>
+              )}
+            </motion.button>
+          ))}
+        </div>
+
+        {prizesWon.length > 0 && (
+          <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+            <p className="text-xs font-bold text-emerald-400 mb-1">Premios ganados:</p>
+            {prizesWon.map((p, i) => (
+              <p key={i} className="text-xs text-emerald-300">✓ {p.amount} {p.prize}</p>
+            ))}
+          </div>
+        )}
+
+        {(gameOver || allPrizesFound) && (
+          <div className="text-center">
+            {gameOver && !allPrizesFound && (
+              <p className="text-sm text-red-400 mb-2">🐕 ¡Perro bravo! Más suerte la próxima vez</p>
+            )}
+            {allPrizesFound && (
+              <p className="text-sm text-emerald-400 mb-2">🎉 ¡Encontraste todos los premios!</p>
+            )}
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={closeMiniGame}
+              className="px-6 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold text-sm"
+            >
+              Cerrar
+            </motion.button>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  )
+}
+
+// ============================================
+// MINI GAME: WHEEL
+// ============================================
+function MiniGameWheel() {
+  const showMiniGame = useAppStore((s) => s.showMiniGame)
+  const miniGameType = useAppStore((s) => s.miniGameType)
+  const closeMiniGame = useAppStore((s) => s.closeMiniGame)
+  const addCoins = useAppStore((s) => s.addCoins)
+  const addXp = useAppStore((s) => s.addXp)
+  const playSound = useAppStore((s) => s.playSound)
+  const [spinning, setSpinning] = useState(false)
+  const [rotation, setRotation] = useState(0)
+  const [result, setResult] = useState<string | null>(null)
+
+  if (!showMiniGame || miniGameType !== 'wheel') return null
+
+  const segments = [
+    { label: '500🪙', color: '#22c55e', action: () => addCoins(500) },
+    { label: '1000🪙', color: '#f97316', action: () => addCoins(1000) },
+    { label: '100⚡', color: '#06b6d4', action: () => addCoins(100) },
+    { label: '🐕', color: '#ef4444', action: () => {} },
+    { label: '1500🪙', color: '#a855f7', action: () => addCoins(1500) },
+    { label: '5❤️', color: '#ec4899', action: () => useAppStore.getState().buyLives(5) },
+    { label: '2000🪙', color: '#eab308', action: () => addCoins(2000) },
+    { label: '🐕', color: '#ef4444', action: () => {} },
+  ]
+
+  const handleSpin = () => {
+    if (spinning) return
+    setSpinning(true)
+    setResult(null)
+    const extraSpins = 5 * 360
+    const randomAngle = Math.random() * 360
+    const newRotation = rotation + extraSpins + randomAngle
+    setRotation(newRotation)
+
+    setTimeout(() => {
+      const normalizedAngle = newRotation % 360
+      const segmentAngle = 360 / segments.length
+      const index = Math.floor(((360 - normalizedAngle + segmentAngle / 2) % 360) / segmentAngle)
+      const segment = segments[index % segments.length]
+      setSpinning(false)
+      if (segment.label.includes('🐕')) {
+        playSound('bark')
+        setResult('🐕 ¡Perro bravo! Más suerte la próxima vez')
+      } else {
+        playSound('reward')
+        segment.action()
+        setResult(`🎉 ¡Ganaste: ${segment.label}!`)
+      }
+    }, 3000)
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/90">
+      <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-2xl p-6 w-full max-w-sm text-center">
+        <h2 className="text-xl font-bold mb-4">🎡 Rueda de la Fortuna</h2>
+        <div className="relative w-48 h-48 mx-auto mb-4">
+          <div
+            className="w-full h-full rounded-full border-4 border-yellow-500/50 overflow-hidden"
+            style={{ transform: `rotate(${rotation}deg)`, transition: spinning ? 'transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none' }}
+          >
+            {segments.map((seg, i) => {
+              const angle = (360 / segments.length) * i
+              return (
+                <div
+                  key={i}
+                  className="absolute w-1/2 h-1/2 origin-bottom-right"
+                  style={{ transform: `rotate(${angle}deg)`, backgroundColor: seg.color + '40' }}
+                >
+                  <span
+                    className="absolute text-xs font-bold text-white"
+                    style={{ transform: `rotate(${360 / segments.length / 2}deg) translateX(30px)`, left: '50%', top: '20%' }}
+                  >
+                    {seg.label}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 text-2xl">▼</div>
+        </div>
+        {result && <p className="text-sm mb-3 font-medium">{result}</p>}
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={result ? closeMiniGame : handleSpin}
+          disabled={spinning}
+          className="px-8 py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-amber-500 text-white font-bold disabled:opacity-50"
+        >
+          {spinning ? '⏳ Girando...' : result ? 'Cerrar' : '🎡 ¡Girar!'}
+        </motion.button>
+      </motion.div>
+    </div>
+  )
+}
+
+// ============================================
+// MINI GAME: MEMORY
+// ============================================
+function MiniGameMemory() {
+  const showMiniGame = useAppStore((s) => s.showMiniGame)
+  const miniGameType = useAppStore((s) => s.miniGameType)
+  const closeMiniGame = useAppStore((s) => s.closeMiniGame)
+  const addXp = useAppStore((s) => s.addXp)
+  const addCoins = useAppStore((s) => s.addCoins)
+  const playSound = useAppStore((s) => s.playSound)
+
+  const wordPairs = [
+    { en: 'House', es: 'Casa' },
+    { en: 'Water', es: 'Agua' },
+    { en: 'Book', es: 'Libro' },
+    { en: 'School', es: 'Escuela' },
+    { en: 'Friend', es: 'Amigo' },
+    { en: 'Food', es: 'Comida' },
+  ]
+
+  const [cards, setCards] = useState<Array<{id: number; text: string; pairId: number; flipped: boolean; matched: boolean}>>([])
+  const [flippedCards, setFlippedCards] = useState<number[]>([])
+  const [moves, setMoves] = useState(0)
+  const [gameComplete, setGameComplete] = useState(false)
+  const [canFlip, setCanFlip] = useState(true)
+  const [prevGameActive, setPrevGameActive] = useState(false)
+
+  // Reset game state when mini game activates (React-recommended pattern for adjusting state based on props)
+  const gameActive = showMiniGame && miniGameType === 'memory'
+  if (gameActive && !prevGameActive) {
+    const generated = wordPairs.flatMap((pair, i) => [
+      { id: i * 2, text: pair.en, pairId: i, flipped: false, matched: false },
+      { id: i * 2 + 1, text: pair.es, pairId: i, flipped: false, matched: false },
+    ])
+    const shuffled = [...generated].sort(() => Math.random() - 0.5)
+    setCards(shuffled)
+    setFlippedCards([])
+    setMoves(0)
+    setGameComplete(false)
+    setCanFlip(true)
+    setPrevGameActive(true)
+  }
+  if (!gameActive && prevGameActive) {
+    setPrevGameActive(false)
+  }
+
+  if (!showMiniGame || miniGameType !== 'memory') return null
+
+  const handleFlip = (cardId: number) => {
+    if (!canFlip) return
+    const card = cards.find(c => c.id === cardId)
+    if (!card || card.flipped || card.matched) return
+    if (flippedCards.length >= 2) return
+
+    const newCards = cards.map(c => c.id === cardId ? { ...c, flipped: true } : c)
+    setCards(newCards)
+    const newFlipped = [...flippedCards, cardId]
+    setFlippedCards(newFlipped)
+
+    if (newFlipped.length === 2) {
+      setMoves(prev => prev + 1)
+      setCanFlip(false)
+      const first = newCards.find(c => c.id === newFlipped[0])!
+      const second = newCards.find(c => c.id === newFlipped[1])!
+      if (first.pairId === second.pairId) {
+        playSound('correct')
+        const matchedCards = newCards.map(c =>
+          c.pairId === first.pairId ? { ...c, matched: true } : c
+        )
+        setTimeout(() => {
+          setCards(matchedCards)
+          setFlippedCards([])
+          setCanFlip(true)
+          if (matchedCards.every(c => c.matched)) {
+            setGameComplete(true)
+            playSound('reward')
+            addXp(50)
+            addCoins(300)
+          }
+        }, 500)
+      } else {
+        playSound('wrong')
+        setTimeout(() => {
+          setCards(newCards.map(c =>
+            c.id === newFlipped[0] || c.id === newFlipped[1] ? { ...c, flipped: false } : c
+          ))
+          setFlippedCards([])
+          setCanFlip(true)
+        }, 1000)
+      }
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/90">
+      <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-2xl p-6 w-full max-w-sm">
+        <h2 className="text-xl font-bold text-center mb-2">🧠 Memoria</h2>
+        <p className="text-xs text-muted-foreground text-center mb-4">Encuentra los pares inglés-español • Movimientos: {moves}</p>
+
+        <div className="grid grid-cols-4 gap-2 mb-4">
+          {cards.map((card) => (
+            <motion.button
+              key={card.id}
+              whileHover={!card.flipped && !card.matched ? { scale: 1.05 } : {}}
+              whileTap={!card.flipped && !card.matched ? { scale: 0.95 } : {}}
+              onClick={() => handleFlip(card.id)}
+              disabled={card.flipped || card.matched}
+              className={`aspect-square rounded-lg flex items-center justify-center text-xs font-bold p-1 transition-all ${
+                card.matched
+                  ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
+                  : card.flipped
+                  ? 'bg-cyan-500/20 border border-cyan-500/30 text-cyan-400'
+                  : 'bg-gradient-to-br from-purple-500/20 to-violet-500/20 border border-purple-500/30 cursor-pointer'
+              }`}
+            >
+              {card.flipped || card.matched ? card.text : '?'}
+            </motion.button>
+          ))}
+        </div>
+
+        {gameComplete && (
+          <div className="text-center">
+            <p className="text-sm text-emerald-400 mb-2">🎉 ¡Completado en {moves} movimientos! +50 XP +300 monedas</p>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={closeMiniGame}
+              className="px-6 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold text-sm"
+            >
+              Cerrar
+            </motion.button>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  )
+}
+
+// ============================================
+// MINI GAME: TRIVIA
+// ============================================
+function MiniGameTrivia() {
+  const showMiniGame = useAppStore((s) => s.showMiniGame)
+  const miniGameType = useAppStore((s) => s.miniGameType)
+  const closeMiniGame = useAppStore((s) => s.closeMiniGame)
+  const addXp = useAppStore((s) => s.addXp)
+  const addCoins = useAppStore((s) => s.addCoins)
+  const playSound = useAppStore((s) => s.playSound)
+
+  const triviaQuestions = [
+    { q: 'What does "apple" mean?', opts: ['Naranja', 'Manzana', 'Pera', 'Uva'], correct: 1 },
+    { q: 'Translate "dog"', opts: ['Gato', 'Pájaro', 'Perro', 'Pez'], correct: 2 },
+    { q: 'What is "water" in Spanish?', opts: ['Fuego', 'Tierra', 'Aire', 'Agua'], correct: 3 },
+    { q: 'What does "book" mean?', opts: ['Mesa', 'Libro', 'Silla', 'Puerta'], correct: 1 },
+    { q: 'Translate "happy"', opts: ['Triste', 'Enojado', 'Feliz', 'Cansado'], correct: 2 },
+  ]
+
+  const [currentQ, setCurrentQ] = useState(0)
+  const [score, setScore] = useState(0)
+  const [timeLeft, setTimeLeft] = useState(30)
+  const [answered, setAnswered] = useState(false)
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
+  const [gameOver, setGameOver] = useState(false)
+  const [prevGameActive, setPrevGameActive] = useState(false)
+
+  // Reset game state when mini game activates (React-recommended pattern for adjusting state based on props)
+  const gameActive = showMiniGame && miniGameType === 'trivia'
+  if (gameActive && !prevGameActive) {
+    setCurrentQ(0)
+    setScore(0)
+    setTimeLeft(30)
+    setAnswered(false)
+    setSelectedAnswer(null)
+    setGameOver(false)
+    setPrevGameActive(true)
+  }
+  if (!gameActive && prevGameActive) {
+    setPrevGameActive(false)
+  }
+
+  useEffect(() => {
+    if (!showMiniGame || miniGameType !== 'trivia' || gameOver) return
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          setGameOver(true)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [showMiniGame, miniGameType, gameOver, currentQ])
+
+  if (!showMiniGame || miniGameType !== 'trivia') return null
+
+  const handleAnswer = (optIndex: number) => {
+    if (answered) return
+    setAnswered(true)
+    setSelectedAnswer(optIndex)
+    if (optIndex === triviaQuestions[currentQ].correct) {
+      playSound('correct')
+      setScore(prev => prev + 1)
+    } else {
+      playSound('wrong')
+    }
+    setTimeout(() => {
+      if (currentQ < triviaQuestions.length - 1) {
+        setCurrentQ(prev => prev + 1)
+        setAnswered(false)
+        setSelectedAnswer(null)
+      } else {
+        setGameOver(true)
+        const xpEarned = (score + (optIndex === triviaQuestions[currentQ].correct ? 1 : 0)) * 15
+        const coinsEarned = (score + (optIndex === triviaQuestions[currentQ].correct ? 1 : 0)) * 100
+        addXp(xpEarned)
+        addCoins(coinsEarned)
+        if (score + (optIndex === triviaQuestions[currentQ].correct ? 1 : 0) >= 4) playSound('reward')
+      }
+    }, 800)
+  }
+
+  const finalScore = gameOver ? score + (answered && selectedAnswer === triviaQuestions[currentQ]?.correct ? 0 : 0) : score
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/90">
+      <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-2xl p-6 w-full max-w-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold">⚡ Trivia</h2>
+          <div className="flex items-center gap-2">
+            <span className={`text-sm font-bold ${timeLeft <= 10 ? 'text-red-400' : 'text-cyan-400'}`}>⏱ {timeLeft}s</span>
+            <span className="text-sm font-bold text-emerald-400">{score}/{triviaQuestions.length}</span>
+          </div>
+        </div>
+
+        {!gameOver ? (
+          <>
+            <div className="w-full h-1.5 bg-secondary rounded-full mb-4">
+              <div className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full transition-all" style={{ width: `${((currentQ + 1) / triviaQuestions.length) * 100}%` }} />
+            </div>
+            <p className="text-sm font-medium mb-4">{triviaQuestions[currentQ].q}</p>
+            <div className="space-y-2">
+              {triviaQuestions[currentQ].opts.map((opt, i) => {
+                const isCorrect = i === triviaQuestions[currentQ].correct
+                const isSelected = selectedAnswer === i
+                let cls = 'w-full p-3 rounded-xl border text-sm font-medium text-left transition-all '
+                if (answered) {
+                  if (isCorrect) cls += 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                  else if (isSelected) cls += 'border-red-500/50 bg-red-500/10 text-red-400'
+                  else cls += 'border-border opacity-50'
+                } else {
+                  cls += 'border-border hover:border-emerald-500/30 cursor-pointer'
+                }
+                return (
+                  <button key={i} onClick={() => handleAnswer(i)} disabled={answered} className={cls}>
+                    {opt}
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        ) : (
+          <div className="text-center">
+            <span className="text-5xl block mb-3">{score >= 4 ? '🏆' : score >= 2 ? '👍' : '📚'}</span>
+            <p className="text-lg font-bold mb-1">{score}/{triviaQuestions.length} correctas</p>
+            <p className="text-sm text-emerald-400 mb-4">+{score * 15} XP +{score * 100} monedas</p>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={closeMiniGame}
+              className="px-6 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold text-sm"
+            >
+              Cerrar
+            </motion.button>
+          </div>
+        )}
+      </motion.div>
     </div>
   )
 }
@@ -3403,15 +4337,17 @@ export default function Home() {
   const claimStreakGift = useAppStore((s) => s.claimStreakGift)
   const setShowStreakGiftModal = useAppStore((s) => s.setShowStreakGiftModal)
   const viewMode = useAppStore((s) => s.viewMode)
+  const startSessionTimer = useAppStore((s) => s.startSessionTimer)
 
-  // Update streak on login
+  // Update streak on login & start session timer
   useEffect(() => {
     if (isLoggedIn) {
       updateStreak()
+      startSessionTimer()
       // Check for streak gift after streak update
       setTimeout(() => checkStreakGift(), 500)
     }
-  }, [isLoggedIn, updateStreak, checkStreakGift])
+  }, [isLoggedIn, updateStreak, checkStreakGift, startSessionTimer])
 
   // Auto-hide confetti
   useEffect(() => {
@@ -3457,6 +4393,7 @@ export default function Home() {
   return (
     <div className={`min-h-screen flex flex-col bg-gradient-game ${viewMode === 'clean' ? 'view-mode-clean' : ''}`}>
       <Header />
+      <SessionTimer />
       <main className="flex-1">
         <AnimatePresence mode="wait">
           <motion.div
@@ -3474,6 +4411,12 @@ export default function Home() {
 
       {/* Confetti overlay */}
       {showConfetti && <ConfettiEffect />}
+
+      {/* Mini Games */}
+      <MiniGameBoxes />
+      <MiniGameWheel />
+      <MiniGameMemory />
+      <MiniGameTrivia />
 
       {/* Streak Gift Modal */}
       <AnimatePresence>

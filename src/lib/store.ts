@@ -200,6 +200,7 @@ interface PersistedPreferences {
   lastStreakGiftAt: number;
   unlockedSpanishReadings: string[];
   unlockedAudioReadings: string[];
+  purchasedReadings: string[];
 }
 
 // ============================================
@@ -278,6 +279,7 @@ export interface AppStoreState {
   showSpanishTranslation: boolean;
   unlockedSpanishReadings: string[];
   unlockedAudioReadings: string[];
+  purchasedReadings: string[];
 
   // UI State
   showConfetti: boolean;
@@ -294,6 +296,12 @@ export interface AppStoreState {
   isLoading: boolean;
   showLevelUpAnimation: boolean;
   notification: NotificationData | null;
+
+  // Session Timer State
+  sessionStartTime: number;
+  showMiniGame: boolean;
+  miniGameType: string; // 'boxes' | 'wheel' | 'memory' | 'trivia'
+  miniGameCompleted: boolean;
 
   // Actions - Navigation
   navigate: (view: ViewName, data?: { levelId?: string; scenarioId?: string; lessonId?: string }) => void;
@@ -361,6 +369,19 @@ export interface AppStoreState {
   unlockAudioReading: (readingId: string) => void;
   answerReadingQuestion: (readingId: string, questionIndex: number, answerIndex: number) => boolean;
   setShowSpanishTranslation: (val: boolean) => void;
+  buyReading: (readingId: string) => void;
+  buyReadingPack: (level: string, count: number) => void;
+  isReadingUnlocked: (readingId: string) => boolean;
+
+  // Actions - Session & Mini Games
+  startSessionTimer: () => void;
+  activateMiniGame: (gameType: string) => void;
+  closeMiniGame: () => void;
+
+  // Actions - Shop Purchases (consumables)
+  buyLives: (amount: number) => void;
+  buyEnergy: () => void;
+  buyCoinPack: (amount: number) => void;
 }
 
 // ============================================
@@ -502,7 +523,177 @@ const READINGS_DATA: ReadingData[] = [
       { id: 'r6q4', question: 'When are they planning to go?', questionEs: '¿Cuándo planean ir?', options: ['In June', 'In July', 'In August', 'In September'], correctAnswer: 1, explanation: 'They plan to stay for "one week in July."', explanationEs: 'Planean quedarse "una semana en julio."' },
     ]
   },
+  {
+    id: 'reading-7',
+    title: 'My First Day at School',
+    titleEs: 'Mi Primer Día de Escuela',
+    passage: 'It was Maria\'s first day at her new school, and she felt very nervous. Her family had moved to a different city during the summer, so she did not know anyone. When she walked into the classroom, the teacher, Miss Flores, smiled at her and introduced her to the class. "Everyone, this is Maria. Please make her feel welcome," Miss Flores said. A girl named Laura raised her hand and said, "You can sit next to me!" Maria felt relieved. During lunch, Laura invited Maria to eat with her and her friends. They talked about their favorite books and TV shows. By the end of the day, Maria had made three new friends and was no longer nervous. She realized that starting at a new school was not as scary as she had imagined. When she got home, she told her mother it was the best first day ever.',
+    passageEs: 'Era el primer día de María en su nueva escuela, y se sentía muy nerviosa. Su familia se había mudado a otra ciudad durante el verano, así que no conocía a nadie. Cuando entró al salón, la maestra, la Srta. Flores, le sonrió y la presentó a la clase. "Todos, esta es María. Por favor hagan que se sienta bienvenida," dijo la Srta. Flores. Una niña llamada Laura levantó la mano y dijo, "¡Puedes sentarte a mi lado!" María se sintió aliviada. Durante el almuerzo, Laura invitó a María a comer con ella y sus amigas. Hablaron sobre sus libros y programas de televisión favoritos. Al final del día, María había hecho tres nuevas amigas y ya no estaba nerviosa. Se dio cuenta de que empezar en una nueva escuela no era tan aterrador como había imaginado. Cuando llegó a casa, le dijo a su madre que había sido el mejor primer día.',
+    level: 'basic',
+    difficulty: 1,
+    xpReward: 50,
+    questions: [
+      { id: 'r7q1', question: 'Why was Maria nervous?', questionEs: '¿Por qué estaba María nerviosa?', options: ['She forgot her homework', 'It was her first day at a new school', 'She was sick', 'She lost her backpack'], correctAnswer: 1, explanation: 'Maria was nervous because "It was her first day at her new school."', explanationEs: 'María estaba nerviosa porque "Era su primer día en su nueva escuela."' },
+      { id: 'r7q2', question: 'Who invited Maria to sit next to her?', questionEs: '¿Quién invitó a María a sentarse a su lado?', options: ['Miss Flores', 'A boy named Carlos', 'A girl named Laura', 'The principal'], correctAnswer: 2, explanation: 'A girl named Laura said, "You can sit next to me!"', explanationEs: 'Una niña llamada Laura dijo, "¡Puedes sentarte a mi lado!"' },
+      { id: 'r7q3', question: 'How many friends did Maria make by the end of the day?', questionEs: '¿Cuántas amigas hizo María al final del día?', options: ['One', 'Two', 'Three', 'Four'], correctAnswer: 2, explanation: 'By the end of the day, Maria "had made three new friends."', explanationEs: 'Al final del día, María "había hecho tres nuevas amigas."' },
+      { id: 'r7q4', question: 'What did Maria tell her mother?', questionEs: '¿Qué le dijo María a su madre?', options: ['She wanted to change schools', 'It was the best first day ever', 'She did not like the food', 'The teacher was mean'], correctAnswer: 1, explanation: 'She told her mother "it was the best first day ever."', explanationEs: 'Le dijo a su madre que "había sido el mejor primer día."' },
+    ]
+  },
+  {
+    id: 'reading-8',
+    title: 'The Farmer\'s Market',
+    titleEs: 'El Mercado de Agricultores',
+    passage: 'Every Saturday morning, the town holds a farmer\'s market in the central square. Farmers from the surrounding countryside bring their fresh fruits, vegetables, cheese, and bread to sell. The market opens at seven o\'clock and closes at noon. People love to arrive early to get the best selection. There are also local artisans who sell handmade crafts, such as pottery, jewelry, and wooden toys. A small band plays folk music near the fountain, creating a cheerful atmosphere. Children can ride ponies or get their faces painted. Many families make the farmer\'s market a weekly tradition, buying their groceries for the week while enjoying the community spirit. The market has been running for over twenty years and is one of the most popular events in town.',
+    passageEs: 'Cada sábado por la mañana, el pueblo celebra un mercado de agricultores en la plaza central. Los agricultores de los alrededores traen sus frutas frescas, verduras, queso y pan para vender. El mercado abre a las siete y cierra al mediodía. A la gente le gusta llegar temprano para obtener la mejor selección. También hay artesanos locales que venden artesanías hechas a mano, como cerámica, joyería y juguetes de madera. Una pequeña banda toca música folclórica cerca de la fuente, creando un ambiente alegre. Los niños pueden montar ponis o que les pinten la cara. Muchas familias hacen del mercado de agricultores una tradición semanal, comprando sus víveres para la semana mientras disfrutan del espíritu comunitario. El mercado ha funcionado durante más de veinte años y es uno de los eventos más populares del pueblo.',
+    level: 'basic',
+    difficulty: 2,
+    xpReward: 50,
+    questions: [
+      { id: 'r8q1', question: 'When does the market open?', questionEs: '¿Cuándo abre el mercado?', options: ['At six o\'clock', 'At seven o\'clock', 'At eight o\'clock', 'At nine o\'clock'], correctAnswer: 1, explanation: 'The market "opens at seven o\'clock."', explanationEs: 'El mercado "abre a las siete."' },
+      { id: 'r8q2', question: 'What do artisans sell at the market?', questionEs: '¿Qué venden los artesanos en el mercado?', options: ['Fresh fish', 'Handmade crafts', 'Clothing', 'Electronics'], correctAnswer: 1, explanation: 'Artisans sell "handmade crafts, such as pottery, jewelry, and wooden toys."', explanationEs: 'Los artesanos venden "artesanías hechas a mano, como cerámica, joyería y juguetes de madera."' },
+      { id: 'r8q3', question: 'How long has the market been running?', questionEs: '¿Cuánto tiempo ha funcionado el mercado?', options: ['Five years', 'Ten years', 'Fifteen years', 'Over twenty years'], correctAnswer: 3, explanation: 'The market "has been running for over twenty years."', explanationEs: 'El mercado "ha funcionado durante más de veinte años."' },
+      { id: 'r8q4', question: 'What can children do at the market?', questionEs: '¿Qué pueden hacer los niños en el mercado?', options: ['Cook food', 'Ride ponies or get faces painted', 'Sell vegetables', 'Play video games'], correctAnswer: 1, explanation: 'Children can "ride ponies or get their faces painted."', explanationEs: 'Los niños pueden "montar ponis o que les pinten la cara."' },
+    ]
+  },
+  {
+    id: 'reading-9',
+    title: 'The Weather Forecast',
+    titleEs: 'El Pronóstico del Tiempo',
+    passage: 'David always checks the weather forecast before planning his weekend activities. On Friday evening, he watched the news and the meteorologist said that Saturday would be sunny and warm, but Sunday would be rainy and cool. David decided to plan a hike for Saturday and an indoor activity for Sunday. He invited his friend Jenny to go hiking at the nearby nature reserve. They packed water bottles, sandwiches, and sunscreen. The hike was wonderful and they saw many beautiful birds and wildflowers. On Sunday, as predicted, it rained all day. David stayed home and baked chocolate chip cookies while listening to his favorite podcasts. He was happy that he had checked the forecast because it helped him make the most of his weekend. If he had not planned ahead, he might have been stuck indoors on the sunny day and caught in the rain on Sunday.',
+    passageEs: 'David siempre revisa el pronóstico del tiempo antes de planear sus actividades del fin de semana. El viernes por la noche, vio las noticias y el meteorólogo dijo que el sábado sería soleado y cálido, pero el domingo sería lluvioso y fresco. David decidió planear una caminata para el sábado y una actividad bajo techo para el domingo. Invitó a su amiga Jenny a ir de excursión a la reserva natural cercana. Empacaron botellas de agua, sándwiches y protector solar. La caminata fue maravillosa y vieron muchos pájaros hermosos y flores silvestres. El domingo, como se predijo, llovió todo el día. David se quedó en casa y horneó galletas con chispas de chocolate mientras escuchaba sus podcasts favoritos. Estaba feliz de haber revisado el pronóstico porque lo ayudó a aprovechar al máximo su fin de semana. Si no hubiera planeado con anticipación, podría haber estado atrapado en el interior el día soleado y sorprendido por la lluvia el domingo.',
+    level: 'basic',
+    difficulty: 2,
+    xpReward: 50,
+    questions: [
+      { id: 'r9q1', question: 'What did the meteorologist say about Sunday?', questionEs: '¿Qué dijo el meteorólogo sobre el domingo?', options: ['It would be hot and sunny', 'It would be rainy and cool', 'It would be windy', 'It would snow'], correctAnswer: 1, explanation: 'The meteorologist said Sunday "would be rainy and cool."', explanationEs: 'El meteorólogo dijo que el domingo "sería lluvioso y fresco."' },
+      { id: 'r9q2', question: 'What did David and Jenny pack for the hike?', questionEs: '¿Qué empacaron David y Jenny para la excursión?', options: ['Books and blankets', 'Water, sandwiches, and sunscreen', 'Cameras and maps', 'Fishing rods and bait'], correctAnswer: 1, explanation: 'They "packed water bottles, sandwiches, and sunscreen."', explanationEs: 'Empacaron "botellas de agua, sándwiches y protector solar."' },
+      { id: 'r9q3', question: 'What did David do on Sunday?', questionEs: '¿Qué hizo David el domingo?', options: ['Went swimming', 'Baked cookies and listened to podcasts', 'Watched movies', 'Cleaned the house'], correctAnswer: 1, explanation: 'David "stayed home and baked chocolate chip cookies while listening to his favorite podcasts."', explanationEs: 'David "se quedó en casa y horneó galletas con chispas de chocolate mientras escuchaba sus podcasts favoritos."' },
+      { id: 'r9q4', question: 'Why was David happy he checked the forecast?', questionEs: '¿Por qué estaba David feliz de haber revisado el pronóstico?', options: ['He liked the meteorologist', 'It helped him make the most of his weekend', 'He wanted to learn about weather', 'His friend told him to'], correctAnswer: 1, explanation: 'He was happy because "it helped him make the most of his weekend."', explanationEs: 'Estaba feliz porque "lo ayudó a aprovechar al máximo su fin de semana."' },
+    ]
+  },
+  {
+    id: 'reading-10',
+    title: 'The Science Fair Project',
+    titleEs: 'El Proyecto de la Feria de Ciencias',
+    passage: 'Luis and his science partner, Ana, were working on a project for the school science fair. They decided to investigate which type of soil was best for growing tomato plants. They set up three pots with different types of soil: sand, clay, and potting mix. Each pot received the same amount of water and sunlight. Over four weeks, they carefully measured the height of the plants and recorded their observations in a journal. At the end of the experiment, the plant in potting mix had grown the tallest, reaching thirty centimeters. The plant in clay grew to eighteen centimeters, and the one in sand only reached ten centimeters. Luis and Ana created a colorful poster showing their hypothesis, method, results, and conclusion. At the science fair, the judges were impressed by their thorough work and awarded them second place. Luis learned that careful observation and recording data are essential for good science.',
+    passageEs: 'Luis y su compañera de ciencias, Ana, estaban trabajando en un proyecto para la feria de ciencias de la escuela. Decidieron investigar qué tipo de suelo era mejor para cultivar plantas de tomate. Prepararon tres macetas con diferentes tipos de suelo: arena, arcilla y mezcla para macetas. Cada maceta recibió la misma cantidad de agua y luz solar. Durante cuatro semanas, midieron cuidadosamente la altura de las plantas y registraron sus observaciones en un diario. Al final del experimento, la planta en la mezcla para macetas había crecido la más alta, alcanzando treinta centímetros. La planta en arcilla creció a dieciocho centímetros, y la de arena solo alcanzó diez centímetros. Luis y Ana crearon un cartel colorido mostrando su hipótesis, método, resultados y conclusión. En la feria de ciencias, los jueces quedaron impresionados por su trabajo exhaustivo y les otorgaron el segundo lugar. Luis aprendió que la observación cuidadosa y el registro de datos son esenciales para la buena ciencia.',
+    level: 'intermediate',
+    difficulty: 3,
+    xpReward: 60,
+    questions: [
+      { id: 'r10q1', question: 'What was the students\' hypothesis about?', questionEs: '¿Sobre qué era la hipótesis de los estudiantes?', options: ['The best fertilizer', 'Which soil type was best for growing tomatoes', 'How much water tomatoes need', 'The effect of sunlight on plants'], correctAnswer: 1, explanation: 'They decided to "investigate which type of soil was best for growing tomato plants."', explanationEs: 'Decidieron "investigar qué tipo de suelo era mejor para cultivar plantas de tomate."' },
+      { id: 'r10q2', question: 'How tall did the plant in potting mix grow?', questionEs: '¿Cuánto creció la planta en la mezcla para macetas?', options: ['Ten centimeters', 'Eighteen centimeters', 'Thirty centimeters', 'Forty centimeters'], correctAnswer: 2, explanation: 'The plant in potting mix "reached thirty centimeters."', explanationEs: 'La planta en la mezcla para macetas "alcanzó treinta centímetros."' },
+      { id: 'r10q3', question: 'What prize did Luis and Ana win?', questionEs: '¿Qué premio ganaron Luis y Ana?', options: ['First place', 'Second place', 'Third place', 'Honorable mention'], correctAnswer: 1, explanation: 'The judges "awarded them second place."', explanationEs: 'Los jueces "les otorgaron el segundo lugar."' },
+      { id: 'r10q4', question: 'What did Luis learn from the experiment?', questionEs: '¿Qué aprendió Luis del experimento?', options: ['Tomatoes are easy to grow', 'Sand is the worst soil', 'Careful observation and data recording are essential', 'Science fairs are fun'], correctAnswer: 2, explanation: 'Luis learned that "careful observation and recording data are essential for good science."', explanationEs: 'Luis aprendió que "la observación cuidadosa y el registro de datos son esenciales para la buena ciencia."' },
+    ]
+  },
+  {
+    id: 'reading-11',
+    title: 'Public Transportation in the City',
+    titleEs: 'El Transporte Público en la Ciudad',
+    passage: 'Using public transportation in a large city can be both convenient and challenging. The subway system is usually the fastest way to travel during rush hour because it avoids traffic on the roads. However, during peak times, the trains can be extremely crowded, and passengers may have to stand for the entire journey. Buses are another popular option. They cover more areas than the subway and are often preferred for shorter distances. One advantage of buses is that passengers can enjoy the view of the city through the windows. Many cities now offer mobile apps that show real-time arrival information, making it easier to plan trips. Monthly passes are usually more economical than buying individual tickets every day. Some cities have also introduced electric buses and bike-sharing programs to reduce pollution. Understanding the different options and planning ahead can make commuting much more pleasant and efficient.',
+    passageEs: 'Usar el transporte público en una gran ciudad puede ser tanto conveniente como desafiante. El sistema de metro suele ser la forma más rápida de viajar durante las horas pico porque evita el tráfico en las carreteras. Sin embargo, durante las horas pico, los trenes pueden estar extremadamente llenos, y los pasajeros pueden tener que estar de pie durante todo el viaje. Los autobuses son otra opción popular. Cubren más áreas que el metro y a menudo se prefieren para distancias cortas. Una ventaja de los autobuses es que los pasajeros pueden disfrutar de la vista de la ciudad a través de las ventanas. Muchas ciudades ahora ofrecen aplicaciones móviles que muestran información de llegada en tiempo real, facilitando la planificación de los viajes. Los pases mensuales suelen ser más económicos que comprar boletos individuales todos los días. Algunas ciudades también han introducido autobuses eléctricos y programas de bicicletas compartidas para reducir la contaminación. Entender las diferentes opciones y planificar con anticipación puede hacer que el viaje sea mucho más agradable y eficiente.',
+    level: 'intermediate',
+    difficulty: 3,
+    xpReward: 60,
+    questions: [
+      { id: 'r11q1', question: 'Why is the subway fastest during rush hour?', questionEs: '¿Por qué el metro es más rápido durante las horas pico?', options: ['It has fewer stops', 'It avoids traffic on the roads', 'It runs more frequently', 'It is cheaper'], correctAnswer: 1, explanation: 'The subway is fastest "because it avoids traffic on the roads."', explanationEs: 'El metro es más rápido "porque evita el tráfico en las carreteras."' },
+      { id: 'r11q2', question: 'What is one advantage of buses over the subway?', questionEs: '¿Cuál es una ventaja de los autobuses sobre el metro?', options: ['They are faster', 'They are cheaper', 'Passengers can enjoy the city view', 'They are less crowded'], correctAnswer: 2, explanation: 'One advantage is that "passengers can enjoy the view of the city through the windows."', explanationEs: 'Una ventaja es que "los pasajeros pueden disfrutar de la vista de la ciudad a través de las ventanas."' },
+      { id: 'r11q3', question: 'What have some cities introduced to reduce pollution?', questionEs: '¿Qué han introducido algunas ciudades para reducir la contaminación?', options: ['More subway lines', 'Electric buses and bike-sharing programs', 'Free transportation', 'Larger buses'], correctAnswer: 1, explanation: 'Some cities have "introduced electric buses and bike-sharing programs to reduce pollution."', explanationEs: 'Algunas ciudades han "introducido autobuses eléctricos y programas de bicicletas compartidas para reducir la contaminación."' },
+      { id: 'r11q4', question: 'What makes commuting more pleasant and efficient?', questionEs: '¿Qué hace que el viaje sea más agradable y eficiente?', options: ['Driving a car', 'Avoiding rush hour', 'Understanding options and planning ahead', 'Walking everywhere'], correctAnswer: 2, explanation: 'Understanding options and planning ahead "can make commuting much more pleasant and efficient."', explanationEs: 'Entender las opciones y planificar con anticipación "puede hacer que el viaje sea mucho más agradable y eficiente."' },
+    ]
+  },
+  {
+    id: 'reading-12',
+    title: 'A Volunteer Experience',
+    titleEs: 'Una Experiencia de Voluntariado',
+    passage: 'Last summer, Patricia decided to volunteer at a local community center that helps children from low-income families. Every morning from Monday to Friday, she helped the children with their homework and organized educational games. In the afternoons, she assisted with art projects and reading sessions. Patricia was surprised to learn that many of the children did not have books at home, so she started a book donation campaign at her school. Within two weeks, she collected over one hundred books. The children were thrilled to have new stories to read. One boy named Miguel told Patricia that he wanted to become a teacher when he grew up because of the way she helped him learn. This moment deeply touched Patricia. She realized that volunteering was not just about giving time; it was about making a real difference in someone\'s life. She plans to continue volunteering every summer and encourages her friends to do the same.',
+    passageEs: 'El verano pasado, Patricia decidió ser voluntaria en un centro comunitario local que ayuda a niños de familias de bajos ingresos. Cada mañana de lunes a viernes, ayudaba a los niños con sus tareas y organizaba juegos educativos. Por las tardes, asistía con proyectos de arte y sesiones de lectura. Patricia se sorprendió al enterarse de que muchos de los niños no tenían libros en casa, así que inició una campaña de donación de libros en su escuela. En dos semanas, recolectó más de cien libros. Los niños estaban emocionados de tener nuevas historias para leer. Un niño llamado Miguel le dijo a Patricia que quería ser maestro cuando creciera por la forma en que ella lo ayudaba a aprender. Este momento conmovió profundamente a Patricia. Se dio cuenta de que ser voluntaria no era solo dar tiempo; era hacer una diferencia real en la vida de alguien. Planea continuar siendo voluntaria cada verano y anima a sus amigos a hacer lo mismo.',
+    level: 'intermediate',
+    difficulty: 4,
+    xpReward: 60,
+    questions: [
+      { id: 'r12q1', question: 'Why did Patricia start a book donation campaign?', questionEs: '¿Por qué Patricia inició una campaña de donación de libros?', options: ['She wanted to get rid of old books', 'Many children did not have books at home', 'The school asked her to', 'She needed community service hours'], correctAnswer: 1, explanation: 'She started the campaign because "many of the children did not have books at home."', explanationEs: 'Inició la campaña porque "muchos de los niños no tenían libros en casa."' },
+      { id: 'r12q2', question: 'How many books did Patricia collect?', questionEs: '¿Cuántos libros recolectó Patricia?', options: ['Fifty books', 'Seventy-five books', 'Over one hundred books', 'Two hundred books'], correctAnswer: 2, explanation: 'She "collected over one hundred books."', explanationEs: 'Recolectó "más de cien libros."' },
+      { id: 'r12q3', question: 'What did Miguel want to become?', questionEs: '¿Qué quería ser Miguel?', options: ['A doctor', 'A teacher', 'An artist', 'A scientist'], correctAnswer: 1, explanation: 'Miguel "wanted to become a teacher when he grew up."', explanationEs: 'Miguel "quería ser maestro cuando creciera."' },
+      { id: 'r12q4', question: 'What did Patricia realize about volunteering?', questionEs: '¿Qué se dio cuenta Patricia sobre el voluntariado?', options: ['It is boring', 'It was about making a real difference in someone\'s life', 'It is only for students', 'It takes too much time'], correctAnswer: 1, explanation: 'She realized "it was about making a real difference in someone\'s life."', explanationEs: 'Se dio cuenta de que "era hacer una diferencia real en la vida de alguien."' },
+    ]
+  },
+  {
+    id: 'reading-13',
+    title: 'The Impact of Social Media on Society',
+    titleEs: 'El Impacto de las Redes Sociales en la Sociedad',
+    passage: 'Social media has transformed the way people communicate, share information, and form opinions. On the positive side, platforms like social networks allow individuals to stay connected with friends and family across the globe. They provide a space for marginalized voices to be heard and enable rapid mobilization for social causes. Small businesses can reach customers without expensive advertising campaigns. However, social media also has significant drawbacks. The spread of misinformation and fake news can influence public opinion and even elections. Studies have shown that excessive social media use can lead to anxiety, depression, and low self-esteem, particularly among teenagers. The algorithms designed to maximize engagement often create echo chambers, where users are only exposed to viewpoints that reinforce their existing beliefs. Finding a balance between leveraging the benefits of social media while mitigating its harms remains one of the great challenges of the digital age. Education in digital literacy is essential for navigating this complex landscape responsibly.',
+    passageEs: 'Las redes sociales han transformado la forma en que las personas se comunican, comparten información y forman opiniones. En el lado positivo, las plataformas como las redes sociales permiten a las personas mantenerse conectadas con amigos y familiares en todo el mundo. Proporcionan un espacio para que las voces marginadas sean escuchadas y permiten una movilización rápida para causas sociales. Las pequeñas empresas pueden llegar a los clientes sin costosas campañas publicitarias. Sin embargo, las redes sociales también tienen importantes desventajas. La propagación de información errónea y noticias falsas puede influir en la opinión pública e incluso en las elecciones. Los estudios han demostrado que el uso excesivo de las redes sociales puede provocar ansiedad, depresión y baja autoestima, particularmente entre los adolescentes. Los algoritmos diseñados para maximizar el compromiso a menudo crean cámaras de eco, donde los usuarios solo están expuestos a puntos de vista que refuerzan sus creencias existentes. Encontrar un equilibrio entre aprovechar los beneficios de las redes sociales mientras se mitigan sus daños sigue siendo uno de los grandes desafíos de la era digital. La educación en alfabetización digital es esencial para navegar este paisaje complejo de manera responsable.',
+    level: 'advanced',
+    difficulty: 4,
+    xpReward: 75,
+    questions: [
+      { id: 'r13q1', question: 'What is one positive effect of social media mentioned?', questionEs: '¿Cuál es un efecto positivo de las redes sociales mencionado?', options: ['It eliminates all misinformation', 'Marginalized voices can be heard', 'It replaces traditional education', 'It reduces screen time'], correctAnswer: 1, explanation: 'Social media "provide a space for marginalized voices to be heard."', explanationEs: 'Las redes sociales "proporcionan un espacio para que las voces marginadas sean escuchadas."' },
+      { id: 'r13q2', question: 'What can excessive social media use lead to?', questionEs: '¿A qué puede llevar el uso excesivo de las redes sociales?', options: ['Better physical health', 'Anxiety, depression, and low self-esteem', 'Improved grades', 'More friendships'], correctAnswer: 1, explanation: 'Excessive use "can lead to anxiety, depression, and low self-esteem."', explanationEs: 'El uso excesivo "puede provocar ansiedad, depresión y baja autoestima."' },
+      { id: 'r13q3', question: 'What are echo chambers?', questionEs: '¿Qué son las cámaras de eco?', options: ['Rooms with good acoustics', 'Spaces where users only see viewpoints that reinforce existing beliefs', 'Places where people argue', 'Social media headquarters'], correctAnswer: 1, explanation: 'Echo chambers are "where users are only exposed to viewpoints that reinforce their existing beliefs."', explanationEs: 'Las cámaras de eco son "donde los usuarios solo están expuestos a puntos de vista que refuerzan sus creencias existentes."' },
+      { id: 'r13q4', question: 'What is essential for navigating the digital landscape responsibly?', questionEs: '¿Qué es esencial para navegar el paisaje digital de manera responsable?', options: ['Using more social media', 'Digital literacy education', 'Avoiding all technology', 'Creating more algorithms'], correctAnswer: 1, explanation: '"Education in digital literacy is essential for navigating this complex landscape responsibly."', explanationEs: '"La educación en alfabetización digital es esencial para navegar este paisaje complejo de manera responsable."' },
+    ]
+  },
+  {
+    id: 'reading-14',
+    title: 'Climate Change and Renewable Energy',
+    titleEs: 'El Cambio Climático y la Energía Renovable',
+    passage: 'Climate change is one of the most pressing issues facing the world today. The burning of fossil fuels such as coal, oil, and natural gas releases carbon dioxide and other greenhouse gases into the atmosphere. These gases trap heat from the sun, causing global temperatures to rise. The consequences include melting ice caps, rising sea levels, more frequent extreme weather events, and the loss of biodiversity. To address this crisis, many countries are investing heavily in renewable energy sources. Solar power harnesses energy from the sun using photovoltaic panels, while wind power uses turbines to convert wind energy into electricity. Hydropower generates electricity from flowing water, and geothermal energy taps into heat from beneath the Earth\'s surface. Unlike fossil fuels, these renewable sources produce little to no greenhouse gas emissions. Transitioning to renewable energy requires significant investment and infrastructure changes, but the long-term benefits for the planet are undeniable. Individuals can also contribute by reducing their energy consumption and supporting clean energy initiatives.',
+    passageEs: 'El cambio climático es uno de los problemas más urgentes que enfrenta el mundo hoy. La quema de combustibles fósiles como el carbón, el petróleo y el gas natural libera dióxido de carbono y otros gases de efecto invernadero en la atmósfera. Estos gases atrapan el calor del sol, provocando que las temperaturas globales aumenten. Las consecuencias incluyen el derretimiento de los casquetes polares, el aumento del nivel del mar, eventos climáticos extremos más frecuentes y la pérdida de biodiversidad. Para abordar esta crisis, muchos países están invirtiendo fuertemente en fuentes de energía renovable. La energía solar aprovecha la energía del sol usando paneles fotovoltaicos, mientras que la energía eólica usa turbinas para convertir la energía del viento en electricidad. La energía hidroeléctrica genera electricidad a partir del agua que fluye, y la energía geotérmica aprovecha el calor del interior de la Tierra. A diferencia de los combustibles fósiles, estas fuentes renovables producen pocas o ninguna emisión de gases de efecto invernadero. La transición a la energía renovable requiere una inversión significativa y cambios en la infraestructura, pero los beneficios a largo plazo para el planeta son innegables. Los individuos también pueden contribuir reduciendo su consumo de energía y apoyando iniciativas de energía limpia.',
+    level: 'advanced',
+    difficulty: 5,
+    xpReward: 80,
+    questions: [
+      { id: 'r14q1', question: 'What do greenhouse gases do?', questionEs: '¿Qué hacen los gases de efecto invernadero?', options: ['Cool the Earth', 'Trap heat from the sun', 'Create oxygen', 'Block sunlight'], correctAnswer: 1, explanation: 'Greenhouse gases "trap heat from the sun, causing global temperatures to rise."', explanationEs: 'Los gases de efecto invernadero "atrapán el calor del sol, provocando que las temperaturas globales aumenten."' },
+      { id: 'r14q2', question: 'How does solar power work?', questionEs: '¿Cómo funciona la energía solar?', options: ['It burns coal', 'It harnesses energy from the sun using photovoltaic panels', 'It uses wind turbines', 'It taps into underground heat'], correctAnswer: 1, explanation: 'Solar power "harnesses energy from the sun using photovoltaic panels."', explanationEs: 'La energía solar "aprovecha la energía del sol usando paneles fotovoltaicos."' },
+      { id: 'r14q3', question: 'What is a benefit of renewable energy over fossil fuels?', questionEs: '¿Cuál es un beneficio de la energía renovable sobre los combustibles fósiles?', options: ['It is cheaper to produce', 'It produces little to no greenhouse gas emissions', 'It is easier to transport', 'It creates more jobs'], correctAnswer: 1, explanation: '"Unlike fossil fuels, these renewable sources produce little to no greenhouse gas emissions."', explanationEs: '"A diferencia de los combustibles fósiles, estas fuentes renovables producen pocas o ninguna emisión de gases de efecto invernadero."' },
+      { id: 'r14q4', question: 'How can individuals contribute to addressing climate change?', questionEs: '¿Cómo pueden los individuos contribuir a abordar el cambio climático?', options: ['By using more electricity', 'By reducing energy consumption and supporting clean energy', 'By moving to colder regions', 'By ignoring the problem'], correctAnswer: 1, explanation: 'Individuals can contribute by "reducing their energy consumption and supporting clean energy initiatives."', explanationEs: 'Los individuos pueden contribuir "reduciendo su consumo de energía y apoyando iniciativas de energía limpia."' },
+    ]
+  },
+  {
+    id: 'reading-15',
+    title: 'The Psychology of Decision Making',
+    titleEs: 'La Psicología de la Toma de Decisiones',
+    passage: 'Every day, humans make thousands of decisions, from trivial choices like what to eat for breakfast to consequential ones like changing careers. Psychologists have identified several cognitive biases that influence our decision-making processes. Confirmation bias leads people to seek out information that supports their existing beliefs while ignoring contradictory evidence. The anchoring effect causes individuals to rely too heavily on the first piece of information they encounter when making judgments. Loss aversion refers to the tendency to prefer avoiding losses over acquiring equivalent gains, meaning that losing fifty dollars feels worse than gaining fifty dollars feels good. The paradox of choice suggests that having too many options can actually lead to decision paralysis and decreased satisfaction with the chosen option. Understanding these biases is the first step toward making more rational decisions. Strategies such as taking time before making important choices, considering alternative viewpoints, and being aware of emotional influences can help individuals overcome their cognitive limitations and make better-informed decisions.',
+    passageEs: 'Cada día, los seres humanos toman miles de decisiones, desde elecciones triviales como qué desayunar hasta decisiones trascendentales como cambiar de carrera. Los psicólogos han identificado varios sesgos cognitivos que influyen en nuestros procesos de toma de decisiones. El sesgo de confirmación lleva a las personas a buscar información que apoye sus creencias existentes mientras ignoran la evidencia contradictoria. El efecto de anclaje hace que los individuos dependan demasiado de la primera información que encuentran al hacer juicios. La aversión a la pérdida se refiere a la tendencia a preferir evitar pérdidas en lugar de adquirir ganancias equivalentes, lo que significa que perder cincuenta dólares se siente peor que ganar cincuenta dólares se siente bien. La paradoja de la elección sugiere que tener demasiadas opciones puede llevar a la parálisis por análisis y a una menor satisfacción con la opción elegida. Entender estos sesgos es el primer paso para tomar decisiones más racionales. Estrategias como tomarse un tiempo antes de hacer elecciones importantes, considerar puntos de vista alternativos y ser consciente de las influencias emocionales pueden ayudar a los individuos a superar sus limitaciones cognitivas y tomar decisiones mejor informadas.',
+    level: 'advanced',
+    difficulty: 5,
+    xpReward: 80,
+    questions: [
+      { id: 'r15q1', question: 'What is confirmation bias?', questionEs: '¿Qué es el sesgo de confirmación?', options: ['Always confirming your choices', 'Seeking information that supports existing beliefs while ignoring contradictory evidence', 'Agreeing with everyone', 'Making decisions quickly'], correctAnswer: 1, explanation: 'Confirmation bias "leads people to seek out information that supports their existing beliefs while ignoring contradictory evidence."', explanationEs: 'El sesgo de confirmación "lleva a las personas a buscar información que apoye sus creencias existentes mientras ignoran la evidencia contradictoria."' },
+      { id: 'r15q2', question: 'What does loss aversion mean?', questionEs: '¿Qué significa la aversión a la pérdida?', options: ['Always choosing the safest option', 'Preferring to avoid losses over acquiring equivalent gains', 'Never taking risks', 'Losing money on purpose'], correctAnswer: 1, explanation: 'Loss aversion is "the tendency to prefer avoiding losses over acquiring equivalent gains."', explanationEs: 'La aversión a la pérdida es "la tendencia a preferir evitar pérdidas en lugar de adquirir ganancias equivalentes."' },
+      { id: 'r15q3', question: 'What is the paradox of choice?', questionEs: '¿Qué es la paradoja de la elección?', options: ['Choosing is always good', 'Having too many options can lead to decision paralysis and decreased satisfaction', 'Fewer choices are always better', 'People always choose the first option'], correctAnswer: 1, explanation: 'The paradox of choice suggests "having too many options can actually lead to decision paralysis and decreased satisfaction."', explanationEs: 'La paradoja de la elección sugiere que "tener demasiadas opciones puede llevar a la parálisis por análisis y a una menor satisfacción."' },
+      { id: 'r15q4', question: 'What strategy can help overcome cognitive biases?', questionEs: '¿Qué estrategia puede ayudar a superar los sesgos cognitivos?', options: ['Making faster decisions', 'Considering alternative viewpoints and being aware of emotional influences', 'Always trusting your instinct', 'Ignoring psychology'], correctAnswer: 1, explanation: 'Strategies include "considering alternative viewpoints, and being aware of emotional influences."', explanationEs: 'Las estrategias incluyen "considerar puntos de vista alternativos y ser consciente de las influencias emocionales."' },
+    ]
+  },
 ];
+
+// ============================================
+// AUTOMATIC TITLES BASED ON PROGRESS
+// ============================================
+export const TITLE_TIERS = [
+  { title: 'Principiante', icon: '🌱', minBoards: 0 },
+  { title: 'Aprendiz', icon: '📚', minBoards: 5 },
+  { title: 'Estudiante', icon: '🎓', minBoards: 15 },
+  { title: 'Avanzado', icon: '💪', minBoards: 30 },
+  { title: 'Experto', icon: '⭐', minBoards: 50 },
+  { title: 'Maestro', icon: '🏆', minBoards: 75 },
+  { title: 'Gran Maestro', icon: '👑', minBoards: 100 },
+] as const;
+
+export function computeTitle(exercisesDone: number): { title: string; icon: string } {
+  let matched = TITLE_TIERS[0];
+  for (const tier of TITLE_TIERS) {
+    if (exercisesDone >= tier.minBoards) matched = tier;
+  }
+  return { title: matched.title, icon: matched.icon };
+}
+
+function isFirstInLevel(readingId: string, level: string): boolean {
+  const levelReadings = READINGS_DATA.filter(r => r.level === level);
+  return levelReadings.length > 0 && levelReadings[0].id === readingId;
+}
 
 // ============================================
 // ZUSTAND STORE
@@ -557,6 +748,7 @@ export const useAppStore = create<AppStoreState>()(
       showSpanishTranslation: false,
       unlockedSpanishReadings: [],
       unlockedAudioReadings: [],
+      purchasedReadings: [],
 
       // ── UI State ────────────────────────────────
       showConfetti: false,
@@ -573,6 +765,12 @@ export const useAppStore = create<AppStoreState>()(
       isLoading: false,
       showLevelUpAnimation: false,
       notification: null,
+
+      // Session Timer State
+      sessionStartTime: 0,
+      showMiniGame: false,
+      miniGameType: '',
+      miniGameCompleted: false,
 
       // ────────────────────────────────────────────
       // NAVIGATION
@@ -1346,14 +1544,14 @@ export const useAppStore = create<AppStoreState>()(
       unlockSpanishTranslation: (readingId) => {
         const { user, unlockedSpanishReadings } = get();
         if (!user) return;
-        if (user.coins < 250) {
-          get().setNotification({ type: 'error', message: 'Not enough coins! You need 250 coins.' });
+        if (user.coins < 200) {
+          get().setNotification({ type: 'error', message: 'Not enough coins! You need 200 coins.' });
           return;
         }
         if (unlockedSpanishReadings.includes(readingId)) return;
 
         // Deduct coins and unlock
-        const updatedUser = { ...user, coins: user.coins - 250 };
+        const updatedUser = { ...user, coins: user.coins - 200 };
         const updatedUnlocked = [...unlockedSpanishReadings, readingId];
 
         set({
@@ -1414,6 +1612,118 @@ export const useAppStore = create<AppStoreState>()(
       },
 
       setShowSpanishTranslation: (val) => set({ showSpanishTranslation: val }),
+
+      buyReading: (readingId) => {
+        const { user, purchasedReadings } = get();
+        if (!user) return;
+        if (purchasedReadings.includes(readingId)) return;
+        if (user.coins < 500) {
+          get().setNotification({ type: 'error', message: '¡Necesitas 500 monedas para comprar esta lectura!' });
+          return;
+        }
+        const updatedUser = { ...user, coins: user.coins - 500 };
+        const updatedPurchased = [...purchasedReadings, readingId];
+        set({ user: updatedUser, purchasedReadings: updatedPurchased });
+        syncUserToDb(user.id, { coins: updatedUser.coins });
+        get().playSound('unlock');
+        get().setNotification({ type: 'success', message: '¡Lectura comprada!' });
+      },
+
+      buyReadingPack: (level, count) => {
+        const { user, purchasedReadings } = get();
+        if (!user) return;
+        // Pricing: basic: 1=1000, 3=2800, 5=4000; intermediate: 1=1500, 3=4000, 5=6500; advanced: 1=2000, 3=5000, 5=8000
+        const prices: Record<string, Record<number, number>> = {
+          basic: { 1: 1000, 3: 2800, 5: 4000 },
+          intermediate: { 1: 1500, 3: 4000, 5: 6500 },
+          advanced: { 1: 2000, 3: 5000, 5: 8000 },
+        };
+        const cost = prices[level]?.[count];
+        if (!cost) return;
+        if (user.coins < cost) {
+          get().setNotification({ type: 'error', message: `¡Necesitas ${cost} monedas!` });
+          return;
+        }
+        // Find unpurchased readings of this level
+        const readings = get().readings;
+        const available = readings.filter(r => r.level === level && !purchasedReadings.includes(r.id) && !isFirstInLevel(r.id, level));
+        const toBuy = available.slice(0, count);
+        if (toBuy.length === 0) {
+          get().setNotification({ type: 'error', message: 'Ya tienes todas las lecturas de este nivel.' });
+          return;
+        }
+        const updatedUser = { ...user, coins: user.coins - cost };
+        const updatedPurchased = [...purchasedReadings, ...toBuy.map(r => r.id)];
+        set({ user: updatedUser, purchasedReadings: updatedPurchased });
+        syncUserToDb(user.id, { coins: updatedUser.coins });
+        get().playSound('reward');
+        get().setNotification({ type: 'success', message: `¡${toBuy.length} lecturas compradas!` });
+      },
+
+      isReadingUnlocked: (readingId) => {
+        const { purchasedReadings, readings } = get();
+        // First reading of each level is free
+        const reading = readings.find(r => r.id === readingId);
+        if (!reading) return false;
+        const levelReadings = readings.filter(r => r.level === reading.level);
+        if (levelReadings[0]?.id === readingId) return true; // First is free
+        return purchasedReadings.includes(readingId);
+      },
+
+      buyLives: (amount) => {
+        const { user } = get();
+        if (!user) return;
+        const prices: Record<number, number> = { 5: 1000, 10: 1800, 15: 2500, 20: 3000 };
+        const cost = prices[amount];
+        if (!cost) return;
+        if (user.coins < cost) {
+          get().setNotification({ type: 'error', message: `¡Necesitas ${cost} monedas!` });
+          return;
+        }
+        const updatedUser = { ...user, coins: user.coins - cost, lives: Math.min(user.lives + amount, user.maxLives) };
+        set({ user: updatedUser });
+        syncUserToDb(user.id, { coins: updatedUser.coins, lives: updatedUser.lives });
+        get().playSound('reward');
+        get().setNotification({ type: 'success', message: `¡${amount} vidas compradas!` });
+      },
+
+      buyEnergy: () => {
+        const { user } = get();
+        if (!user) return;
+        if (user.coins < 500) {
+          get().setNotification({ type: 'error', message: '¡Necesitas 500 monedas para energía!' });
+          return;
+        }
+        // Energy gives +1 life as proxy (since there's no separate energy field)
+        const updatedUser = { ...user, coins: user.coins - 500, lives: Math.min(user.lives + 1, user.maxLives) };
+        set({ user: updatedUser });
+        syncUserToDb(user.id, { coins: updatedUser.coins, lives: updatedUser.lives });
+        get().playSound('reward');
+        get().setNotification({ type: 'success', message: '¡Energía recargada!' });
+      },
+
+      buyCoinPack: (amount) => {
+        // This is the "watch video" simulated purchase - just gives coins for free
+        const { user } = get();
+        if (!user) return;
+        const updatedUser = { ...user, coins: user.coins + amount };
+        set({ user: updatedUser });
+        syncUserToDb(user.id, { coins: updatedUser.coins });
+        get().playSound('reward');
+        get().setNotification({ type: 'success', message: `¡${amount} monedas obtenidas!` });
+      },
+
+      startSessionTimer: () => {
+        set({ sessionStartTime: Date.now(), showMiniGame: false, miniGameCompleted: false });
+      },
+
+      activateMiniGame: (gameType) => {
+        set({ showMiniGame: true, miniGameType: gameType });
+      },
+
+      closeMiniGame: () => {
+        set({ showMiniGame: false, miniGameType: '', miniGameCompleted: true, sessionStartTime: 0 });
+      },
 
       setShowConfetti: (val) => set({ showConfetti: val }),
 
@@ -1615,6 +1925,7 @@ export const useAppStore = create<AppStoreState>()(
         lastStreakGiftAt: state.lastStreakGiftAt,
         unlockedSpanishReadings: state.unlockedSpanishReadings,
         unlockedAudioReadings: state.unlockedAudioReadings,
+        purchasedReadings: state.purchasedReadings,
       }),
       // Rehydrate persisted preferences back into the store
       merge: (persistedState, currentState) => {
@@ -1630,6 +1941,7 @@ export const useAppStore = create<AppStoreState>()(
           lastStreakGiftAt: persisted.lastStreakGiftAt ?? currentState.lastStreakGiftAt,
           unlockedSpanishReadings: persisted.unlockedSpanishReadings ?? currentState.unlockedSpanishReadings,
           unlockedAudioReadings: persisted.unlockedAudioReadings ?? currentState.unlockedAudioReadings,
+          purchasedReadings: persisted.purchasedReadings ?? currentState.purchasedReadings,
         };
       },
     }
