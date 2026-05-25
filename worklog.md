@@ -1,24 +1,47 @@
 ---
-Task ID: 1
+Task ID: 1-4
 Agent: Main Agent
-Task: Fix scenario completion, score updates, duplicate rewards, expand questions, increase prices
+Task: Implement 4 user-requested improvements to Wisdom English Quest
 
 Work Log:
-- Identified ROOT CAUSE: UserProgress model had @@unique([userId, scenarioId]) and @@unique([userId, lessonId]) constraints. When lesson progress records set BOTH lessonId AND scenarioId, they occupied BOTH unique slots. Then when the code tried to upsert scenario progress with the same (userId, scenarioId), it found the lesson progress record instead and OVERWROTE it with scenario-level data, destroying the lesson's completion status.
-- Fixed `/api/progress/complete/route.ts`: Lesson progress records now set lessonId ONLY (no scenarioId). Scenario progress records set scenarioId ONLY (no lessonId). This prevents unique constraint conflicts.
-- Fixed `/api/levels/[id]/scenarios/route.ts`: Added `lessonId: null` filter to only get scenario progress records
-- Fixed `/api/scenarios/[id]/lessons/route.ts`: Added `scenarioId: null` filter to only get lesson progress records
-- Fixed `/api/missions/claim/route.ts`: Updated all progress queries to properly filter by lessonId=null (for scenario counts) or scenarioId=null (for lesson counts)
-- Fixed `/api/missions/[userId]/route.ts`: Same filtering updates for mission progress calculations
-- Fixed `src/lib/store.ts`: Added `scenarioCompleted` flag handling, play unlock sound when scenario completed, fixed replay detection UI (no confetti on replay)
-- Expanded question pool in `prisma/seed.ts`: Added scenarioVocabulary for all 73 scenarios with real English-Spanish word pairs, rewrote generateQuestionsForScenario() to use real vocabulary (12-15 questions per lesson instead of 8)
-- Increased shop prices: Common 3x, Rare 2.5x, Epic 2x, Legendary 2x (rounded to nearest 50)
-- Fixed demo user progress in seed to create separate scenario and lesson progress records
-- Reseeded database and verified all fixes with comprehensive API tests
+- Added ViewMode type ('normal' | 'clean') to store with persistence
+- Added clean mode CSS in globals.css with comprehensive overrides:
+  - White/light background, all text forced to dark colors
+  - Match exercise buttons get dark text (no white text)
+  - Glass effects become light cards, neon text becomes dark
+  - All headings, paragraphs, labels forced to dark in clean mode
+- Added view mode toggle in Profile → Settings tab (🌙 Normal / ☀️ Clean)
+- Added logout button in Settings tab
+- Fixed voice selector: added 7 virtual voice styles (Deep Male, High Female, Fast Speaker, Slow & Clear, Friendly, Teacher) that always appear
+- Virtual voices use different pitch/rate settings, always work regardless of browser voices
+- Browser English voices still appear if available
+- Added streak gift reward system:
+  - Shows after 7-day streak with 6 gift boxes
+  - 3 prizes: 100 coins, 50 energy, infinite lives for 10 minutes
+  - 3 "perro bravo" (mad dog) boxes
+  - Player picks 1 box only
+  - Dog box plays bark sound, prize box plays reward sound + confetti
+- Added infinite lives feature:
+  - Timer displayed in header (∞ symbol with countdown)
+  - loseLife() checks for infinite lives before deducting
+  - Auto-expires after time runs out
+- Added bark sound effect to playSound
+- Expanded Admin Panel significantly:
+  - Overview section with platform stats
+  - Users section: list all users, search/filter, view stats
+  - Actions: give lives/coins/XP, block/unblock, delete users
+  - Create User section: form with name, email, password, role
+- Added API endpoints: /api/admin/users, /api/admin/action, /api/user/sync
+- Added `blocked` field to User Prisma schema
+- Added blocked user check on login
+- Fixed profile frame: now shows as decorative border instead of overlapping avatar
+- Frame emoji shown as small badge in corner
+- Admin credentials shown on login page
+- All changes pushed to both GitHub repos
 
 Stage Summary:
-- ROOT CAUSE FOUND: Lesson and scenario progress records conflicted on @@unique([userId, scenarioId]) constraint
-- FIX: Lesson progress = lessonId only, Scenario progress = scenarioId only
-- ALL TESTS PASSED: Scenario completion ✅, Scenario unlocking ✅, Score updates ✅, No duplicate rewards ✅, Progress tracking ✅
-- Questions expanded from ~8 to 12-15 per lesson with real vocabulary
-- Shop prices increased 2x-3x across all items
+- Clean mode with dark text on light backgrounds ✓
+- Voice options with 7 virtual styles ✓
+- Streak gift system with 6 boxes (3 prizes + 3 dogs) ✓
+- Comprehensive admin panel with user management ✓
+- Both GitHub repos updated ✓
