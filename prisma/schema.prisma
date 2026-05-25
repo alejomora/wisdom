@@ -40,6 +40,7 @@ model User {
   speakingScore   Float     @default(0)
   currentLevelId  String    @default("basic")
   theme           String    @default("default")
+  infiniteLivesUntil Int     @default(0) // timestamp for infinite lives expiration
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

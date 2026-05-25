@@ -394,11 +394,26 @@
   border-color: oklch(0.85 0.01 270) !important;
 }
 
-/* Clean mode: Match exercise buttons - dark text */
+/* Clean mode: All exercise/match/relation buttons - dark text */
 .view-mode-clean .glass button,
 .view-mode-clean button.glass,
-.view-mode-clean .match-btn {
+.view-mode-clean .match-btn,
+.view-mode-clean .glass .match-btn,
+.view-mode-clean [class*="glass"] button,
+.view-mode-clean button[class*="glass"],
+.view-mode-clean .exercise-area button,
+.view-mode-clean .exercise-content button {
   color: oklch(0.15 0.05 250) !important;
+}
+
+/* Clean mode: Force ALL buttons to have dark text in light view */
+.view-mode-clean button:not([class*="bg-gradient"]):not(.bg-emerald-500):not(.bg-red-500):not(.bg-cyan-500) {
+  color: oklch(0.15 0.05 250) !important;
+}
+
+/* Clean mode: Gradient buttons keep white text (they have dark bg) */
+.view-mode-clean button[class*="bg-gradient"] {
+  color: oklch(1 0 0) !important;
 }
 
 /* Clean mode: Background gradients - light */
@@ -458,4 +473,45 @@
 /* Clean mode: Gradient text on light background */
 .view-mode-clean .bg-clip-text {
   -webkit-text-fill-color: oklch(0.2 0.05 250) !important;
+}
+
+/* Clean mode: Red-300 text (used in find_error) */
+.view-mode-clean .text-red-300 {
+  color: oklch(0.45 0.18 25) !important;
+}
+
+/* Clean mode: Secondary text color */
+.view-mode-clean .text-secondary-foreground {
+  color: oklch(0.2 0.02 270) !important;
+}
+
+/* Clean mode: Ensure bg-secondary items have dark text */
+.view-mode-clean .bg-secondary {
+  color: oklch(0.15 0.02 270) !important;
+}
+
+/* Clean mode: Card backgrounds light */
+.view-mode-clean .card-premium {
+  background: oklch(0.98 0.005 270) !important;
+  border-color: oklch(0.85 0.02 270) !important;
+}
+
+/* Clean mode: Difficulty dots */
+.view-mode-clean .difficulty-dot-active {
+  background: oklch(0.45 0.15 45);
+  box-shadow: 0 0 4px oklch(0.45 0.15 45 / 50%);
+}
+
+.view-mode-clean .difficulty-dot-inactive {
+  background: oklch(0.75 0.02 270);
+}
+
+/* Clean mode: Star colors */
+.view-mode-clean .star-filled {
+  color: oklch(0.5 0.18 85) !important;
+  filter: drop-shadow(0 0 4px oklch(0.5 0.18 85 / 50%));
+}
+
+.view-mode-clean .star-empty {
+  color: oklch(0.7 0.02 270) !important;
 }

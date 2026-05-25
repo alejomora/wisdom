@@ -50,6 +50,7 @@ export interface UserData {
   speakingScore: number;
   currentLevelId: string;
   theme: string;
+  infiniteLivesUntil: number;
   blocked?: boolean;
 }
 
@@ -328,6 +329,20 @@ export function parseQuestionOptions(optionsJson: string): string[] {
 }
 
 // ============================================
+// HELPER: Sync user data to database (fire-and-forget)
+// ============================================
+function syncUserToDb(userId: string, data: Record<string, unknown>) {
+  fetch(`${API_BASE}/user/sync`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, ...data }),
+  }).catch(() => {
+    // Silently fail - data will be synced on next interaction
+    console.warn('Failed to sync user data to DB');
+  });
+}
+
+// ============================================
 // ZUSTAND STORE
 // ============================================
 export const useAppStore = create<AppStoreState>()(
@@ -418,10 +433,33 @@ export const useAppStore = create<AppStoreState>()(
           }
 
           const data = await res.json();
+          const userData = data.user;
+
+          // Calculate lives refill based on time elapsed since last refill
+          if (userData) {
+            const now = new Date();
+            const lastRefill = new Date(userData.livesLastRefill);
+            const minutesSinceRefill = (now.getTime() - lastRefill.getTime()) / 60000;
+            const livesToRefill = Math.min(
+              Math.floor(minutesSinceRefill / 30),
+              (userData.maxLives || 5) - userData.lives
+            );
+            if (livesToRefill > 0) {
+              userData.lives = Math.min(userData.lives + livesToRefill, userData.maxLives || 5);
+              userData.livesLastRefill = now.toISOString();
+              // Sync the refilled lives back to DB
+              syncUserToDb(userData.id, { lives: userData.lives, livesLastRefill: userData.livesLastRefill });
+            }
+          }
+
+          // Restore infinite lives from DB
+          const dbInfiniteLivesUntil = userData?.infiniteLivesUntil || 0;
+
           set({
-            user: data.user,
+            user: userData,
             isLoggedIn: true,
             isLoading: false,
+            infiniteLivesUntil: dbInfiniteLivesUntil > Date.now() ? dbInfiniteLivesUntil : 0,
           });
         } catch (error) {
           set({ isLoading: false });
@@ -792,7 +830,10 @@ export const useAppStore = create<AppStoreState>()(
         if (!user || user.lives <= 0) return;
         // Don't lose lives if infinite lives is active
         if (infiniteLivesUntil > Date.now()) return;
-        set({ user: { ...user, lives: user.lives - 1 } });
+        const updatedUser = { ...user, lives: user.lives - 1 };
+        set({ user: updatedUser });
+        // Sync lives to DB
+        syncUserToDb(user.id, { lives: updatedUser.lives });
       },
 
       refillLives: () => {
@@ -810,13 +851,14 @@ export const useAppStore = create<AppStoreState>()(
         );
 
         if (livesToRefill > 0) {
-          set({
-            user: {
-              ...user,
-              lives: Math.min(user.lives + livesToRefill, user.maxLives),
-              livesLastRefill: now.toISOString(),
-            },
-          });
+          const updatedUser = {
+            ...user,
+            lives: Math.min(user.lives + livesToRefill, user.maxLives),
+            livesLastRefill: now.toISOString(),
+          };
+          set({ user: updatedUser });
+          // Sync lives to DB
+          syncUserToDb(user.id, { lives: updatedUser.lives, livesLastRefill: updatedUser.livesLastRefill });
         }
       },
 
@@ -845,13 +887,19 @@ export const useAppStore = create<AppStoreState>()(
           newLongestStreak = newStreak;
         }
 
-        set({
-          user: {
-            ...user,
-            streak: newStreak,
-            longestStreak: newLongestStreak,
-            lastActiveDate: today,
-          },
+        const updatedUser = {
+          ...user,
+          streak: newStreak,
+          longestStreak: newLongestStreak,
+          lastActiveDate: today,
+        };
+
+        set({ user: updatedUser });
+        // Sync streak to DB
+        syncUserToDb(user.id, {
+          streak: newStreak,
+          longestStreak: newLongestStreak,
+          lastActiveDate: today,
         });
       },
 
@@ -946,6 +994,8 @@ export const useAppStore = create<AppStoreState>()(
         const { user } = get();
         if (user) {
           set({ user: { ...user, lives: user.maxLives } });
+          // Sync infinite lives and lives to DB
+          syncUserToDb(user.id, { infiniteLivesUntil: until, lives: user.maxLives });
         }
       },
 
@@ -1000,12 +1050,8 @@ export const useAppStore = create<AppStoreState>()(
           }
           set({ user: updatedUser, showStreakGiftModal: false, showConfetti: true });
           get().setNotification({ type: 'success', message: `🎁 ¡Ganaste: ${selected.label}!` });
-          // Sync to backend
-          fetch(`${API_BASE}/user/sync`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.id, coins: updatedUser.coins, xp: updatedUser.xp }),
-          }).catch(() => {});
+          // Sync to backend - use the comprehensive sync function
+          syncUserToDb(user.id, { coins: updatedUser.coins, xp: updatedUser.xp });
         }
       },
 
