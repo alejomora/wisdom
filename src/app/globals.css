@@ -517,58 +517,35 @@
 }
 
 /* ============================================
-   ANIMATED AVATAR EXPRESSIONS
+   ANIMATED AVATAR (Emoji + Animated Background)
    ============================================ */
 @keyframes avatar-idle {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-3px); }
 }
 
-@keyframes avatar-blink {
-  0%, 90%, 100% { transform: scaleY(1); }
-  95% { transform: scaleY(0.1); }
+@keyframes avatar-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  33% { transform: translateY(-2px) scale(1.01); }
+  66% { transform: translateY(1px) scale(0.99); }
 }
 
-@keyframes avatar-tongue {
-  0%, 80%, 100% { transform: translateY(0) scale(1); }
-  85% { transform: translateY(3px) scale(1.1); }
-  90% { transform: translateY(5px) scale(1.2); }
-  95% { transform: translateY(3px) scale(1.1); }
+@keyframes avatar-bg {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-@keyframes avatar-wink {
-  0%, 75%, 100% { transform: scaleY(1); }
-  80% { transform: scaleY(0.1) rotate(-5deg); }
-  85% { transform: scaleY(1); }
+@keyframes avatar-glow-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
 }
 
-@keyframes avatar-yawn {
-  0%, 70%, 100% { transform: scale(1) translateY(0); }
-  80% { transform: scale(1.1) translateY(2px); }
-  85% { transform: scale(1.15) translateY(3px); }
-  90% { transform: scale(1.1) translateY(2px); }
-}
-
-@keyframes avatar-laugh {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  10% { transform: scale(1.05) rotate(-3deg); }
-  20% { transform: scale(1) rotate(3deg); }
-  30% { transform: scale(1.05) rotate(-3deg); }
-  40% { transform: scale(1) rotate(0deg); }
-}
-
-@keyframes avatar-angry {
-  0%, 75%, 100% { transform: translateX(0); }
-  80% { transform: translateX(-3px); }
-  85% { transform: translateX(3px); }
-  90% { transform: translateX(-2px); }
-  95% { transform: translateX(2px); }
-}
-
-@keyframes avatar-surprise {
-  0%, 70%, 100% { transform: scale(1); }
-  75% { transform: scale(1.15); }
-  80% { transform: scale(1.1); }
+@keyframes avatar-particle {
+  0%, 100% { opacity: 0; transform: translateY(0) scale(0.5); }
+  25% { opacity: 0.8; transform: translateY(-10px) scale(1); }
+  75% { opacity: 0.6; transform: translateY(-20px) scale(0.8); }
+  100% { opacity: 0; transform: translateY(-30px) scale(0.3); }
 }
 
 @keyframes avatar-bounce {
@@ -576,25 +553,84 @@
   50% { transform: translateY(-8px); }
 }
 
-@keyframes frame-rotate-glow {
-  0% { box-shadow: 0 0 10px rgba(234, 179, 8, 0.3), 0 0 20px rgba(234, 179, 8, 0.1); }
-  50% { box-shadow: 0 0 20px rgba(234, 179, 8, 0.5), 0 0 40px rgba(234, 179, 8, 0.2), 0 0 60px rgba(234, 179, 8, 0.1); }
-  100% { box-shadow: 0 0 10px rgba(234, 179, 8, 0.3), 0 0 20px rgba(234, 179, 8, 0.1); }
+.animate-avatar-idle {
+  animation: avatar-idle 3s ease-in-out infinite;
+}
+
+.animate-avatar-float {
+  animation: avatar-float 4s ease-in-out infinite;
+}
+
+.animate-avatar-bg {
+  animation: avatar-bg 4s ease-in-out infinite;
+}
+
+.animate-avatar-glow-pulse {
+  animation: avatar-glow-pulse 3s ease-in-out infinite;
+}
+
+.animate-avatar-particle {
+  animation: avatar-particle 3s ease-in-out infinite;
+}
+
+.animate-avatar-bounce {
+  animation: avatar-bounce 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   ANIMATED FRAME (Enhanced)
+   ============================================ */
+@keyframes frame-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes frame-glow-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.02); }
 }
 
 @keyframes frame-sparkle {
-  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
-  50% { opacity: 1; transform: scale(1) rotate(180deg); }
+  0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(180deg); }
 }
 
 @keyframes frame-border-dance {
-  0% { border-color: rgba(234, 179, 8, 0.4); }
-  25% { border-color: rgba(239, 68, 68, 0.4); }
-  50% { border-color: rgba(168, 85, 247, 0.4); }
-  75% { border-color: rgba(34, 197, 94, 0.4); }
-  100% { border-color: rgba(234, 179, 8, 0.4); }
+  0% { border-color: rgba(234, 179, 8, 0.6); }
+  25% { border-color: rgba(239, 68, 68, 0.6); }
+  50% { border-color: rgba(168, 85, 247, 0.6); }
+  75% { border-color: rgba(34, 197, 94, 0.6); }
+  100% { border-color: rgba(234, 179, 8, 0.6); }
 }
 
+@keyframes frame-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.01); }
+}
+
+.animate-frame-rotate {
+  animation: frame-rotate 6s linear infinite;
+}
+
+.animate-frame-glow-pulse {
+  animation: frame-glow-pulse 2s ease-in-out infinite;
+}
+
+.animate-frame-sparkle {
+  animation: frame-sparkle 2s ease-in-out infinite;
+}
+
+.animate-frame-dance {
+  animation: frame-border-dance 4s ease-in-out infinite;
+}
+
+.animate-frame-breathe {
+  animation: frame-breathe 4s ease-in-out infinite;
+}
+
+/* ============================================
+   MINI GAME & OTHER ANIMATIONS
+   ============================================ */
 @keyframes mini-box-shake {
   0%, 100% { transform: rotate(0deg); }
   10% { transform: rotate(-5deg); }
@@ -641,54 +677,6 @@
   0%, 100% { transform: rotate(0deg) scale(1); }
   25% { transform: rotate(-10deg) scale(1.1); }
   75% { transform: rotate(10deg) scale(1.1); }
-}
-
-.animate-avatar-idle {
-  animation: avatar-idle 3s ease-in-out infinite;
-}
-
-.animate-avatar-blink {
-  animation: avatar-blink 4s ease-in-out infinite;
-}
-
-.animate-avatar-tongue {
-  animation: avatar-tongue 3s ease-in-out infinite;
-}
-
-.animate-avatar-wink {
-  animation: avatar-wink 3s ease-in-out infinite;
-}
-
-.animate-avatar-yawn {
-  animation: avatar-yawn 5s ease-in-out infinite;
-}
-
-.animate-avatar-laugh {
-  animation: avatar-laugh 2s ease-in-out infinite;
-}
-
-.animate-avatar-angry {
-  animation: avatar-angry 2.5s ease-in-out infinite;
-}
-
-.animate-avatar-surprise {
-  animation: avatar-surprise 3s ease-in-out infinite;
-}
-
-.animate-avatar-bounce {
-  animation: avatar-bounce 1.5s ease-in-out infinite;
-}
-
-.animate-frame-glow {
-  animation: frame-rotate-glow 2s ease-in-out infinite;
-}
-
-.animate-frame-sparkle {
-  animation: frame-sparkle 1.5s ease-in-out infinite;
-}
-
-.animate-frame-dance {
-  animation: frame-border-dance 4s ease-in-out infinite;
 }
 
 .animate-box-shake {

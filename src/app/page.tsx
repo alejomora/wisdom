@@ -68,34 +68,32 @@ function ConfettiEffect() {
 }
 
 // ============================================
-// ANIMATED AVATAR COMPONENT
+// ANIMATED AVATAR COMPONENT (Emoji + Animated Background)
 // ============================================
-type AvatarExpression = 'normal' | 'tongue' | 'wink' | 'yawn' | 'laugh' | 'angry' | 'surprise' | 'cool'
-
-const AVATAR_THEMES: Record<string, { skin: string; hair: string; hairStyle: string; accessory: string; bg: string }> = {
-  '🎯': { skin: '#FFDBB4', hair: '#4A3728', hairStyle: 'short', accessory: 'none', bg: 'from-emerald-500 to-cyan-500' },
-  '👩': { skin: '#FFDBB4', hair: '#8B4513', hairStyle: 'long', accessory: 'none', bg: 'from-pink-500 to-rose-500' },
-  '👨': { skin: '#F5C7A1', hair: '#2C1810', hairStyle: 'short', accessory: 'none', bg: 'from-blue-500 to-indigo-500' },
-  '👧': { skin: '#FFDBB4', hair: '#D4A574', hairStyle: 'pigtails', accessory: 'none', bg: 'from-purple-500 to-pink-500' },
-  '🧑': { skin: '#E8B88A', hair: '#1A1A2E', hairStyle: 'short', accessory: 'none', bg: 'from-cyan-500 to-teal-500' },
-  '👩‍🎓': { skin: '#FFDBB4', hair: '#654321', hairStyle: 'long', accessory: 'gradcap', bg: 'from-yellow-500 to-amber-500' },
-  '👨‍💻': { skin: '#F5C7A1', hair: '#3D2B1F', hairStyle: 'short', accessory: 'glasses', bg: 'from-violet-500 to-purple-500' },
-  '👩‍🏫': { skin: '#FFDBB4', hair: '#8B0000', hairStyle: 'bun', accessory: 'glasses', bg: 'from-teal-500 to-emerald-500' },
-  '🧑‍🎓': { skin: '#E8B88A', hair: '#4A3728', hairStyle: 'short', accessory: 'gradcap', bg: 'from-orange-500 to-red-500' },
-  '🦊': { skin: '#FF8C00', hair: '#CC7000', hairStyle: 'fox', accessory: 'none', bg: 'from-orange-500 to-amber-500' },
-  '🐱': { skin: '#FFB6C1', hair: '#FF69B4', hairStyle: 'cat', accessory: 'none', bg: 'from-pink-400 to-rose-400' },
-  '🐶': { skin: '#D2A679', hair: '#8B6914', hairStyle: 'dog', accessory: 'none', bg: 'from-yellow-600 to-amber-600' },
-  '🤖': { skin: '#A8A8A8', hair: '#707070', hairStyle: 'robot', accessory: 'antenna', bg: 'from-gray-500 to-slate-500' },
-  '👾': { skin: '#7C3AED', hair: '#5B21B6', hairStyle: 'alien', accessory: 'none', bg: 'from-purple-600 to-violet-600' },
-  '🧙': { skin: '#FFDBB4', hair: '#E8E8E8', hairStyle: 'wizard', accessory: 'hat', bg: 'from-purple-600 to-indigo-600' },
-  '🦸': { skin: '#F5C7A1', hair: '#1A1A2E', hairStyle: 'hero', accessory: 'mask', bg: 'from-red-500 to-blue-500' },
-  '👸': { skin: '#FFDBB4', hair: '#FFD700', hairStyle: 'princess', accessory: 'crown', bg: 'from-yellow-400 to-amber-400' },
-  '🤴': { skin: '#F5C7A1', hair: '#4A3728', hairStyle: 'prince', accessory: 'crown', bg: 'from-yellow-500 to-orange-500' },
-  '🧛': { skin: '#E8E0E0', hair: '#1A1A2E', hairStyle: 'vampire', accessory: 'none', bg: 'from-red-600 to-gray-700' },
-  '🥷': { skin: '#F5C7A1', hair: '#1A1A2E', hairStyle: 'ninja', accessory: 'mask', bg: 'from-gray-700 to-gray-900' },
+const AVATAR_BG_THEMES: Record<string, { colors: string[]; particles: string[]; glow: string }> = {
+  '🎯': { colors: ['#10b981', '#06b6d4'], particles: ['#34d399', '#22d3ee', '#6ee7b7'], glow: '#10b981' },
+  '👩': { colors: ['#ec4899', '#f43f5e'], particles: ['#f472b6', '#fb7185', '#fda4af'], glow: '#ec4899' },
+  '👨': { colors: ['#3b82f6', '#6366f1'], particles: ['#60a5fa', '#818cf8', '#93c5fd'], glow: '#3b82f6' },
+  '👧': { colors: ['#a855f7', '#ec4899'], particles: ['#c084fc', '#f472b6', '#e879f9'], glow: '#a855f7' },
+  '🧑': { colors: ['#06b6d4', '#14b8a6'], particles: ['#22d3ee', '#2dd4bf', '#67e8f9'], glow: '#06b6d4' },
+  '👩‍🎓': { colors: ['#eab308', '#f59e0b'], particles: ['#facc15', '#fbbf24', '#fde68a'], glow: '#eab308' },
+  '👨‍💻': { colors: ['#8b5cf6', '#a855f7'], particles: ['#a78bfa', '#c084fc', '#c4b5fd'], glow: '#8b5cf6' },
+  '👩‍🏫': { colors: ['#14b8a6', '#10b981'], particles: ['#2dd4bf', '#34d399', '#5eead4'], glow: '#14b8a6' },
+  '🧑‍🎓': { colors: ['#f97316', '#ef4444'], particles: ['#fb923c', '#f87171', '#fdba74'], glow: '#f97316' },
+  '🦊': { colors: ['#f97316', '#eab308'], particles: ['#fb923c', '#facc15', '#fdba74'], glow: '#f97316' },
+  '🐱': { colors: ['#f472b6', '#fb7185'], particles: ['#f9a8d4', '#fda4af', '#fbcfe8'], glow: '#f472b6' },
+  '🐶': { colors: ['#ca8a04', '#d97706'], particles: ['#eab308', '#fbbf24', '#fde68a'], glow: '#ca8a04' },
+  '🤖': { colors: ['#6b7280', '#94a3b8'], particles: ['#9ca3af', '#cbd5e1', '#64748b'], glow: '#6b7280' },
+  '👾': { colors: ['#7c3aed', '#8b5cf6'], particles: ['#8b5cf6', '#a78bfa', '#c4b5fd'], glow: '#7c3aed' },
+  '🧙': { colors: ['#7c3aed', '#6366f1'], particles: ['#8b5cf6', '#818cf8', '#a78bfa'], glow: '#7c3aed' },
+  '🦸': { colors: ['#ef4444', '#3b82f6'], particles: ['#f87171', '#60a5fa', '#fb923c'], glow: '#ef4444' },
+  '👸': { colors: ['#fbbf24', '#f59e0b'], particles: ['#fde68a', '#fbbf24', '#fcd34d'], glow: '#fbbf24' },
+  '🤴': { colors: ['#f59e0b', '#f97316'], particles: ['#fbbf24', '#fb923c', '#fdba74'], glow: '#f59e0b' },
+  '🧛': { colors: ['#dc2626', '#374151'], particles: ['#ef4444', '#6b7280', '#991b1b'], glow: '#dc2626' },
+  '🥷': { colors: ['#374151', '#111827'], particles: ['#4b5563', '#6b7280', '#1f2937'], glow: '#374151' },
 }
 
-const DEFAULT_THEME = { skin: '#FFDBB4', hair: '#4A3728', hairStyle: 'short', accessory: 'none', bg: 'from-emerald-500 to-cyan-500' }
+const DEFAULT_BG_THEME = { colors: ['#10b981', '#06b6d4'], particles: ['#34d399', '#22d3ee', '#6ee7b7'], glow: '#10b981' }
 
 function AnimatedAvatar({ avatar, size = 120, showExpression = true, className = '' }: {
   avatar: string
@@ -103,396 +101,221 @@ function AnimatedAvatar({ avatar, size = 120, showExpression = true, className =
   showExpression?: boolean
   className?: string
 }) {
-  const [expression, setExpression] = useState<AvatarExpression>('normal')
-  const [isTransitioning, setIsTransitioning] = useState(false)
-  
-  const theme = AVATAR_THEMES[avatar] || DEFAULT_THEME
-  const s = size / 120 // scale factor
+  const theme = AVATAR_BG_THEMES[avatar] || DEFAULT_BG_THEME
+  const emojiSize = Math.round(size * 0.6)
 
-  // Cycle through expressions
-  useEffect(() => {
-    if (!showExpression) return
-    const expressions: AvatarExpression[] = ['normal', 'normal', 'normal', 'tongue', 'wink', 'laugh', 'angry', 'surprise', 'yawn', 'cool']
-    let idx = 0
-    const interval = setInterval(() => {
-      idx = (idx + 1) % expressions.length
-      setIsTransitioning(true)
-      setTimeout(() => {
-        setExpression(expressions[idx])
-        setIsTransitioning(false)
-      }, 150)
-    }, 3000 + Math.random() * 2000)
-    return () => clearInterval(interval)
-  }, [showExpression])
-
-  const eyeY = 48 * s
-  const eyeSpacing = 16 * s
-  const eyeSize = 6 * s
-  const mouthY = 68 * s
+  // Generate floating particles
+  const particles = Array.from({ length: 6 }, (_, i) => ({
+    id: i,
+    size: 3 + Math.random() * 5,
+    x: 15 + Math.random() * 70,
+    y: 15 + Math.random() * 70,
+    delay: Math.random() * 3,
+    duration: 2 + Math.random() * 3,
+    color: theme.particles[i % theme.particles.length],
+  }))
 
   return (
-    <div className={`animate-avatar-idle ${className}`} style={{ width: size, height: size }}>
-      <svg viewBox="0 0 120 120" width={size} height={size} style={{ overflow: 'visible' }}>
-        {/* Background circle */}
-        <defs>
-          <radialGradient id={`bg-${avatar.replace(/[^a-zA-Z0-9]/g, '')}`} cx="50%" cy="40%" r="50%">
-            <stop offset="0%" stopColor={theme.skin} stopOpacity="0.3" />
-            <stop offset="100%" stopColor={theme.skin} stopOpacity="0" />
-          </radialGradient>
-        </defs>
+    <div
+      className={`relative flex items-center justify-center animate-avatar-float ${className}`}
+      style={{ width: size, height: size }}
+    >
+      {/* Animated gradient background */}
+      <div
+        className="absolute inset-0 rounded-2xl animate-avatar-bg"
+        style={{
+          background: `linear-gradient(135deg, ${theme.colors[0]}, ${theme.colors[1]}, ${theme.colors[0]})`,
+          backgroundSize: '200% 200%',
+        }}
+      />
 
-        {/* Body/Shoulders */}
-        <ellipse cx="60" cy="112" rx="35" ry="14" fill={theme.hair} opacity="0.8" />
+      {/* Glow pulse behind */}
+      <div
+        className="absolute inset-0 rounded-2xl animate-avatar-glow-pulse"
+        style={{
+          boxShadow: `0 0 20px ${theme.glow}40, 0 0 40px ${theme.glow}20`,
+        }}
+      />
 
-        {/* Head */}
-        <ellipse cx="60" cy="55" rx="36" ry="40" fill={theme.skin} />
+      {/* Floating particles */}
+      {showExpression && particles.map((p) => (
+        <div
+          key={p.id}
+          className="absolute rounded-full animate-avatar-particle"
+          style={{
+            width: p.size,
+            height: p.size,
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            backgroundColor: p.color,
+            animationDelay: `${p.delay}s`,
+            animationDuration: `${p.duration}s`,
+            opacity: 0.6,
+          }}
+        />
+      ))}
 
-        {/* Hair */}
-        {theme.hairStyle === 'long' && (
-          <>
-            <ellipse cx="60" cy="30" rx="38" ry="25" fill={theme.hair} />
-            <rect x="22" y="30" width="16" height="45" rx="8" fill={theme.hair} />
-            <rect x="82" y="30" width="16" height="45" rx="8" fill={theme.hair} />
-          </>
-        )}
-        {theme.hairStyle === 'short' && (
-          <ellipse cx="60" cy="28" rx="36" ry="22" fill={theme.hair} />
-        )}
-        {theme.hairStyle === 'pigtails' && (
-          <>
-            <ellipse cx="60" cy="28" rx="36" ry="22" fill={theme.hair} />
-            <circle cx="20" cy="35" r="12" fill={theme.hair} />
-            <circle cx="100" cy="35" r="12" fill={theme.hair} />
-          </>
-        )}
-        {theme.hairStyle === 'bun' && (
-          <>
-            <ellipse cx="60" cy="28" rx="36" ry="22" fill={theme.hair} />
-            <circle cx="60" cy="12" r="14" fill={theme.hair} />
-          </>
-        )}
-        {theme.hairStyle === 'fox' && (
-          <>
-            <ellipse cx="60" cy="28" rx="38" ry="24" fill={theme.hair} />
-            <polygon points="30,15 38,0 46,15" fill={theme.hair} />
-            <polygon points="74,15 82,0 90,15" fill={theme.hair} />
-            <ellipse cx="60" cy="60" rx="12" ry="8" fill="white" opacity="0.8" />
-          </>
-        )}
-        {theme.hairStyle === 'cat' && (
-          <>
-            <ellipse cx="60" cy="28" rx="36" ry="22" fill={theme.hair} />
-            <polygon points="28,18 34,0 44,18" fill={theme.hair} />
-            <polygon points="76,18 86,0 92,18" fill={theme.hair} />
-          </>
-        )}
-        {theme.hairStyle === 'dog' && (
-          <>
-            <ellipse cx="60" cy="28" rx="38" ry="24" fill={theme.hair} />
-            <ellipse cx="28" cy="45" rx="12" ry="20" fill={theme.hair} />
-            <ellipse cx="92" cy="45" rx="12" ry="20" fill={theme.hair} />
-          </>
-        )}
-        {theme.hairStyle === 'robot' && (
-          <>
-            <rect x="28" y="15" width="64" height="20" rx="4" fill={theme.hair} />
-            <rect x="48" y="5" width="24" height="15" rx="4" fill={theme.hair} />
-            <rect x="55" y="0" width="10" height="8" rx="5" fill={theme.hair} />
-          </>
-        )}
-        {theme.hairStyle === 'alien' && (
-          <>
-            <ellipse cx="60" cy="22" rx="42" ry="28" fill={theme.skin} />
-            <ellipse cx="35" cy="55" rx="8" ry="12" fill={theme.skin} />
-            <ellipse cx="85" cy="55" rx="8" ry="12" fill={theme.skin} />
-          </>
-        )}
-        {theme.hairStyle === 'wizard' && (
-          <>
-            <polygon points="25,40 60,-10 95,40" fill={theme.hair} />
-            <polygon points="20,40 60,-5 100,40" fill="#4A3728" />
-          </>
-        )}
-        {theme.hairStyle === 'hero' && (
-          <>
-            <ellipse cx="60" cy="28" rx="36" ry="22" fill={theme.hair} />
-            <polygon points="35,25 60,8 85,25" fill="#EF4444" opacity="0.8" />
-          </>
-        )}
-        {theme.hairStyle === 'princess' && (
-          <>
-            <ellipse cx="60" cy="28" rx="36" ry="22" fill={theme.hair} />
-            <polygon points="35,30 60,5 85,30" fill="#FFD700" stroke="#FFA500" strokeWidth="1" />
-          </>
-        )}
-        {theme.hairStyle === 'prince' && (
-          <>
-            <ellipse cx="60" cy="28" rx="36" ry="22" fill={theme.hair} />
-            <rect x="40" y="18" width="40" height="8" rx="2" fill="#FFD700" />
-            <circle cx="60" cy="22" r="5" fill="#FFD700" stroke="#FFA500" strokeWidth="1" />
-          </>
-        )}
-        {theme.hairStyle === 'vampire' && (
-          <>
-            <ellipse cx="60" cy="28" rx="36" ry="22" fill={theme.hair} />
-            <polygon points="50,78 55,92 60,78" fill="white" />
-            <polygon points="60,78 65,92 70,78" fill="white" />
-          </>
-        )}
-        {theme.hairStyle === 'ninja' && (
-          <>
-            <rect x="24" y="25" width="72" height="30" rx="4" fill="#1A1A2E" />
-            <rect x="44" y="38" width="32" height="12" rx="2" fill={theme.skin} />
-          </>
-        )}
+      {/* Spinning ring accent */}
+      {showExpression && (
+        <div
+          className="absolute inset-1 rounded-2xl animate-spin-slow opacity-20"
+          style={{
+            border: `2px dashed ${theme.colors[0]}`,
+          }}
+        />
+      )}
 
-        {/* Cheeks (blush) */}
-        {(expression === 'normal' || expression === 'laugh' || expression === 'cool') && (
-          <>
-            <circle cx="35" cy={65 * s} r={7 * s} fill="#FFB6C1" opacity="0.4" />
-            <circle cx="85" cy={65 * s} r={7 * s} fill="#FFB6C1" opacity="0.4" />
-          </>
-        )}
-
-        {/* Eyes */}
-        {expression === 'normal' && (
-          <>
-            <g className="animate-avatar-blink" style={{ transformOrigin: `${60 - eyeSpacing}px ${eyeY}px` }}>
-              <ellipse cx={60 - eyeSpacing} cy={eyeY} rx={eyeSize} ry={eyeSize + 2} fill="#1A1A2E" />
-              <circle cx={60 - eyeSpacing + 2 * s} cy={eyeY - 2 * s} r={2 * s} fill="white" />
-            </g>
-            <g className="animate-avatar-blink" style={{ transformOrigin: `${60 + eyeSpacing}px ${eyeY}px`, animationDelay: '0.1s' }}>
-              <ellipse cx={60 + eyeSpacing} cy={eyeY} rx={eyeSize} ry={eyeSize + 2} fill="#1A1A2E" />
-              <circle cx={60 + eyeSpacing + 2 * s} cy={eyeY - 2 * s} r={2 * s} fill="white" />
-            </g>
-          </>
-        )}
-        {expression === 'tongue' && (
-          <>
-            <ellipse cx={60 - eyeSpacing} cy={eyeY} rx={eyeSize} ry={eyeSize + 2} fill="#1A1A2E" />
-            <circle cx={60 - eyeSpacing + 2 * s} cy={eyeY - 2 * s} r={2 * s} fill="white" />
-            <ellipse cx={60 + eyeSpacing} cy={eyeY} rx={eyeSize} ry={eyeSize + 2} fill="#1A1A2E" />
-            <circle cx={60 + eyeSpacing + 2 * s} cy={eyeY - 2 * s} r={2 * s} fill="white" />
-          </>
-        )}
-        {expression === 'wink' && (
-          <>
-            <ellipse cx={60 - eyeSpacing} cy={eyeY} rx={eyeSize} ry={eyeSize + 2} fill="#1A1A2E" />
-            <circle cx={60 - eyeSpacing + 2 * s} cy={eyeY - 2 * s} r={2 * s} fill="white" />
-            <line x1={60 + eyeSpacing - eyeSize} y1={eyeY} x2={60 + eyeSpacing + eyeSize} y2={eyeY} stroke="#1A1A2E" strokeWidth={3 * s} strokeLinecap="round" />
-          </>
-        )}
-        {expression === 'yawn' && (
-          <>
-            <ellipse cx={60 - eyeSpacing} cy={eyeY} rx={eyeSize * 0.8} ry={eyeSize * 0.3} fill="#1A1A2E" />
-            <ellipse cx={60 + eyeSpacing} cy={eyeY} rx={eyeSize * 0.8} ry={eyeSize * 0.3} fill="#1A1A2E" />
-          </>
-        )}
-        {expression === 'laugh' && (
-          <>
-            <path d={`M${60 - eyeSpacing - eyeSize},${eyeY - 2 * s} Q${60 - eyeSpacing},${eyeY - 8 * s} ${60 - eyeSpacing + eyeSize},${eyeY - 2 * s}`} fill="#1A1A2E" />
-            <path d={`M${60 + eyeSpacing - eyeSize},${eyeY - 2 * s} Q${60 + eyeSpacing},${eyeY - 8 * s} ${60 + eyeSpacing + eyeSize},${eyeY - 2 * s}`} fill="#1A1A2E" />
-          </>
-        )}
-        {expression === 'angry' && (
-          <>
-            <line x1={60 - eyeSpacing - eyeSize} y1={eyeY - eyeSize - 4 * s} x2={60 - eyeSpacing + eyeSize} y2={eyeY - eyeSize + 2 * s} stroke="#1A1A2E" strokeWidth={3 * s} strokeLinecap="round" />
-            <ellipse cx={60 - eyeSpacing} cy={eyeY} rx={eyeSize} ry={eyeSize + 2} fill="#1A1A2E" />
-            <line x1={60 + eyeSpacing + eyeSize} y1={eyeY - eyeSize - 4 * s} x2={60 + eyeSpacing - eyeSize} y2={eyeY - eyeSize + 2 * s} stroke="#1A1A2E" strokeWidth={3 * s} strokeLinecap="round" />
-            <ellipse cx={60 + eyeSpacing} cy={eyeY} rx={eyeSize} ry={eyeSize + 2} fill="#1A1A2E" />
-          </>
-        )}
-        {expression === 'surprise' && (
-          <>
-            <circle cx={60 - eyeSpacing} cy={eyeY} r={eyeSize + 3 * s} fill="white" stroke="#1A1A2E" strokeWidth={2 * s} />
-            <circle cx={60 - eyeSpacing} cy={eyeY + s} r={eyeSize - 1 * s} fill="#1A1A2E" />
-            <circle cx={60 + eyeSpacing} cy={eyeY} r={eyeSize + 3 * s} fill="white" stroke="#1A1A2E" strokeWidth={2 * s} />
-            <circle cx={60 + eyeSpacing} cy={eyeY + s} r={eyeSize - 1 * s} fill="#1A1A2E" />
-          </>
-        )}
-        {expression === 'cool' && (
-          <>
-            <rect x={60 - eyeSpacing - eyeSize - 4 * s} y={eyeY - 5 * s} width={eyeSize * 2 + 8 * s} height={10 * s} rx={3 * s} fill="#1A1A2E" />
-            <rect x={60 + eyeSpacing - eyeSize - 4 * s} y={eyeY - 5 * s} width={eyeSize * 2 + 8 * s} height={10 * s} rx={3 * s} fill="#1A1A2E" />
-            <rect x={60 - 4 * s} y={eyeY - 3 * s} width={8 * s} height={6 * s} fill="#1A1A2E" />
-            <ellipse cx={60 - eyeSpacing} cy={eyeY} rx={eyeSize - 2 * s} ry={eyeSize - 2 * s} fill="white" opacity="0.3" />
-            <ellipse cx={60 + eyeSpacing} cy={eyeY} rx={eyeSize - 2 * s} ry={eyeSize - 2 * s} fill="white" opacity="0.3" />
-          </>
-        )}
-
-        {/* Mouth */}
-        {expression === 'normal' && (
-          <path d={`M${52 * s},${mouthY} Q${60},${mouthY + 8 * s} ${68 * s},${mouthY}`} stroke="#1A1A2E" strokeWidth={2.5 * s} fill="none" strokeLinecap="round" />
-        )}
-        {expression === 'tongue' && (
-          <>
-            <ellipse cx="60" cy={mouthY + 2 * s} rx={8 * s} ry={5 * s} fill="#1A1A2E" />
-            <ellipse cx="60" cy={mouthY + 7 * s} rx={5 * s} ry={6 * s} fill="#FF6B6B" className="animate-avatar-tongue" style={{ transformOrigin: '60px ' + (mouthY + 2 * s) + 'px' }} />
-          </>
-        )}
-        {expression === 'wink' && (
-          <path d={`M${52 * s},${mouthY} Q${60},${mouthY + 10 * s} ${68 * s},${mouthY}`} stroke="#1A1A2E" strokeWidth={2.5 * s} fill="none" strokeLinecap="round" />
-        )}
-        {expression === 'yawn' && (
-          <ellipse cx="60" cy={mouthY + 2 * s} rx={10 * s} ry={12 * s} fill="#1A1A2E" />
-        )}
-        {expression === 'laugh' && (
-          <>
-            <path d={`M${50 * s},${mouthY - 2 * s} Q${60},${mouthY + 14 * s} ${70 * s},${mouthY - 2 * s}`} fill="#1A1A2E" stroke="#1A1A2E" strokeWidth={1 * s} />
-            <path d={`M${50 * s},${mouthY - 2 * s} Q${60},${mouthY + 2 * s} ${70 * s},${mouthY - 2 * s}`} fill="white" />
-          </>
-        )}
-        {expression === 'angry' && (
-          <>
-            <path d={`M${52 * s},${mouthY + 2 * s} L${60},${mouthY - 2 * s} L${68 * s},${mouthY + 2 * s}`} stroke="#1A1A2E" strokeWidth={2.5 * s} fill="none" strokeLinecap="round" />
-            <circle cx="30" cy="35" r="3" fill="#FF0000" opacity="0.6" />
-            <circle cx="90" cy="35" r="3" fill="#FF0000" opacity="0.6" />
-          </>
-        )}
-        {expression === 'surprise' && (
-          <ellipse cx="60" cy={mouthY + 2 * s} rx={6 * s} ry={8 * s} fill="#1A1A2E" />
-        )}
-        {expression === 'cool' && (
-          <path d={`M${52 * s},${mouthY} Q${60},${mouthY + 10 * s} ${68 * s},${mouthY}`} stroke="#1A1A2E" strokeWidth={2.5 * s} fill="none" strokeLinecap="round" />
-        )}
-
-        {/* Accessories */}
-        {theme.accessory === 'glasses' && (
-          <>
-            <circle cx={60 - eyeSpacing} cy={eyeY} r={eyeSize + 5 * s} fill="none" stroke="#333" strokeWidth={2 * s} />
-            <circle cx={60 + eyeSpacing} cy={eyeY} r={eyeSize + 5 * s} fill="none" stroke="#333" strokeWidth={2 * s} />
-            <line x1={60 - eyeSpacing + eyeSize + 5 * s} y1={eyeY} x2={60 + eyeSpacing - eyeSize - 5 * s} y2={eyeY} stroke="#333" strokeWidth={2 * s} />
-          </>
-        )}
-        {theme.accessory === 'gradcap' && (
-          <>
-            <polygon points="20,28 60,10 100,28" fill="#1A1A2E" />
-            <rect x="25" y="28" width="70" height="5" rx="1" fill="#1A1A2E" />
-            <line x1="95" y1="28" x2="95" y2="40" stroke="#FFD700" strokeWidth={2 * s} />
-            <circle cx="95" cy="42" r={3 * s} fill="#FFD700" />
-          </>
-        )}
-        {theme.accessory === 'crown' && (
-          <>
-            <polygon points="35,25 40,10 50,20 60,5 70,20 80,10 85,25" fill="#FFD700" stroke="#FFA500" strokeWidth={1 * s} />
-            <circle cx="40" cy="14" r={2 * s} fill="#EF4444" />
-            <circle cx="60" cy="9" r={2 * s} fill="#3B82F6" />
-            <circle cx="80" cy="14" r={2 * s} fill="#22C55E" />
-          </>
-        )}
-        {theme.accessory === 'hat' && (
-          <>
-            <polygon points="25,35 60,0 95,35" fill="#4A3728" />
-            <rect x="30" y="32" width="60" height="6" rx="2" fill="#4A3728" />
-            <circle cx="60" cy="3" r={4 * s} fill="#FFD700" />
-          </>
-        )}
-        {theme.accessory === 'mask' && (
-          <>
-            <path d={`M${60 - eyeSpacing - eyeSize - 6 * s},${eyeY - 6 * s} L${60 + eyeSpacing + eyeSize + 6 * s},${eyeY - 6 * s} L${60 + eyeSpacing + eyeSize + 3 * s},${eyeY + 8 * s} L${60 - eyeSpacing - eyeSize - 3 * s},${eyeY + 8 * s} Z`} fill="#1A1A2E" opacity="0.8" />
-          </>
-        )}
-        {theme.accessory === 'antenna' && (
-          <>
-            <line x1="60" y1="5" x2="60" y2="15" stroke="#707070" strokeWidth={2 * s} />
-            <circle cx="60" cy="3" r={4 * s} fill="#EF4444" className="animate-avatar-blink" style={{ transformOrigin: '60px 3px' }} />
-          </>
-        )}
-
-        {/* Expression emoji indicator */}
-        {showExpression && expression !== 'normal' && (
-          <text x="95" y="30" fontSize="18" opacity={isTransitioning ? 0 : 0.8}>
-            {expression === 'tongue' ? '😛' : expression === 'wink' ? '😉' : expression === 'yawn' ? '🥱' : expression === 'laugh' ? '😂' : expression === 'angry' ? '😡' : expression === 'surprise' ? '😲' : expression === 'cool' ? '😎' : ''}
-          </text>
-        )}
-      </svg>
+      {/* Emoji avatar */}
+      <span
+        className="relative z-10 select-none animate-avatar-idle"
+        style={{ fontSize: emojiSize, lineHeight: 1, filter: `drop-shadow(0 2px 8px ${theme.glow}60)` }}
+      >
+        {avatar}
+      </span>
     </div>
   )
 }
 
 // ============================================
-// ANIMATED FRAME COMPONENT
+// ANIMATED FRAME COMPONENT (Enhanced)
 // ============================================
 function AnimatedFrame({ frame, size = 120, children }: { frame?: string; size?: number; children: React.ReactNode }) {
   if (!frame) {
     return <>{children}</>
   }
 
-  const frameThemes: Record<string, { colors: string[]; pattern: string; glow: string }> = {
-    '🔥': { colors: ['#EF4444', '#F97316', '#EAB308'], pattern: 'fire', glow: 'shadow-orange-500/40' },
-    '❄️': { colors: ['#06B6D4', '#3B82F6', '#A78BFA'], pattern: 'ice', glow: 'shadow-cyan-500/40' },
-    '⭐': { colors: ['#EAB308', '#F59E0B', '#FBBF24'], pattern: 'stars', glow: 'shadow-yellow-500/40' },
-    '💎': { colors: ['#8B5CF6', '#A78BFA', '#C4B5FD'], pattern: 'diamond', glow: 'shadow-purple-500/40' },
-    '👑': { colors: ['#EAB308', '#D97706', '#92400E'], pattern: 'royal', glow: 'shadow-amber-500/40' },
-    '🌈': { colors: ['#EF4444', '#F97316', '#EAB308', '#22C55E', '#3B82F6', '#8B5CF6'], pattern: 'rainbow', glow: 'shadow-pink-500/40' },
-    '⚡': { colors: ['#EAB308', '#F59E0B', '#FDE68A'], pattern: 'electric', glow: 'shadow-yellow-400/40' },
-    '🌸': { colors: ['#EC4899', '#F472B6', '#FBCFE8'], pattern: 'sakura', glow: 'shadow-pink-400/40' },
-    '🌊': { colors: ['#06B6D4', '#0891B2', '#155E75'], pattern: 'wave', glow: 'shadow-teal-500/40' },
-    '🌿': { colors: ['#22C55E', '#16A34A', '#15803D'], pattern: 'nature', glow: 'shadow-green-500/40' },
-    '🗡️': { colors: ['#9CA3AF', '#6B7280', '#D1D5DB'], pattern: 'blade', glow: 'shadow-gray-400/40' },
-    '🛡️': { colors: ['#DC2626', '#991B1B', '#7F1D1D'], pattern: 'shield', glow: 'shadow-red-500/40' },
-    '🎭': { colors: ['#8B5CF6', '#EC4899', '#6366F1'], pattern: 'theater', glow: 'shadow-violet-500/40' },
-    '🎵': { colors: ['#06B6D4', '#8B5CF6', '#EC4899'], pattern: 'music', glow: 'shadow-cyan-400/40' },
-    '💫': { colors: ['#FBBF24', '#F59E0B', '#D97706'], pattern: 'cosmic', glow: 'shadow-amber-400/40' },
-    '🌸': { colors: ['#F472B6', '#EC4899', '#DB2777'], pattern: 'floral', glow: 'shadow-pink-500/40' },
-    '🦋': { colors: ['#8B5CF6', '#3B82F6', '#06B6D4'], pattern: 'butterfly', glow: 'shadow-indigo-400/40' },
-    '🏆': { colors: ['#EAB308', '#D97706', '#B45309'], pattern: 'champion', glow: 'shadow-yellow-500/40' },
+  const frameThemes: Record<string, { colors: string[]; pattern: string; glow: string; emoji: string }> = {
+    '🔥': { colors: ['#EF4444', '#F97316', '#EAB308'], pattern: 'fire', glow: '#F97316', emoji: '🔥' },
+    '❄️': { colors: ['#06B6D4', '#3B82F6', '#A78BFA'], pattern: 'ice', glow: '#06B6D4', emoji: '❄️' },
+    '⭐': { colors: ['#EAB308', '#F59E0B', '#FBBF24'], pattern: 'stars', glow: '#EAB308', emoji: '⭐' },
+    '💎': { colors: ['#8B5CF6', '#A78BFA', '#C4B5FD'], pattern: 'diamond', glow: '#8B5CF6', emoji: '💎' },
+    '👑': { colors: ['#EAB308', '#D97706', '#92400E'], pattern: 'royal', glow: '#D97706', emoji: '👑' },
+    '🌈': { colors: ['#EF4444', '#F97316', '#EAB308', '#22C55E', '#3B82F6', '#8B5CF6'], pattern: 'rainbow', glow: '#EC4899', emoji: '🌈' },
+    '⚡': { colors: ['#EAB308', '#F59E0B', '#FDE68A'], pattern: 'electric', glow: '#F59E0B', emoji: '⚡' },
+    '🌸': { colors: ['#EC4899', '#F472B6', '#FBCFE8'], pattern: 'sakura', glow: '#EC4899', emoji: '🌸' },
+    '🌊': { colors: ['#06B6D4', '#0891B2', '#155E75'], pattern: 'wave', glow: '#0891B2', emoji: '🌊' },
+    '🌿': { colors: ['#22C55E', '#16A34A', '#15803D'], pattern: 'nature', glow: '#22C55E', emoji: '🌿' },
+    '🗡️': { colors: ['#9CA3AF', '#6B7280', '#D1D5DB'], pattern: 'blade', glow: '#9CA3AF', emoji: '🗡️' },
+    '🛡️': { colors: ['#DC2626', '#991B1B', '#7F1D1D'], pattern: 'shield', glow: '#DC2626', emoji: '🛡️' },
+    '🎭': { colors: ['#8B5CF6', '#EC4899', '#6366F1'], pattern: 'theater', glow: '#8B5CF6', emoji: '🎭' },
+    '🎵': { colors: ['#06B6D4', '#8B5CF6', '#EC4899'], pattern: 'music', glow: '#8B5CF6', emoji: '🎵' },
+    '💫': { colors: ['#FBBF24', '#F59E0B', '#D97706'], pattern: 'cosmic', glow: '#F59E0B', emoji: '💫' },
+    '🦋': { colors: ['#8B5CF6', '#3B82F6', '#06B6D4'], pattern: 'butterfly', glow: '#3B82F6', emoji: '🦋' },
+    '🏆': { colors: ['#EAB308', '#D97706', '#B45309'], pattern: 'champion', glow: '#D97706', emoji: '🏆' },
   }
 
-  const theme = frameThemes[frame] || { colors: ['#EAB308', '#F97316', '#EF4444'], pattern: 'default', glow: 'shadow-yellow-500/40' }
-  const borderSize = Math.max(6, size * 0.06)
+  const theme = frameThemes[frame] || { colors: ['#EAB308', '#F97316', '#EF4444'], pattern: 'default', glow: '#F97316', emoji: frame }
+  const borderSize = Math.max(8, size * 0.08)
+  const totalSize = size + borderSize * 4
 
-  // Generate sparkle positions
-  const sparkles = Array.from({ length: 8 }, (_, i) => ({
-    angle: (i / 8) * 360,
-    delay: i * 0.3,
-    size: 4 + Math.random() * 6,
+  // Generate orbit sparkle positions
+  const sparkles = Array.from({ length: 12 }, (_, i) => ({
+    angle: (i / 12) * 360,
+    delay: i * 0.25,
+    size: 5 + Math.random() * 7,
   }))
 
+  // Corner decorations
+  const corners = [
+    { x: 0, y: 0, rotate: 0 },
+    { x: '100%', y: 0, rotate: 90 },
+    { x: '100%', y: '100%', rotate: 180 },
+    { x: 0, y: '100%', rotate: 270 },
+  ]
+
   return (
-    <div className="relative" style={{ width: size + borderSize * 4, height: size + borderSize * 4 }}>
-      {/* Animated frame border */}
+    <div className="relative animate-frame-breathe" style={{ width: totalSize, height: totalSize }}>
+      {/* Outer glow ring */}
       <div
-        className={`absolute inset-0 rounded-2xl animate-frame-glow animate-frame-dance border-4 ${theme.glow}`}
+        className="absolute -inset-3 rounded-3xl animate-frame-glow-pulse"
         style={{
-          borderColor: theme.colors[0],
-          background: `linear-gradient(45deg, ${theme.colors.map((c, i) => `${c}40 ${i * (100 / theme.colors.length)}%, ${c}40 ${(i + 1) * (100 / theme.colors.length)}%`).join(', ')})`,
+          boxShadow: `0 0 30px ${theme.glow}30, 0 0 60px ${theme.glow}15, inset 0 0 30px ${theme.glow}10`,
         }}
-      >
-        {/* Animated border pattern - rotating gradient */}
+      />
+
+      {/* Main frame border with animated conic gradient */}
+      <div className="absolute inset-0 rounded-2xl overflow-hidden">
+        {/* Rotating conic gradient border */}
         <div
-          className="absolute inset-0 rounded-2xl animate-spin-slow"
+          className="absolute inset-0 animate-frame-rotate"
           style={{
             background: `conic-gradient(from 0deg, ${theme.colors.join(', ')}, ${theme.colors[0]})`,
-            opacity: 0.3,
           }}
         />
-        
-        {/* Sparkle particles */}
-        {sparkles.map((sparkle, i) => (
+        {/* Inner cutout */}
+        <div
+          className="absolute rounded-xl bg-background"
+          style={{ inset: borderSize * 1.5 }}
+        />
+      </div>
+
+      {/* Second animated border layer - pulsing colors */}
+      <div
+        className="absolute rounded-2xl animate-frame-dance"
+        style={{
+          inset: 2,
+          border: `3px solid ${theme.colors[0]}`,
+          opacity: 0.6,
+        }}
+      />
+
+      {/* Orbit sparkles around the frame */}
+      {sparkles.map((sparkle, i) => {
+        const rad = (sparkle.angle * Math.PI) / 180
+        const cx = 50 + 48 * Math.cos(rad)
+        const cy = 50 + 48 * Math.sin(rad)
+        return (
           <div
             key={i}
             className="absolute animate-frame-sparkle"
             style={{
-              left: `${50 + 45 * Math.cos((sparkle.angle * Math.PI) / 180)}%`,
-              top: `${50 + 45 * Math.sin((sparkle.angle * Math.PI) / 180)}%`,
-              width: sparkle.size,
-              height: sparkle.size,
+              left: `${cx}%`,
+              top: `${cy}%`,
+              transform: 'translate(-50%, -50%)',
               animationDelay: `${sparkle.delay}s`,
               color: theme.colors[i % theme.colors.length],
+              fontSize: sparkle.size,
+              textShadow: `0 0 8px ${theme.colors[i % theme.colors.length]}`,
             }}
           >
             ✦
           </div>
-        ))}
-      </div>
+        )
+      })}
+
+      {/* Animated corner decorations */}
+      {corners.map((corner, i) => (
+        <div
+          key={i}
+          className="absolute animate-frame-sparkle"
+          style={{
+            left: corner.x === 0 ? -4 : corner.x === '100%' ? undefined : corner.x,
+            right: corner.x === '100%' ? -4 : undefined,
+            top: corner.y === 0 ? -4 : corner.y === '100%' ? undefined : corner.y,
+            bottom: corner.y === '100%' ? -4 : undefined,
+            transform: `rotate(${corner.rotate}deg)`,
+            animationDelay: `${i * 0.4}s`,
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20">
+            <path d="M0,0 L20,0 L20,6 L6,6 L6,20 L0,20 Z" fill={theme.colors[i % theme.colors.length]} opacity="0.7" />
+          </svg>
+        </div>
+      ))}
 
       {/* Frame emoji badge - LARGE and prominent */}
       <div
-        className="absolute -bottom-2 -right-2 z-30 animate-avatar-bounce"
-        style={{ fontSize: Math.max(24, size * 0.25) }}
+        className="absolute -bottom-3 -right-3 z-30 animate-avatar-bounce"
+        style={{ fontSize: Math.max(28, size * 0.28) }}
       >
-        <div className="bg-background rounded-full border-2 border-yellow-500/50 shadow-lg shadow-yellow-500/20 p-1 flex items-center justify-center">
+        <div
+          className="rounded-full p-1.5 flex items-center justify-center"
+          style={{
+            background: `linear-gradient(135deg, ${theme.colors[0]}, ${theme.colors[1]})`,
+            boxShadow: `0 0 15px ${theme.glow}50, 0 0 30px ${theme.glow}25`,
+            border: `2px solid ${theme.colors[2] || theme.colors[0]}80`,
+          }}
+        >
           {frame}
         </div>
       </div>
