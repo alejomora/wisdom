@@ -68,6 +68,444 @@ function ConfettiEffect() {
 }
 
 // ============================================
+// ANIMATED AVATAR COMPONENT
+// ============================================
+type AvatarExpression = 'normal' | 'tongue' | 'wink' | 'yawn' | 'laugh' | 'angry' | 'surprise' | 'cool'
+
+const AVATAR_THEMES: Record<string, { skin: string; hair: string; hairStyle: string; accessory: string; bg: string }> = {
+  '🎯': { skin: '#FFDBB4', hair: '#4A3728', hairStyle: 'short', accessory: 'none', bg: 'from-emerald-500 to-cyan-500' },
+  '👩': { skin: '#FFDBB4', hair: '#8B4513', hairStyle: 'long', accessory: 'none', bg: 'from-pink-500 to-rose-500' },
+  '👨': { skin: '#F5C7A1', hair: '#2C1810', hairStyle: 'short', accessory: 'none', bg: 'from-blue-500 to-indigo-500' },
+  '👧': { skin: '#FFDBB4', hair: '#D4A574', hairStyle: 'pigtails', accessory: 'none', bg: 'from-purple-500 to-pink-500' },
+  '🧑': { skin: '#E8B88A', hair: '#1A1A2E', hairStyle: 'short', accessory: 'none', bg: 'from-cyan-500 to-teal-500' },
+  '👩‍🎓': { skin: '#FFDBB4', hair: '#654321', hairStyle: 'long', accessory: 'gradcap', bg: 'from-yellow-500 to-amber-500' },
+  '👨‍💻': { skin: '#F5C7A1', hair: '#3D2B1F', hairStyle: 'short', accessory: 'glasses', bg: 'from-violet-500 to-purple-500' },
+  '👩‍🏫': { skin: '#FFDBB4', hair: '#8B0000', hairStyle: 'bun', accessory: 'glasses', bg: 'from-teal-500 to-emerald-500' },
+  '🧑‍🎓': { skin: '#E8B88A', hair: '#4A3728', hairStyle: 'short', accessory: 'gradcap', bg: 'from-orange-500 to-red-500' },
+  '🦊': { skin: '#FF8C00', hair: '#CC7000', hairStyle: 'fox', accessory: 'none', bg: 'from-orange-500 to-amber-500' },
+  '🐱': { skin: '#FFB6C1', hair: '#FF69B4', hairStyle: 'cat', accessory: 'none', bg: 'from-pink-400 to-rose-400' },
+  '🐶': { skin: '#D2A679', hair: '#8B6914', hairStyle: 'dog', accessory: 'none', bg: 'from-yellow-600 to-amber-600' },
+  '🤖': { skin: '#A8A8A8', hair: '#707070', hairStyle: 'robot', accessory: 'antenna', bg: 'from-gray-500 to-slate-500' },
+  '👾': { skin: '#7C3AED', hair: '#5B21B6', hairStyle: 'alien', accessory: 'none', bg: 'from-purple-600 to-violet-600' },
+  '🧙': { skin: '#FFDBB4', hair: '#E8E8E8', hairStyle: 'wizard', accessory: 'hat', bg: 'from-purple-600 to-indigo-600' },
+  '🦸': { skin: '#F5C7A1', hair: '#1A1A2E', hairStyle: 'hero', accessory: 'mask', bg: 'from-red-500 to-blue-500' },
+  '👸': { skin: '#FFDBB4', hair: '#FFD700', hairStyle: 'princess', accessory: 'crown', bg: 'from-yellow-400 to-amber-400' },
+  '🤴': { skin: '#F5C7A1', hair: '#4A3728', hairStyle: 'prince', accessory: 'crown', bg: 'from-yellow-500 to-orange-500' },
+  '🧛': { skin: '#E8E0E0', hair: '#1A1A2E', hairStyle: 'vampire', accessory: 'none', bg: 'from-red-600 to-gray-700' },
+  '🥷': { skin: '#F5C7A1', hair: '#1A1A2E', hairStyle: 'ninja', accessory: 'mask', bg: 'from-gray-700 to-gray-900' },
+}
+
+const DEFAULT_THEME = { skin: '#FFDBB4', hair: '#4A3728', hairStyle: 'short', accessory: 'none', bg: 'from-emerald-500 to-cyan-500' }
+
+function AnimatedAvatar({ avatar, size = 120, showExpression = true, className = '' }: {
+  avatar: string
+  size?: number
+  showExpression?: boolean
+  className?: string
+}) {
+  const [expression, setExpression] = useState<AvatarExpression>('normal')
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  
+  const theme = AVATAR_THEMES[avatar] || DEFAULT_THEME
+  const s = size / 120 // scale factor
+
+  // Cycle through expressions
+  useEffect(() => {
+    if (!showExpression) return
+    const expressions: AvatarExpression[] = ['normal', 'normal', 'normal', 'tongue', 'wink', 'laugh', 'angry', 'surprise', 'yawn', 'cool']
+    let idx = 0
+    const interval = setInterval(() => {
+      idx = (idx + 1) % expressions.length
+      setIsTransitioning(true)
+      setTimeout(() => {
+        setExpression(expressions[idx])
+        setIsTransitioning(false)
+      }, 150)
+    }, 3000 + Math.random() * 2000)
+    return () => clearInterval(interval)
+  }, [showExpression])
+
+  const eyeY = 48 * s
+  const eyeSpacing = 16 * s
+  const eyeSize = 6 * s
+  const mouthY = 68 * s
+
+  return (
+    <div className={`animate-avatar-idle ${className}`} style={{ width: size, height: size }}>
+      <svg viewBox="0 0 120 120" width={size} height={size} style={{ overflow: 'visible' }}>
+        {/* Background circle */}
+        <defs>
+          <radialGradient id={`bg-${avatar.replace(/[^a-zA-Z0-9]/g, '')}`} cx="50%" cy="40%" r="50%">
+            <stop offset="0%" stopColor={theme.skin} stopOpacity="0.3" />
+            <stop offset="100%" stopColor={theme.skin} stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        {/* Body/Shoulders */}
+        <ellipse cx="60" cy="112" rx="35" ry="14" fill={theme.hair} opacity="0.8" />
+
+        {/* Head */}
+        <ellipse cx="60" cy="55" rx="36" ry="40" fill={theme.skin} />
+
+        {/* Hair */}
+        {theme.hairStyle === 'long' && (
+          <>
+            <ellipse cx="60" cy="30" rx="38" ry="25" fill={theme.hair} />
+            <rect x="22" y="30" width="16" height="45" rx="8" fill={theme.hair} />
+            <rect x="82" y="30" width="16" height="45" rx="8" fill={theme.hair} />
+          </>
+        )}
+        {theme.hairStyle === 'short' && (
+          <ellipse cx="60" cy="28" rx="36" ry="22" fill={theme.hair} />
+        )}
+        {theme.hairStyle === 'pigtails' && (
+          <>
+            <ellipse cx="60" cy="28" rx="36" ry="22" fill={theme.hair} />
+            <circle cx="20" cy="35" r="12" fill={theme.hair} />
+            <circle cx="100" cy="35" r="12" fill={theme.hair} />
+          </>
+        )}
+        {theme.hairStyle === 'bun' && (
+          <>
+            <ellipse cx="60" cy="28" rx="36" ry="22" fill={theme.hair} />
+            <circle cx="60" cy="12" r="14" fill={theme.hair} />
+          </>
+        )}
+        {theme.hairStyle === 'fox' && (
+          <>
+            <ellipse cx="60" cy="28" rx="38" ry="24" fill={theme.hair} />
+            <polygon points="30,15 38,0 46,15" fill={theme.hair} />
+            <polygon points="74,15 82,0 90,15" fill={theme.hair} />
+            <ellipse cx="60" cy="60" rx="12" ry="8" fill="white" opacity="0.8" />
+          </>
+        )}
+        {theme.hairStyle === 'cat' && (
+          <>
+            <ellipse cx="60" cy="28" rx="36" ry="22" fill={theme.hair} />
+            <polygon points="28,18 34,0 44,18" fill={theme.hair} />
+            <polygon points="76,18 86,0 92,18" fill={theme.hair} />
+          </>
+        )}
+        {theme.hairStyle === 'dog' && (
+          <>
+            <ellipse cx="60" cy="28" rx="38" ry="24" fill={theme.hair} />
+            <ellipse cx="28" cy="45" rx="12" ry="20" fill={theme.hair} />
+            <ellipse cx="92" cy="45" rx="12" ry="20" fill={theme.hair} />
+          </>
+        )}
+        {theme.hairStyle === 'robot' && (
+          <>
+            <rect x="28" y="15" width="64" height="20" rx="4" fill={theme.hair} />
+            <rect x="48" y="5" width="24" height="15" rx="4" fill={theme.hair} />
+            <rect x="55" y="0" width="10" height="8" rx="5" fill={theme.hair} />
+          </>
+        )}
+        {theme.hairStyle === 'alien' && (
+          <>
+            <ellipse cx="60" cy="22" rx="42" ry="28" fill={theme.skin} />
+            <ellipse cx="35" cy="55" rx="8" ry="12" fill={theme.skin} />
+            <ellipse cx="85" cy="55" rx="8" ry="12" fill={theme.skin} />
+          </>
+        )}
+        {theme.hairStyle === 'wizard' && (
+          <>
+            <polygon points="25,40 60,-10 95,40" fill={theme.hair} />
+            <polygon points="20,40 60,-5 100,40" fill="#4A3728" />
+          </>
+        )}
+        {theme.hairStyle === 'hero' && (
+          <>
+            <ellipse cx="60" cy="28" rx="36" ry="22" fill={theme.hair} />
+            <polygon points="35,25 60,8 85,25" fill="#EF4444" opacity="0.8" />
+          </>
+        )}
+        {theme.hairStyle === 'princess' && (
+          <>
+            <ellipse cx="60" cy="28" rx="36" ry="22" fill={theme.hair} />
+            <polygon points="35,30 60,5 85,30" fill="#FFD700" stroke="#FFA500" strokeWidth="1" />
+          </>
+        )}
+        {theme.hairStyle === 'prince' && (
+          <>
+            <ellipse cx="60" cy="28" rx="36" ry="22" fill={theme.hair} />
+            <rect x="40" y="18" width="40" height="8" rx="2" fill="#FFD700" />
+            <circle cx="60" cy="22" r="5" fill="#FFD700" stroke="#FFA500" strokeWidth="1" />
+          </>
+        )}
+        {theme.hairStyle === 'vampire' && (
+          <>
+            <ellipse cx="60" cy="28" rx="36" ry="22" fill={theme.hair} />
+            <polygon points="50,78 55,92 60,78" fill="white" />
+            <polygon points="60,78 65,92 70,78" fill="white" />
+          </>
+        )}
+        {theme.hairStyle === 'ninja' && (
+          <>
+            <rect x="24" y="25" width="72" height="30" rx="4" fill="#1A1A2E" />
+            <rect x="44" y="38" width="32" height="12" rx="2" fill={theme.skin} />
+          </>
+        )}
+
+        {/* Cheeks (blush) */}
+        {(expression === 'normal' || expression === 'laugh' || expression === 'cool') && (
+          <>
+            <circle cx="35" cy={65 * s} r={7 * s} fill="#FFB6C1" opacity="0.4" />
+            <circle cx="85" cy={65 * s} r={7 * s} fill="#FFB6C1" opacity="0.4" />
+          </>
+        )}
+
+        {/* Eyes */}
+        {expression === 'normal' && (
+          <>
+            <g className="animate-avatar-blink" style={{ transformOrigin: `${60 - eyeSpacing}px ${eyeY}px` }}>
+              <ellipse cx={60 - eyeSpacing} cy={eyeY} rx={eyeSize} ry={eyeSize + 2} fill="#1A1A2E" />
+              <circle cx={60 - eyeSpacing + 2 * s} cy={eyeY - 2 * s} r={2 * s} fill="white" />
+            </g>
+            <g className="animate-avatar-blink" style={{ transformOrigin: `${60 + eyeSpacing}px ${eyeY}px`, animationDelay: '0.1s' }}>
+              <ellipse cx={60 + eyeSpacing} cy={eyeY} rx={eyeSize} ry={eyeSize + 2} fill="#1A1A2E" />
+              <circle cx={60 + eyeSpacing + 2 * s} cy={eyeY - 2 * s} r={2 * s} fill="white" />
+            </g>
+          </>
+        )}
+        {expression === 'tongue' && (
+          <>
+            <ellipse cx={60 - eyeSpacing} cy={eyeY} rx={eyeSize} ry={eyeSize + 2} fill="#1A1A2E" />
+            <circle cx={60 - eyeSpacing + 2 * s} cy={eyeY - 2 * s} r={2 * s} fill="white" />
+            <ellipse cx={60 + eyeSpacing} cy={eyeY} rx={eyeSize} ry={eyeSize + 2} fill="#1A1A2E" />
+            <circle cx={60 + eyeSpacing + 2 * s} cy={eyeY - 2 * s} r={2 * s} fill="white" />
+          </>
+        )}
+        {expression === 'wink' && (
+          <>
+            <ellipse cx={60 - eyeSpacing} cy={eyeY} rx={eyeSize} ry={eyeSize + 2} fill="#1A1A2E" />
+            <circle cx={60 - eyeSpacing + 2 * s} cy={eyeY - 2 * s} r={2 * s} fill="white" />
+            <line x1={60 + eyeSpacing - eyeSize} y1={eyeY} x2={60 + eyeSpacing + eyeSize} y2={eyeY} stroke="#1A1A2E" strokeWidth={3 * s} strokeLinecap="round" />
+          </>
+        )}
+        {expression === 'yawn' && (
+          <>
+            <ellipse cx={60 - eyeSpacing} cy={eyeY} rx={eyeSize * 0.8} ry={eyeSize * 0.3} fill="#1A1A2E" />
+            <ellipse cx={60 + eyeSpacing} cy={eyeY} rx={eyeSize * 0.8} ry={eyeSize * 0.3} fill="#1A1A2E" />
+          </>
+        )}
+        {expression === 'laugh' && (
+          <>
+            <path d={`M${60 - eyeSpacing - eyeSize},${eyeY - 2 * s} Q${60 - eyeSpacing},${eyeY - 8 * s} ${60 - eyeSpacing + eyeSize},${eyeY - 2 * s}`} fill="#1A1A2E" />
+            <path d={`M${60 + eyeSpacing - eyeSize},${eyeY - 2 * s} Q${60 + eyeSpacing},${eyeY - 8 * s} ${60 + eyeSpacing + eyeSize},${eyeY - 2 * s}`} fill="#1A1A2E" />
+          </>
+        )}
+        {expression === 'angry' && (
+          <>
+            <line x1={60 - eyeSpacing - eyeSize} y1={eyeY - eyeSize - 4 * s} x2={60 - eyeSpacing + eyeSize} y2={eyeY - eyeSize + 2 * s} stroke="#1A1A2E" strokeWidth={3 * s} strokeLinecap="round" />
+            <ellipse cx={60 - eyeSpacing} cy={eyeY} rx={eyeSize} ry={eyeSize + 2} fill="#1A1A2E" />
+            <line x1={60 + eyeSpacing + eyeSize} y1={eyeY - eyeSize - 4 * s} x2={60 + eyeSpacing - eyeSize} y2={eyeY - eyeSize + 2 * s} stroke="#1A1A2E" strokeWidth={3 * s} strokeLinecap="round" />
+            <ellipse cx={60 + eyeSpacing} cy={eyeY} rx={eyeSize} ry={eyeSize + 2} fill="#1A1A2E" />
+          </>
+        )}
+        {expression === 'surprise' && (
+          <>
+            <circle cx={60 - eyeSpacing} cy={eyeY} r={eyeSize + 3 * s} fill="white" stroke="#1A1A2E" strokeWidth={2 * s} />
+            <circle cx={60 - eyeSpacing} cy={eyeY + s} r={eyeSize - 1 * s} fill="#1A1A2E" />
+            <circle cx={60 + eyeSpacing} cy={eyeY} r={eyeSize + 3 * s} fill="white" stroke="#1A1A2E" strokeWidth={2 * s} />
+            <circle cx={60 + eyeSpacing} cy={eyeY + s} r={eyeSize - 1 * s} fill="#1A1A2E" />
+          </>
+        )}
+        {expression === 'cool' && (
+          <>
+            <rect x={60 - eyeSpacing - eyeSize - 4 * s} y={eyeY - 5 * s} width={eyeSize * 2 + 8 * s} height={10 * s} rx={3 * s} fill="#1A1A2E" />
+            <rect x={60 + eyeSpacing - eyeSize - 4 * s} y={eyeY - 5 * s} width={eyeSize * 2 + 8 * s} height={10 * s} rx={3 * s} fill="#1A1A2E" />
+            <rect x={60 - 4 * s} y={eyeY - 3 * s} width={8 * s} height={6 * s} fill="#1A1A2E" />
+            <ellipse cx={60 - eyeSpacing} cy={eyeY} rx={eyeSize - 2 * s} ry={eyeSize - 2 * s} fill="white" opacity="0.3" />
+            <ellipse cx={60 + eyeSpacing} cy={eyeY} rx={eyeSize - 2 * s} ry={eyeSize - 2 * s} fill="white" opacity="0.3" />
+          </>
+        )}
+
+        {/* Mouth */}
+        {expression === 'normal' && (
+          <path d={`M${52 * s},${mouthY} Q${60},${mouthY + 8 * s} ${68 * s},${mouthY}`} stroke="#1A1A2E" strokeWidth={2.5 * s} fill="none" strokeLinecap="round" />
+        )}
+        {expression === 'tongue' && (
+          <>
+            <ellipse cx="60" cy={mouthY + 2 * s} rx={8 * s} ry={5 * s} fill="#1A1A2E" />
+            <ellipse cx="60" cy={mouthY + 7 * s} rx={5 * s} ry={6 * s} fill="#FF6B6B" className="animate-avatar-tongue" style={{ transformOrigin: '60px ' + (mouthY + 2 * s) + 'px' }} />
+          </>
+        )}
+        {expression === 'wink' && (
+          <path d={`M${52 * s},${mouthY} Q${60},${mouthY + 10 * s} ${68 * s},${mouthY}`} stroke="#1A1A2E" strokeWidth={2.5 * s} fill="none" strokeLinecap="round" />
+        )}
+        {expression === 'yawn' && (
+          <ellipse cx="60" cy={mouthY + 2 * s} rx={10 * s} ry={12 * s} fill="#1A1A2E" />
+        )}
+        {expression === 'laugh' && (
+          <>
+            <path d={`M${50 * s},${mouthY - 2 * s} Q${60},${mouthY + 14 * s} ${70 * s},${mouthY - 2 * s}`} fill="#1A1A2E" stroke="#1A1A2E" strokeWidth={1 * s} />
+            <path d={`M${50 * s},${mouthY - 2 * s} Q${60},${mouthY + 2 * s} ${70 * s},${mouthY - 2 * s}`} fill="white" />
+          </>
+        )}
+        {expression === 'angry' && (
+          <>
+            <path d={`M${52 * s},${mouthY + 2 * s} L${60},${mouthY - 2 * s} L${68 * s},${mouthY + 2 * s}`} stroke="#1A1A2E" strokeWidth={2.5 * s} fill="none" strokeLinecap="round" />
+            <circle cx="30" cy="35" r="3" fill="#FF0000" opacity="0.6" />
+            <circle cx="90" cy="35" r="3" fill="#FF0000" opacity="0.6" />
+          </>
+        )}
+        {expression === 'surprise' && (
+          <ellipse cx="60" cy={mouthY + 2 * s} rx={6 * s} ry={8 * s} fill="#1A1A2E" />
+        )}
+        {expression === 'cool' && (
+          <path d={`M${52 * s},${mouthY} Q${60},${mouthY + 10 * s} ${68 * s},${mouthY}`} stroke="#1A1A2E" strokeWidth={2.5 * s} fill="none" strokeLinecap="round" />
+        )}
+
+        {/* Accessories */}
+        {theme.accessory === 'glasses' && (
+          <>
+            <circle cx={60 - eyeSpacing} cy={eyeY} r={eyeSize + 5 * s} fill="none" stroke="#333" strokeWidth={2 * s} />
+            <circle cx={60 + eyeSpacing} cy={eyeY} r={eyeSize + 5 * s} fill="none" stroke="#333" strokeWidth={2 * s} />
+            <line x1={60 - eyeSpacing + eyeSize + 5 * s} y1={eyeY} x2={60 + eyeSpacing - eyeSize - 5 * s} y2={eyeY} stroke="#333" strokeWidth={2 * s} />
+          </>
+        )}
+        {theme.accessory === 'gradcap' && (
+          <>
+            <polygon points="20,28 60,10 100,28" fill="#1A1A2E" />
+            <rect x="25" y="28" width="70" height="5" rx="1" fill="#1A1A2E" />
+            <line x1="95" y1="28" x2="95" y2="40" stroke="#FFD700" strokeWidth={2 * s} />
+            <circle cx="95" cy="42" r={3 * s} fill="#FFD700" />
+          </>
+        )}
+        {theme.accessory === 'crown' && (
+          <>
+            <polygon points="35,25 40,10 50,20 60,5 70,20 80,10 85,25" fill="#FFD700" stroke="#FFA500" strokeWidth={1 * s} />
+            <circle cx="40" cy="14" r={2 * s} fill="#EF4444" />
+            <circle cx="60" cy="9" r={2 * s} fill="#3B82F6" />
+            <circle cx="80" cy="14" r={2 * s} fill="#22C55E" />
+          </>
+        )}
+        {theme.accessory === 'hat' && (
+          <>
+            <polygon points="25,35 60,0 95,35" fill="#4A3728" />
+            <rect x="30" y="32" width="60" height="6" rx="2" fill="#4A3728" />
+            <circle cx="60" cy="3" r={4 * s} fill="#FFD700" />
+          </>
+        )}
+        {theme.accessory === 'mask' && (
+          <>
+            <path d={`M${60 - eyeSpacing - eyeSize - 6 * s},${eyeY - 6 * s} L${60 + eyeSpacing + eyeSize + 6 * s},${eyeY - 6 * s} L${60 + eyeSpacing + eyeSize + 3 * s},${eyeY + 8 * s} L${60 - eyeSpacing - eyeSize - 3 * s},${eyeY + 8 * s} Z`} fill="#1A1A2E" opacity="0.8" />
+          </>
+        )}
+        {theme.accessory === 'antenna' && (
+          <>
+            <line x1="60" y1="5" x2="60" y2="15" stroke="#707070" strokeWidth={2 * s} />
+            <circle cx="60" cy="3" r={4 * s} fill="#EF4444" className="animate-avatar-blink" style={{ transformOrigin: '60px 3px' }} />
+          </>
+        )}
+
+        {/* Expression emoji indicator */}
+        {showExpression && expression !== 'normal' && (
+          <text x="95" y="30" fontSize="18" opacity={isTransitioning ? 0 : 0.8}>
+            {expression === 'tongue' ? '😛' : expression === 'wink' ? '😉' : expression === 'yawn' ? '🥱' : expression === 'laugh' ? '😂' : expression === 'angry' ? '😡' : expression === 'surprise' ? '😲' : expression === 'cool' ? '😎' : ''}
+          </text>
+        )}
+      </svg>
+    </div>
+  )
+}
+
+// ============================================
+// ANIMATED FRAME COMPONENT
+// ============================================
+function AnimatedFrame({ frame, size = 120, children }: { frame?: string; size?: number; children: React.ReactNode }) {
+  if (!frame) {
+    return <>{children}</>
+  }
+
+  const frameThemes: Record<string, { colors: string[]; pattern: string; glow: string }> = {
+    '🔥': { colors: ['#EF4444', '#F97316', '#EAB308'], pattern: 'fire', glow: 'shadow-orange-500/40' },
+    '❄️': { colors: ['#06B6D4', '#3B82F6', '#A78BFA'], pattern: 'ice', glow: 'shadow-cyan-500/40' },
+    '⭐': { colors: ['#EAB308', '#F59E0B', '#FBBF24'], pattern: 'stars', glow: 'shadow-yellow-500/40' },
+    '💎': { colors: ['#8B5CF6', '#A78BFA', '#C4B5FD'], pattern: 'diamond', glow: 'shadow-purple-500/40' },
+    '👑': { colors: ['#EAB308', '#D97706', '#92400E'], pattern: 'royal', glow: 'shadow-amber-500/40' },
+    '🌈': { colors: ['#EF4444', '#F97316', '#EAB308', '#22C55E', '#3B82F6', '#8B5CF6'], pattern: 'rainbow', glow: 'shadow-pink-500/40' },
+    '⚡': { colors: ['#EAB308', '#F59E0B', '#FDE68A'], pattern: 'electric', glow: 'shadow-yellow-400/40' },
+    '🌸': { colors: ['#EC4899', '#F472B6', '#FBCFE8'], pattern: 'sakura', glow: 'shadow-pink-400/40' },
+    '🌊': { colors: ['#06B6D4', '#0891B2', '#155E75'], pattern: 'wave', glow: 'shadow-teal-500/40' },
+    '🌿': { colors: ['#22C55E', '#16A34A', '#15803D'], pattern: 'nature', glow: 'shadow-green-500/40' },
+    '🗡️': { colors: ['#9CA3AF', '#6B7280', '#D1D5DB'], pattern: 'blade', glow: 'shadow-gray-400/40' },
+    '🛡️': { colors: ['#DC2626', '#991B1B', '#7F1D1D'], pattern: 'shield', glow: 'shadow-red-500/40' },
+    '🎭': { colors: ['#8B5CF6', '#EC4899', '#6366F1'], pattern: 'theater', glow: 'shadow-violet-500/40' },
+    '🎵': { colors: ['#06B6D4', '#8B5CF6', '#EC4899'], pattern: 'music', glow: 'shadow-cyan-400/40' },
+    '💫': { colors: ['#FBBF24', '#F59E0B', '#D97706'], pattern: 'cosmic', glow: 'shadow-amber-400/40' },
+    '🌸': { colors: ['#F472B6', '#EC4899', '#DB2777'], pattern: 'floral', glow: 'shadow-pink-500/40' },
+    '🦋': { colors: ['#8B5CF6', '#3B82F6', '#06B6D4'], pattern: 'butterfly', glow: 'shadow-indigo-400/40' },
+    '🏆': { colors: ['#EAB308', '#D97706', '#B45309'], pattern: 'champion', glow: 'shadow-yellow-500/40' },
+  }
+
+  const theme = frameThemes[frame] || { colors: ['#EAB308', '#F97316', '#EF4444'], pattern: 'default', glow: 'shadow-yellow-500/40' }
+  const borderSize = Math.max(6, size * 0.06)
+
+  // Generate sparkle positions
+  const sparkles = Array.from({ length: 8 }, (_, i) => ({
+    angle: (i / 8) * 360,
+    delay: i * 0.3,
+    size: 4 + Math.random() * 6,
+  }))
+
+  return (
+    <div className="relative" style={{ width: size + borderSize * 4, height: size + borderSize * 4 }}>
+      {/* Animated frame border */}
+      <div
+        className={`absolute inset-0 rounded-2xl animate-frame-glow animate-frame-dance border-4 ${theme.glow}`}
+        style={{
+          borderColor: theme.colors[0],
+          background: `linear-gradient(45deg, ${theme.colors.map((c, i) => `${c}40 ${i * (100 / theme.colors.length)}%, ${c}40 ${(i + 1) * (100 / theme.colors.length)}%`).join(', ')})`,
+        }}
+      >
+        {/* Animated border pattern - rotating gradient */}
+        <div
+          className="absolute inset-0 rounded-2xl animate-spin-slow"
+          style={{
+            background: `conic-gradient(from 0deg, ${theme.colors.join(', ')}, ${theme.colors[0]})`,
+            opacity: 0.3,
+          }}
+        />
+        
+        {/* Sparkle particles */}
+        {sparkles.map((sparkle, i) => (
+          <div
+            key={i}
+            className="absolute animate-frame-sparkle"
+            style={{
+              left: `${50 + 45 * Math.cos((sparkle.angle * Math.PI) / 180)}%`,
+              top: `${50 + 45 * Math.sin((sparkle.angle * Math.PI) / 180)}%`,
+              width: sparkle.size,
+              height: sparkle.size,
+              animationDelay: `${sparkle.delay}s`,
+              color: theme.colors[i % theme.colors.length],
+            }}
+          >
+            ✦
+          </div>
+        ))}
+      </div>
+
+      {/* Frame emoji badge - LARGE and prominent */}
+      <div
+        className="absolute -bottom-2 -right-2 z-30 animate-avatar-bounce"
+        style={{ fontSize: Math.max(24, size * 0.25) }}
+      >
+        <div className="bg-background rounded-full border-2 border-yellow-500/50 shadow-lg shadow-yellow-500/20 p-1 flex items-center justify-center">
+          {frame}
+        </div>
+      </div>
+
+      {/* Inner content area */}
+      <div className="absolute rounded-xl overflow-hidden" style={{ inset: borderSize * 2 }}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// ============================================
 // LOGIN SCREEN
 // ============================================
 function LoginScreen() {
@@ -363,8 +801,8 @@ function Dashboard() {
         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="relative z-10">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-3xl shadow-lg shadow-emerald-500/20">
-              {user?.avatar || '🎯'}
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden">
+              <AnimatedAvatar avatar={user?.avatar || '🎯'} size={80} showExpression={true} />
             </div>
             <div>
               <h2 className="text-xl font-bold">Welcome back, {user?.name}!</h2>
@@ -487,25 +925,31 @@ function Dashboard() {
         <p className="text-xs text-muted-foreground mb-3">Espera a que el reloj llegue a cero para jugar</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { icon: '🎁', label: 'Cajas Sorpresa', gameType: 'boxes' },
-            { icon: '🎡', label: 'Rueda', gameType: 'wheel' },
-            { icon: '🧠', label: 'Memoria', gameType: 'memory' },
-            { icon: '⚡', label: 'Trivia', gameType: 'trivia' },
+            { icon: '🎁', label: 'Cajas Sorpresa', gameType: 'boxes', gradient: 'from-yellow-500/10 to-amber-500/10', border: 'border-yellow-500/20', text: 'text-yellow-400' },
+            { icon: '🎡', label: 'Rueda', gameType: 'wheel', gradient: 'from-purple-500/10 to-pink-500/10', border: 'border-purple-500/20', text: 'text-purple-400' },
+            { icon: '🧠', label: 'Memoria', gameType: 'memory', gradient: 'from-cyan-500/10 to-teal-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400' },
+            { icon: '⚡', label: 'Trivia', gameType: 'trivia', gradient: 'from-emerald-500/10 to-green-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
           ].map((game, i) => (
             <motion.button
               key={game.gameType}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 + i * 0.05 }}
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => useAppStore.getState().activateMiniGame(game.gameType)}
-              className="glass rounded-xl p-4 text-center hover:bg-secondary/50 transition-colors border border-cyan-500/10 relative"
+              className={`glass rounded-xl p-4 text-center hover:bg-secondary/50 transition-all border ${game.border} relative bg-gradient-to-br ${game.gradient}`}
             >
-              <span className="text-2xl">{game.icon}</span>
-              <p className="text-xs font-medium mt-2 text-cyan-400">{game.label}</p>
+              <motion.span
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
+                className="text-2xl block"
+              >
+                {game.icon}
+              </motion.span>
+              <p className={`text-xs font-medium mt-2 ${game.text}`}>{game.label}</p>
               {user?.role !== 'admin' && (
-                <span className="absolute top-1 right-1 text-[10px]">⏰</span>
+                <span className="absolute top-1 right-1 text-[10px] animate-avatar-bounce">⏰</span>
               )}
             </motion.button>
           ))}
@@ -1704,7 +2148,11 @@ function RankingsView() {
               }`}>
                 {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${r.rank || i + 1}`}
               </span>
-              <span className="text-2xl">{r.avatar || '🎯'}</span>
+              <span className="text-2xl">
+                <div className="w-8 h-8 overflow-hidden rounded-full">
+                  <AnimatedAvatar avatar={r.avatar || '🎯'} size={32} showExpression={false} />
+                </div>
+              </span>
               <div className="flex-1">
                 <p className="font-bold">{r.name}</p>
               </div>
@@ -2034,21 +2482,13 @@ function ProfileView() {
         animate={{ opacity: 1, y: 0 }}
         className="glass rounded-2xl p-6 text-center mb-6"
       >
-        {/* Avatar with Frame */}
-        <div className="relative w-28 h-28 mx-auto mb-4">
-          {/* Frame as border decoration only */}
-          {user.frame && (
-            <div className="absolute -inset-3 rounded-2xl border-4 border-yellow-500/60 z-0 animate-pulse-glow" />
-          )}
-          <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-5xl shadow-lg shadow-emerald-500/20 relative z-10">
-            {user.avatar}
-          </div>
-          {/* Frame emoji in corner */}
-          {user.frame && (
-            <div className="absolute -bottom-1 -right-1 text-lg z-20 bg-background rounded-full w-8 h-8 flex items-center justify-center border border-border shadow-md">
-              {user.frame}
+        {/* Avatar with Animated Frame */}
+        <div className="mx-auto mb-4 flex justify-center">
+          <AnimatedFrame frame={user.frame} size={140}>
+            <div className="w-full h-full rounded-xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 flex items-center justify-center">
+              <AnimatedAvatar avatar={user.avatar} size={130} showExpression={true} />
             </div>
-          )}
+          </AnimatedFrame>
         </div>
         <h2 className="text-2xl font-bold">{user.name}</h2>
         <p className="text-emerald-400 font-medium">{user.title}</p>
@@ -2936,7 +3376,9 @@ function AdminView() {
                   className="p-4 rounded-xl border border-border glass"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{u.avatar || '👤'}</span>
+                    <div className="w-8 h-8 overflow-hidden rounded-full">
+                      <AnimatedAvatar avatar={u.avatar || '👤'} size={32} showExpression={false} />
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-sm">{u.name}</p>
                       <p className="text-xs text-muted-foreground">{u.email}</p>
@@ -3191,14 +3633,18 @@ function BattleView() {
           {/* VS Result */}
           <div className="flex items-center justify-center gap-6 mb-6">
             <div className={`text-center p-4 rounded-xl ${won ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-secondary border border-border'}`}>
-              <div className="text-3xl mb-2">{user?.avatar || '🎯'}</div>
+              <div className="mx-auto mb-2 w-14 h-14 rounded-full overflow-hidden">
+                <AnimatedAvatar avatar={user?.avatar || '🎯'} size={56} showExpression={won} />
+              </div>
               <p className="text-sm font-bold">{user?.name}</p>
               <p className="text-3xl font-black text-emerald-400">{battleScore}</p>
               <p className="text-[10px] text-muted-foreground">correctas</p>
             </div>
-            <div className="text-2xl font-black text-muted-foreground">VS</div>
+            <div className="text-2xl font-black text-muted-foreground animate-avatar-bounce">VS</div>
             <div className={`text-center p-4 rounded-xl ${!won ? 'bg-red-500/10 border border-red-500/30' : 'bg-secondary border border-border'}`}>
-              <div className="text-3xl mb-2">{battleOpponent?.avatar || '🤖'}</div>
+              <div className="mx-auto mb-2 w-14 h-14 rounded-full overflow-hidden">
+                <AnimatedAvatar avatar="🤖" size={56} showExpression={!won} />
+              </div>
               <p className="text-sm font-bold">{battleOpponent?.name || 'Oponente'}</p>
               <p className="text-3xl font-black text-red-400">{battleOpponentScore}</p>
               <p className="text-[10px] text-muted-foreground">correctas</p>
@@ -3256,16 +3702,16 @@ function BattleView() {
           {/* VS Display */}
           <div className="flex items-center justify-center gap-4 mb-6">
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center text-3xl mx-auto mb-2">
-                {user?.avatar || '🎯'}
+              <div className="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center mx-auto mb-2 overflow-hidden">
+                <AnimatedAvatar avatar={user?.avatar || '🎯'} size={70} showExpression={true} />
               </div>
               <p className="text-sm font-bold text-emerald-400">{user?.name || 'Tú'}</p>
               <p className="text-[10px] text-muted-foreground">Nivel {user?.currentLevelId === 'advanced' ? 'Avanzado' : user?.currentLevelId === 'intermediate' ? 'Intermedio' : 'Básico'}</p>
             </div>
-            <div className="text-3xl font-black text-red-400">VS</div>
+            <div className="text-4xl font-black text-red-400 animate-avatar-bounce">VS</div>
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500/40 flex items-center justify-center text-3xl mx-auto mb-2">
-                🤖
+              <div className="w-20 h-20 rounded-full bg-red-500/20 border-2 border-red-500/40 flex items-center justify-center mx-auto mb-2 overflow-hidden">
+                <AnimatedAvatar avatar="🤖" size={70} showExpression={true} />
               </div>
               <p className="text-sm font-bold text-red-400">Oponente</p>
               <p className="text-[10px] text-muted-foreground">Virtual</p>
@@ -3311,7 +3757,9 @@ function BattleView() {
       {/* Battle header with VS */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <span className="text-2xl">{user?.avatar || '🎯'}</span>
+          <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/30 overflow-hidden">
+            <AnimatedAvatar avatar={user?.avatar || '🎯'} size={40} showExpression={false} />
+          </div>
           <div>
             <p className="text-xs text-muted-foreground">{user?.name}</p>
             <span className="text-lg font-bold text-emerald-400">{battleScore}</span>
@@ -3328,7 +3776,9 @@ function BattleView() {
             <p className="text-xs text-muted-foreground">{battleOpponent?.name || 'Oponente'}</p>
             <span className="text-lg font-bold text-red-400">{battleOpponentScore}</span>
           </div>
-          <span className="text-2xl">{battleOpponent?.avatar || '🤖'}</span>
+          <div className="w-10 h-10 rounded-full bg-red-500/20 border border-red-500/30 overflow-hidden">
+            <AnimatedAvatar avatar="🤖" size={40} showExpression={false} />
+          </div>
         </div>
       </div>
 
@@ -3970,67 +4420,130 @@ function MiniGameBoxes() {
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="glass rounded-2xl p-6 w-full max-w-sm"
+        className="glass rounded-3xl p-6 w-full max-w-sm relative overflow-hidden"
       >
-        <h2 className="text-xl font-bold text-center mb-4">🎁 ¡Cajas Sorpresa!</h2>
-        <p className="text-sm text-muted-foreground text-center mb-4">Destapa las cajas para ganar premios. ¡Cuidado con el perro bravo!</p>
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-amber-500/5 pointer-events-none" />
+        <div className="absolute top-0 left-0 w-20 h-20 bg-yellow-500/5 rounded-full -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full translate-x-1/2 translate-y-1/2" />
 
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          {boxes.map((box, i) => (
-            <motion.button
-              key={i}
-              whileHover={!box.opened ? { scale: 1.1 } : {}}
-              whileTap={!box.opened ? { scale: 0.9 } : {}}
-              onClick={() => handleOpenBox(i)}
-              disabled={box.opened || gameOver}
-              className={`aspect-square rounded-xl flex items-center justify-center text-3xl transition-all ${
-                box.opened
-                  ? box.isDog
-                    ? 'bg-red-500/20 border-2 border-red-500/30'
-                    : 'bg-emerald-500/20 border-2 border-emerald-500/30'
-                  : 'bg-gradient-to-br from-yellow-500/20 to-amber-500/20 border-2 border-yellow-500/30 hover:border-yellow-400/50 cursor-pointer'
-              }`}
-            >
-              {box.opened ? (
-                box.isDog ? '🐕' : box.prize === 'Vidas' ? '❤️' : box.prize === 'Energía' ? '⚡' : '🪙'
-              ) : (
-                <motion.span
-                  animate={{ rotate: [0, -5, 5, -5, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
-                >
-                  🎁
-                </motion.span>
-              )}
-            </motion.button>
-          ))}
-        </div>
+        <div className="relative z-10">
+          <h2 className="text-xl font-bold text-center mb-2">🎁 ¡Cajas Sorpresa!</h2>
+          <p className="text-xs text-muted-foreground text-center mb-5">Destapa las cajas para ganar premios. ¡Cuidado con el perro bravo! 🐕</p>
 
-        {prizesWon.length > 0 && (
-          <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-            <p className="text-xs font-bold text-emerald-400 mb-1">Premios ganados:</p>
-            {prizesWon.map((p, i) => (
-              <p key={i} className="text-xs text-emerald-300">✓ {p.amount} {p.prize}</p>
+          <div className="grid grid-cols-3 gap-3 mb-5">
+            {boxes.map((box, i) => (
+              <motion.button
+                key={i}
+                whileHover={!box.opened ? { scale: 1.08, rotate: [-1, 1, -1, 0] } : {}}
+                whileTap={!box.opened ? { scale: 0.92 } : {}}
+                onClick={() => handleOpenBox(i)}
+                disabled={box.opened || gameOver}
+                className={`aspect-square rounded-2xl flex flex-col items-center justify-center transition-all relative ${
+                  box.opened
+                    ? box.isDog
+                      ? 'bg-red-500/15 border-2 border-red-500/40 animate-box-reveal'
+                      : 'bg-emerald-500/15 border-2 border-emerald-500/40 animate-box-reveal'
+                    : 'bg-gradient-to-br from-yellow-500/20 to-amber-600/20 border-2 border-yellow-500/40 hover:border-yellow-400/60 cursor-pointer animate-box-glow'
+                }`}
+              >
+                {box.opened ? (
+                  <motion.div
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                    className="flex flex-col items-center"
+                  >
+                    {box.isDog ? (
+                      <>
+                        <span className="text-4xl animate-dog-angry">🐕</span>
+                        <span className="text-[9px] text-red-400 font-bold mt-1">¡GRRR!</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-4xl">{box.prize === 'Vidas' ? '❤️' : box.prize === 'Energía' ? '⚡' : '🪙'}</span>
+                        <span className="text-[9px] text-emerald-400 font-bold mt-1">+{box.amount}</span>
+                      </>
+                    )}
+                  </motion.div>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <motion.span
+                      animate={{ rotate: [0, -8, 8, -8, 0], scale: [1, 1.05, 1, 1.05, 1] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
+                      className="text-4xl"
+                    >
+                      🎁
+                    </motion.span>
+                    <span className="text-[8px] text-yellow-400/60 font-bold mt-1">¿Qué hay?</span>
+                  </div>
+                )}
+
+                {/* 3D lid effect for unopened boxes */}
+                {!box.opened && (
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+                )}
+              </motion.button>
             ))}
           </div>
-        )}
 
-        {(gameOver || allPrizesFound) && (
-          <div className="text-center">
-            {gameOver && !allPrizesFound && (
-              <p className="text-sm text-red-400 mb-2">🐕 ¡Perro bravo! Más suerte la próxima vez</p>
-            )}
-            {allPrizesFound && (
-              <p className="text-sm text-emerald-400 mb-2">🎉 ¡Encontraste todos los premios!</p>
-            )}
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => { closeMiniGame(); useAppStore.getState().startSessionTimer() }}
-              className="px-6 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold text-sm"
+          {prizesWon.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20"
             >
-              Cerrar
-            </motion.button>
-          </div>
-        )}
+              <p className="text-xs font-bold text-emerald-400 mb-1">🏆 Premios ganados:</p>
+              {prizesWon.map((p, i) => (
+                <motion.p
+                  key={i}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="text-xs text-emerald-300 flex items-center gap-1"
+                >
+                  <span>✨</span> +{p.amount} {p.prize}
+                </motion.p>
+              ))}
+            </motion.div>
+          )}
+
+          {(gameOver || allPrizesFound) && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center"
+            >
+              {gameOver && !allPrizesFound && (
+                <motion.div
+                  animate={{ x: [-5, 5, -5, 5, 0] }}
+                  transition={{ duration: 0.5 }}
+                  className="mb-3"
+                >
+                  <p className="text-sm text-red-400 font-bold">🐕 ¡Perro bravo!</p>
+                  <p className="text-xs text-red-400/70">Más suerte la próxima vez</p>
+                </motion.div>
+              )}
+              {allPrizesFound && (
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 0.5 }}
+                  className="mb-3"
+                >
+                  <p className="text-lg font-bold text-emerald-400">🎉 ¡Encontraste todos los premios!</p>
+                </motion.div>
+              )}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { closeMiniGame(); useAppStore.getState().startSessionTimer() }}
+                className="px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/20"
+              >
+                ✅ Cerrar
+              </motion.button>
+            </motion.div>
+          )}
+        </div>
       </motion.div>
     </div>
   )
@@ -4091,42 +4604,119 @@ function MiniGameWheel() {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/90">
-      <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-2xl p-6 w-full max-w-sm text-center">
-        <h2 className="text-xl font-bold mb-4">🎡 Rueda de la Fortuna</h2>
-        <div className="relative w-48 h-48 mx-auto mb-4">
-          <div
-            className="w-full h-full rounded-full border-4 border-yellow-500/50 overflow-hidden"
-            style={{ transform: `rotate(${rotation}deg)`, transition: spinning ? 'transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none' }}
-          >
-            {segments.map((seg, i) => {
-              const angle = (360 / segments.length) * i
-              return (
+      <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-3xl p-6 w-full max-w-sm text-center relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 pointer-events-none" />
+        
+        <div className="relative z-10">
+          <h2 className="text-xl font-bold mb-2">🎡 Rueda de la Fortuna</h2>
+          <p className="text-xs text-muted-foreground mb-4">¡Gira y gana premios! Pero cuidado con el perro 🐕</p>
+
+          <div className="relative w-56 h-56 mx-auto mb-4">
+            {/* LED lights around the wheel */}
+            <div className="absolute inset-0 rounded-full">
+              {Array.from({ length: 16 }).map((_, i) => (
                 <div
                   key={i}
-                  className="absolute w-1/2 h-1/2 origin-bottom-right"
-                  style={{ transform: `rotate(${angle}deg)`, backgroundColor: seg.color + '40' }}
-                >
-                  <span
-                    className="absolute text-xs font-bold text-white"
-                    style={{ transform: `rotate(${360 / segments.length / 2}deg) translateX(30px)`, left: '50%', top: '20%' }}
-                  >
-                    {seg.label}
-                  </span>
-                </div>
-              )
-            })}
+                  className="absolute w-2.5 h-2.5 rounded-full"
+                  style={{
+                    left: `${50 + 47 * Math.cos((i / 16) * 2 * Math.PI - Math.PI / 2)}%`,
+                    top: `${50 + 47 * Math.sin((i / 16) * 2 * Math.PI - Math.PI / 2)}%`,
+                    transform: 'translate(-50%, -50%)',
+                    backgroundColor: i % 2 === 0 ? '#EAB308' : '#EF4444',
+                    animation: `wheel-led-blink 0.5s ease-in-out ${spinning ? 'infinite' : '1'} ${i * 0.05}s both`,
+                    boxShadow: `0 0 6px ${i % 2 === 0 ? '#EAB30880' : '#EF444480'}`,
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Wheel */}
+            <div
+              className="w-48 h-48 rounded-full overflow-hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+              style={{
+                transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
+                transition: spinning ? 'transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none',
+              }}
+            >
+              <svg viewBox="0 0 200 200" className="w-full h-full">
+                {segments.map((seg, i) => {
+                  const startAngle = (360 / segments.length) * i
+                  const endAngle = (360 / segments.length) * (i + 1)
+                  const startRad = (startAngle - 90) * (Math.PI / 180)
+                  const endRad = (endAngle - 90) * (Math.PI / 180)
+                  const x1 = 100 + 100 * Math.cos(startRad)
+                  const y1 = 100 + 100 * Math.sin(startRad)
+                  const x2 = 100 + 100 * Math.cos(endRad)
+                  const y2 = 100 + 100 * Math.sin(endRad)
+                  const midRad = (startRad + endRad) / 2
+                  const textX = 100 + 60 * Math.cos(midRad)
+                  const textY = 100 + 60 * Math.sin(midRad)
+                  const largeArc = (endAngle - startAngle) > 180 ? 1 : 0
+
+                  return (
+                    <g key={i}>
+                      <path
+                        d={`M100,100 L${x1},${y1} A100,100 0 ${largeArc},1 ${x2},${y2} Z`}
+                        fill={seg.color + '30'}
+                        stroke={seg.color + '60'}
+                        strokeWidth="1"
+                      />
+                      <text
+                        x={textX}
+                        y={textY}
+                        fill="white"
+                        fontSize="14"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        transform={`rotate(${(startAngle + endAngle) / 2}, ${textX}, ${textY})`}
+                        fontWeight="bold"
+                      >
+                        {seg.label}
+                      </text>
+                    </g>
+                  )
+                })}
+                {/* Center circle */}
+                <circle cx="100" cy="100" r="20" fill="oklch(0.2 0.02 270)" stroke="#EAB30860" strokeWidth="2" />
+                <text x="100" y="100" fill="#EAB308" fontSize="11" textAnchor="middle" dominantBaseline="middle" fontWeight="bold">🎡</text>
+              </svg>
+            </div>
+
+            {/* Pointer */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 z-20">
+              <div className="w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[24px] border-t-yellow-400 drop-shadow-lg" />
+            </div>
           </div>
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 text-2xl">▼</div>
+
+          {result && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mb-4 p-3 rounded-xl border border-border"
+              style={{
+                background: result.includes('Perro') ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+                borderColor: result.includes('Perro') ? 'rgba(239, 68, 68, 0.3)' : 'rgba(34, 197, 94, 0.3)',
+              }}
+            >
+              <p className={`text-sm font-bold ${result.includes('Perro') ? 'text-red-400' : 'text-emerald-400'}`}>{result}</p>
+            </motion.div>
+          )}
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={result ? () => { closeMiniGame(); useAppStore.getState().startSessionTimer() } : handleSpin}
+            disabled={spinning}
+            className={`px-8 py-3 rounded-xl font-bold text-sm shadow-lg transition-all ${
+              spinning
+                ? 'bg-secondary text-muted-foreground cursor-not-allowed'
+                : 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white shadow-yellow-500/20'
+            }`}
+          >
+            {spinning ? '⏳ Girando...' : result ? '✅ Cerrar' : '🎡 ¡Girar!'}
+          </motion.button>
         </div>
-        {result && <p className="text-sm mb-3 font-medium">{result}</p>}
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={result ? () => { closeMiniGame(); useAppStore.getState().startSessionTimer() } : handleSpin}
-          disabled={spinning}
-          className="px-8 py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-amber-500 text-white font-bold disabled:opacity-50"
-        >
-          {spinning ? '⏳ Girando...' : result ? 'Cerrar' : '🎡 ¡Girar!'}
-        </motion.button>
       </motion.div>
     </div>
   )
@@ -4227,43 +4817,90 @@ function MiniGameMemory() {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/90">
-      <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-2xl p-6 w-full max-w-sm">
-        <h2 className="text-xl font-bold text-center mb-2">🧠 Memoria</h2>
-        <p className="text-xs text-muted-foreground text-center mb-4">Encuentra los pares inglés-español • Movimientos: {moves}</p>
+      <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-3xl p-6 w-full max-w-sm relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-cyan-500/5 pointer-events-none" />
 
-        <div className="grid grid-cols-4 gap-2 mb-4">
-          {cards.map((card) => (
-            <motion.button
-              key={card.id}
-              whileHover={!card.flipped && !card.matched ? { scale: 1.05 } : {}}
-              whileTap={!card.flipped && !card.matched ? { scale: 0.95 } : {}}
-              onClick={() => handleFlip(card.id)}
-              disabled={card.flipped || card.matched}
-              className={`aspect-square rounded-lg flex items-center justify-center text-xs font-bold p-1 transition-all ${
-                card.matched
-                  ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
-                  : card.flipped
-                  ? 'bg-cyan-500/20 border border-cyan-500/30 text-cyan-400'
-                  : 'bg-gradient-to-br from-purple-500/20 to-violet-500/20 border border-purple-500/30 cursor-pointer'
-              }`}
-            >
-              {card.flipped || card.matched ? card.text : '?'}
-            </motion.button>
-          ))}
-        </div>
+        <div className="relative z-10">
+          <h2 className="text-xl font-bold text-center mb-1">🧠 Memoria</h2>
+          <p className="text-xs text-muted-foreground text-center mb-4">Encuentra los pares inglés-español</p>
 
-        {gameComplete && (
-          <div className="text-center">
-            <p className="text-sm text-emerald-400 mb-2">🎉 ¡Completado en {moves} movimientos! +50 XP +300 monedas</p>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => { closeMiniGame(); useAppStore.getState().startSessionTimer() }}
-              className="px-6 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold text-sm"
-            >
-              Cerrar
-            </motion.button>
+          {/* Score display */}
+          <div className="flex items-center justify-center gap-4 mb-3">
+            <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20">
+              <span className="text-xs">🔄</span>
+              <span className="text-xs font-bold text-purple-400">{moves} movimientos</span>
+            </div>
+            <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              <span className="text-xs">✅</span>
+              <span className="text-xs font-bold text-emerald-400">{cards.filter(c => c.matched).length / 2} pares</span>
+            </div>
           </div>
-        )}
+
+          <div className="grid grid-cols-4 gap-2 mb-4">
+            {cards.map((card) => (
+              <motion.button
+                key={card.id}
+                whileHover={!card.flipped && !card.matched ? { scale: 1.08, y: -2 } : {}}
+                whileTap={!card.flipped && !card.matched ? { scale: 0.92 } : {}}
+                onClick={() => handleFlip(card.id)}
+                disabled={card.flipped || card.matched}
+                className={`aspect-square rounded-xl flex items-center justify-center text-xs font-bold p-1 transition-all relative ${
+                  card.matched
+                    ? 'bg-emerald-500/15 border-2 border-emerald-500/30 text-emerald-400 animate-memory-glow'
+                    : card.flipped
+                    ? 'bg-cyan-500/15 border-2 border-cyan-500/40 text-cyan-400'
+                    : 'bg-gradient-to-br from-purple-500/15 to-violet-500/15 border-2 border-purple-500/30 cursor-pointer hover:border-purple-400/50'
+                }`}
+              >
+                {card.flipped || card.matched ? (
+                  <motion.span
+                    initial={{ rotateY: 90, opacity: 0 }}
+                    animate={{ rotateY: 0, opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-[11px] leading-tight text-center"
+                  >
+                    {card.text}
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: card.id * 0.1 }}
+                    className="text-lg"
+                  >
+                    🃏
+                  </motion.span>
+                )}
+              </motion.button>
+            ))}
+          </div>
+
+          {gameComplete && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center"
+            >
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 0.5 }}
+                className="mb-3"
+              >
+                <p className="text-2xl mb-2">🎉</p>
+                <p className="text-sm text-emerald-400 font-bold">¡Completado en {moves} movimientos!</p>
+                <p className="text-xs text-emerald-300/70">+50 XP +300 monedas</p>
+              </motion.div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { closeMiniGame(); useAppStore.getState().startSessionTimer() }}
+                className="px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/20"
+              >
+                ✅ Cerrar
+              </motion.button>
+            </motion.div>
+          )}
+        </div>
       </motion.div>
     </div>
   )
@@ -4358,55 +4995,119 @@ function MiniGameTrivia() {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/90">
-      <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-2xl p-6 w-full max-w-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">⚡ Trivia</h2>
-          <div className="flex items-center gap-2">
-            <span className={`text-sm font-bold ${timeLeft <= 10 ? 'text-red-400' : 'text-cyan-400'}`}>⏱ {timeLeft}s</span>
-            <span className="text-sm font-bold text-emerald-400">{score}/{triviaQuestions.length}</span>
-          </div>
-        </div>
+      <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-3xl p-6 w-full max-w-sm relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-emerald-500/5 pointer-events-none" />
 
-        {!gameOver ? (
-          <>
-            <div className="w-full h-1.5 bg-secondary rounded-full mb-4">
-              <div className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full transition-all" style={{ width: `${((currentQ + 1) / triviaQuestions.length) * 100}%` }} />
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">⚡ Trivia</h2>
+            <div className="flex items-center gap-2">
+              <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${timeLeft <= 10 ? 'bg-red-500/10 border border-red-500/20' : 'bg-cyan-500/10 border border-cyan-500/20'}`}>
+                <span className={`text-xs font-bold ${timeLeft <= 10 ? 'text-red-400 animate-trivia-pulse' : 'text-cyan-400'}`}>⏱ {timeLeft}s</span>
+              </div>
+              <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                <span className="text-xs font-bold text-emerald-400">{score}/{triviaQuestions.length}</span>
+              </div>
             </div>
-            <p className="text-sm font-medium mb-4">{triviaQuestions[currentQ].q}</p>
-            <div className="space-y-2">
-              {triviaQuestions[currentQ].opts.map((opt, i) => {
-                const isCorrect = i === triviaQuestions[currentQ].correct
-                const isSelected = selectedAnswer === i
-                let cls = 'w-full p-3 rounded-xl border text-sm font-medium text-left transition-all '
-                if (answered) {
-                  if (isCorrect) cls += 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-                  else if (isSelected) cls += 'border-red-500/50 bg-red-500/10 text-red-400'
-                  else cls += 'border-border opacity-50'
-                } else {
-                  cls += 'border-border hover:border-emerald-500/30 cursor-pointer'
-                }
-                return (
-                  <button key={i} onClick={() => handleAnswer(i)} disabled={answered} className={cls}>
-                    {opt}
-                  </button>
-                )
-              })}
-            </div>
-          </>
-        ) : (
-          <div className="text-center">
-            <span className="text-5xl block mb-3">{score >= 4 ? '🏆' : score >= 2 ? '👍' : '📚'}</span>
-            <p className="text-lg font-bold mb-1">{score}/{triviaQuestions.length} correctas</p>
-            <p className="text-sm text-emerald-400 mb-4">+{score * 15} XP +{score * 100} monedas</p>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => { closeMiniGame(); useAppStore.getState().startSessionTimer() }}
-              className="px-6 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold text-sm"
-            >
-              Cerrar
-            </motion.button>
           </div>
-        )}
+
+          {!gameOver ? (
+            <>
+              {/* Progress bar */}
+              <div className="w-full h-2 bg-secondary rounded-full mb-4 overflow-hidden">
+                <motion.div
+                  animate={{ width: `${((currentQ + 1) / triviaQuestions.length) * 100}%` }}
+                  className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full"
+                  transition={{ duration: 0.5 }}
+                />
+              </div>
+
+              {/* Question number */}
+              <div className="flex items-center gap-2 mb-3">
+                {triviaQuestions.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      i < currentQ ? 'bg-emerald-500' : i === currentQ ? 'bg-cyan-400 scale-125' : 'bg-secondary'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <motion.div
+                key={currentQ}
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <p className="text-sm font-medium mb-4">{triviaQuestions[currentQ].q}</p>
+                <div className="space-y-2">
+                  {triviaQuestions[currentQ].opts.map((opt, i) => {
+                    const isCorrect = i === triviaQuestions[currentQ].correct
+                    const isSelected = selectedAnswer === i
+                    let cls = 'w-full p-3 rounded-xl border text-sm font-medium text-left transition-all '
+                    if (answered) {
+                      if (isCorrect) cls += 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                      else if (isSelected) cls += 'border-red-500/50 bg-red-500/10 text-red-400'
+                      else cls += 'border-border opacity-50'
+                    } else {
+                      cls += 'border-border hover:border-emerald-500/30 hover:bg-emerald-500/5 cursor-pointer'
+                    }
+                    return (
+                      <motion.button
+                        key={i}
+                        whileHover={!answered ? { scale: 1.02 } : {}}
+                        whileTap={!answered ? { scale: 0.98 } : {}}
+                        onClick={() => handleAnswer(i)}
+                        disabled={answered}
+                        className={cls}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full bg-secondary/50 flex items-center justify-center text-xs font-bold">
+                            {String.fromCharCode(65 + i)}
+                          </span>
+                          {opt}
+                          {answered && isCorrect && <span className="ml-auto">✅</span>}
+                          {answered && isSelected && !isCorrect && <span className="ml-auto">❌</span>}
+                        </span>
+                      </motion.button>
+                    )
+                  })}
+                </div>
+              </motion.div>
+            </>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center"
+            >
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.5 }}
+              >
+                <span className="text-6xl block mb-3">{score >= 4 ? '🏆' : score >= 2 ? '👍' : '📚'}</span>
+              </motion.div>
+              <p className="text-lg font-bold mb-1">{score}/{triviaQuestions.length} correctas</p>
+              <p className="text-sm text-emerald-400 mb-1">+{score * 15} XP +{score * 100} monedas</p>
+              <p className="text-xs text-muted-foreground mb-4">
+                {score === 5 ? '🌟 ¡PERFECTO! ¡Eres un genio!' : 
+                 score >= 4 ? '🔥 ¡Casi perfecto!' :
+                 score >= 3 ? '👍 ¡Buen trabajo!' :
+                 score >= 2 ? '💪 ¡Sigue practicando!' : '📚 ¡Estudia más!'}
+              </p>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { closeMiniGame(); useAppStore.getState().startSessionTimer() }}
+                className="px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/20"
+              >
+                ✅ Cerrar
+              </motion.button>
+            </motion.div>
+          )}
+        </div>
       </motion.div>
     </div>
   )
