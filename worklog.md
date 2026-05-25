@@ -258,3 +258,45 @@ Stage Summary:
 - All 4 mini games significantly improved visually ✓
 - No existing functionality broken ✓
 - Both GitHub repos updated ✓
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: Revert animated SVG avatars to emoji style, add animated backgrounds and enhanced frames
+
+Work Log:
+- User reported that animated SVG avatars looked terrible ("quedaron horribles")
+- Reverted avatars to original emoji-based display (🎯, 👩, 👨, etc.)
+- Created new AnimatedAvatar component with:
+  - Simple emoji display at proportional size (60% of container)
+  - Animated gradient background that pulses and shifts colors per avatar theme
+  - 20 avatar background themes with unique color palettes and particle colors
+  - Floating particle effects (6 particles per avatar)
+  - Glow pulse effect behind the emoji
+  - Spinning dashed ring accent
+  - Gentle idle floating animation
+  - Drop shadow filter matching avatar theme color
+- Enhanced AnimatedFrame component:
+  - Rotating conic gradient border (replaces static gradient)
+  - Outer glow ring with pulsing animation
+  - 12 orbit sparkles (up from 8) with text shadow glow
+  - Animated corner decorations (SVG bracket shapes)
+  - Breathing animation on the whole frame
+  - Color-cycling border layer
+  - Gradient background on frame badge with glow
+  - Larger badge size and better positioning
+- Updated CSS animations in globals.css:
+  - Removed old SVG avatar expression keyframes (blink, tongue, wink, yawn, laugh, angry, surprise)
+  - Added new avatar keyframes: float, bg, glow-pulse, particle
+  - Added new frame keyframes: rotate, glow-pulse, breathe
+  - Updated sparkle animation to include translate(-50%, -50%)
+  - Kept all mini game animations intact
+- All existing functionality preserved (battle, shop, readings, mini games, energy, etc.)
+- Lint passes with no errors
+- Pushed to GitHub (commit 5d708fd)
+
+Stage Summary:
+- Avatars now show original emojis with animated gradient backgrounds ✓
+- Frames enhanced with rotating conic gradient, orbit sparkles, corner decorations ✓
+- No functionality broken ✓
+- Code reduced by ~190 lines (465 removed, 276 added) ✓
