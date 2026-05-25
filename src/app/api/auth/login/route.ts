@@ -24,6 +24,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check if user is blocked
+    if (user.blocked) {
+      return NextResponse.json(
+        { error: 'Your account has been blocked. Contact an administrator.' },
+        { status: 403 }
+      );
+    }
+
     // Return user data (exclude password)
     const { password: _, ...userData } = user;
     return NextResponse.json({ user: userData });

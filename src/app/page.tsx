@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAppStore, parseQuestionOptions, type ViewName, type Question } from '@/lib/store'
+import { useAppStore, parseQuestionOptions, type ViewName, type Question, type ViewMode } from '@/lib/store'
 
 // ============================================
 // ICONS (inline SVG to avoid import issues)
@@ -165,6 +165,10 @@ function LoginScreen() {
             <span>👤 Player: demo@lingoquest.com</span>
             <span>🔑 demo123</span>
           </div>
+          <div className="flex gap-4 justify-center text-xs text-muted-foreground mt-1">
+            <span>🛡️ Admin: admin@lingoquest.com</span>
+            <span>🔑 admin123</span>
+          </div>
         </div>
       </motion.div>
     </div>
@@ -179,11 +183,13 @@ function Header() {
   const navigate = useAppStore((s) => s.navigate)
   const currentView = useAppStore((s) => s.currentView)
   const soundEnabled = useAppStore((s) => s.soundEnabled)
+  const infiniteLivesUntil = useAppStore((s) => s.infiniteLivesUntil)
   const store = useAppStore()
 
   const xpForNextLevel = user ? user.level * (user.level + 1) * 50 + 100 * (user.level + 1) : 100
   const xpForCurrentLevel = user ? user.level * (user.level - 1) * 50 + 100 * user.level : 0
   const xpProgress = user ? ((user.xp - xpForCurrentLevel) / (xpForNextLevel - xpForCurrentLevel)) * 100 : 0
+  const hasInfiniteLives = infiniteLivesUntil > Date.now()
 
   return (
     <header className="sticky top-0 z-40 glass border-b border-border/50">
@@ -216,9 +222,20 @@ function Header() {
             </div>
 
             {/* Lives */}
-            <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20">
-              <Icons.heart size={14} className="text-red-400" />
-              <span className="text-sm font-bold text-red-400">{user.lives}</span>
+            <div className={`flex items-center gap-1 px-3 py-1.5 rounded-xl border ${
+              hasInfiniteLives 
+                ? 'bg-pink-500/10 border-pink-500/20' 
+                : 'bg-red-500/10 border-red-500/20'
+            }`}>
+              <Icons.heart size={14} className={hasInfiniteLives ? 'text-pink-400' : 'text-red-400'} />
+              <span className={`text-sm font-bold ${hasInfiniteLives ? 'text-pink-400' : 'text-red-400'}`}>
+                {hasInfiniteLives ? '∞' : user.lives}
+              </span>
+              {hasInfiniteLives && (
+                <span className="text-[9px] text-pink-400 font-medium">
+                  {Math.max(0, Math.ceil((infiniteLivesUntil - Date.now()) / 60000))}m
+                </span>
+              )}
             </div>
 
             {/* XP */}
@@ -817,6 +834,17 @@ function ExerciseView() {
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([])
   const [showVoiceSelector, setShowVoiceSelector] = useState(false)
 
+  // Fallback virtual voices for when browser has no English voices
+  const virtualVoices = [
+    { name: 'Default', pitch: 1, rate: 0.9, local: true },
+    { name: 'Deep Male', pitch: 0.6, rate: 0.85, local: true },
+    { name: 'High Female', pitch: 1.4, rate: 0.9, local: true },
+    { name: 'Fast Speaker', pitch: 1, rate: 1.2, local: true },
+    { name: 'Slow & Clear', pitch: 0.9, rate: 0.5, local: true },
+    { name: 'Friendly', pitch: 1.2, rate: 0.85, local: true },
+    { name: 'Teacher', pitch: 0.8, rate: 0.75, local: true },
+  ]
+
   useEffect(() => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
 
@@ -847,6 +875,14 @@ function ExerciseView() {
       // Apply selected voice if available
       if (speechVoiceIndex >= 0 && speechVoiceIndex < availableVoices.length) {
         utterance.voice = availableVoices[speechVoiceIndex]
+      } else if (speechVoiceIndex >= availableVoices.length) {
+        // Virtual voice: apply pitch and rate settings
+        const vIdx = speechVoiceIndex - availableVoices.length
+        const virtualVoice = virtualVoices[vIdx]
+        if (virtualVoice) {
+          utterance.pitch = virtualVoice.pitch
+          utterance.rate = speechSpeed === 'slow' ? virtualVoice.rate * 0.6 : virtualVoice.rate
+        }
       }
       speechSynthesis.speak(utterance)
     }
@@ -1357,7 +1393,7 @@ function ExerciseView() {
                   <div className="p-2 border-b border-border">
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Voice Selection</p>
                   </div>
-                  <div className="max-h-64 overflow-y-auto">
+                  <div className="max-h-72 overflow-y-auto">
                     {/* Default voice option */}
                     <button
                       onClick={() => {
@@ -1384,7 +1420,48 @@ function ExerciseView() {
                       {speechVoiceIndex === -1 && <Icons.check size={14} className="text-cyan-400 shrink-0" />}
                     </button>
 
-                    {/* Available English voices */}
+                    {/* Virtual voice options (always available) */}
+                    <div className="px-3 py-1.5 border-t border-border">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Voice Styles</p>
+                    </div>
+                    {virtualVoices.map((voice, i) => {
+                      const voiceIdx = availableVoices.length + i
+                      return (
+                        <button
+                          key={`virtual-${i}`}
+                          onClick={() => {
+                            setSpeechVoiceIndex(voiceIdx)
+                            setShowVoiceSelector(false)
+                            // Preview the voice
+                            if ('speechSynthesis' in window) {
+                              speechSynthesis.cancel()
+                              const u = new SpeechSynthesisUtterance('Hello, this is how I sound.')
+                              u.lang = 'en-US'
+                              u.pitch = voice.pitch
+                              u.rate = speechSpeed === 'slow' ? voice.rate * 0.6 : voice.rate
+                              speechSynthesis.speak(u)
+                            }
+                          }}
+                          className={`w-full px-3 py-2.5 text-left text-sm hover:bg-secondary transition-colors flex items-center gap-2 ${
+                            speechVoiceIndex === voiceIdx ? 'bg-cyan-500/10 text-cyan-400' : 'text-foreground'
+                          }`}
+                        >
+                          <span className="text-base">🗣️</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{voice.name}</p>
+                            <p className="text-[10px] text-muted-foreground">Pitch: {voice.pitch.toFixed(1)} • Speed: {voice.rate.toFixed(1)}</p>
+                          </div>
+                          {speechVoiceIndex === voiceIdx && <Icons.check size={14} className="text-cyan-400 shrink-0" />}
+                        </button>
+                      )
+                    })}
+
+                    {/* Browser English voices (if available) */}
+                    {availableVoices.length > 0 && (
+                      <div className="px-3 py-1.5 border-t border-border">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Browser Voices</p>
+                      </div>
+                    )}
                     {availableVoices.map((voice, i) => (
                       <button
                         key={`${voice.name}-${i}`}
@@ -1413,12 +1490,6 @@ function ExerciseView() {
                         {speechVoiceIndex === i && <Icons.check size={14} className="text-cyan-400 shrink-0" />}
                       </button>
                     ))}
-
-                    {availableVoices.length === 0 && (
-                      <div className="px-3 py-4 text-center text-xs text-muted-foreground">
-                        Loading voices...
-                      </div>
-                    )}
                   </div>
                 </motion.div>
                 </>
@@ -1886,7 +1957,9 @@ function ProfileView() {
   const inventory = useAppStore((s) => s.inventory)
   const loadShop = useAppStore((s) => s.loadShop)
   const equipReward = useAppStore((s) => s.equipReward)
-  const [activeTab, setActiveTab] = useState<'stats' | 'inventory'>('stats')
+  const viewMode = useAppStore((s) => s.viewMode)
+  const setViewMode = useAppStore((s) => s.setViewMode)
+  const [activeTab, setActiveTab] = useState<'stats' | 'inventory' | 'settings'>('stats')
   const [inventoryFilter, setInventoryFilter] = useState<string>('all')
 
   useEffect(() => {
@@ -1924,16 +1997,18 @@ function ProfileView() {
       >
         {/* Avatar with Frame */}
         <div className="relative w-28 h-28 mx-auto mb-4">
+          {/* Frame as border decoration only */}
           {user.frame && (
-            <div className="absolute -inset-2 rounded-2xl text-5xl flex items-center justify-center opacity-40 animate-pulse-glow">
-              {user.frame}
-            </div>
+            <div className="absolute -inset-3 rounded-2xl border-4 border-yellow-500/60 z-0 animate-pulse-glow" />
           )}
           <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-5xl shadow-lg shadow-emerald-500/20 relative z-10">
             {user.avatar}
           </div>
+          {/* Frame emoji in corner */}
           {user.frame && (
-            <div className="absolute -inset-1 rounded-2xl border-2 border-yellow-500/40 z-0" />
+            <div className="absolute -bottom-1 -right-1 text-lg z-20 bg-background rounded-full w-8 h-8 flex items-center justify-center border border-border shadow-md">
+              {user.frame}
+            </div>
           )}
         </div>
         <h2 className="text-2xl font-bold">{user.name}</h2>
@@ -1973,6 +2048,14 @@ function ProfileView() {
           }`}
         >
           🎒 My Items ({inventory.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('settings')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            activeTab === 'settings' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-secondary/50 text-muted-foreground border border-transparent'
+          }`}
+        >
+          ⚙️ Settings
         </button>
       </div>
 
@@ -2125,6 +2208,52 @@ function ProfileView() {
               ))}
             </div>
           )}
+        </motion.div>
+      )}
+
+      {activeTab === 'settings' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+          {/* View Mode */}
+          <div className="p-4 rounded-xl glass border border-border">
+            <h3 className="font-bold mb-3">🎨 View Mode</h3>
+            <p className="text-xs text-muted-foreground mb-3">Choose your preferred visual style</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setViewMode('normal')}
+                className={`flex-1 p-3 rounded-xl border text-center transition-all ${
+                  viewMode === 'normal'
+                    ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                    : 'bg-secondary/50 border-border text-muted-foreground hover:border-emerald-500/20'
+                }`}
+              >
+                <span className="text-2xl block mb-1">🌙</span>
+                <p className="text-xs font-bold">Normal</p>
+                <p className="text-[9px] text-muted-foreground">Dark theme</p>
+              </button>
+              <button
+                onClick={() => setViewMode('clean')}
+                className={`flex-1 p-3 rounded-xl border text-center transition-all ${
+                  viewMode === 'clean'
+                    ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                    : 'bg-secondary/50 border-border text-muted-foreground hover:border-emerald-500/20'
+                }`}
+              >
+                <span className="text-2xl block mb-1">☀️</span>
+                <p className="text-xs font-bold">Clean</p>
+                <p className="text-[9px] text-muted-foreground">Light & readable</p>
+              </button>
+            </div>
+          </div>
+
+          {/* Logout */}
+          <button
+            onClick={() => {
+              logout()
+            }}
+            className="w-full p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 font-bold hover:bg-red-500/20 transition-colors"
+          >
+            🚪 Logout
+          </button>
         </motion.div>
       )}
     </div>
@@ -2335,6 +2464,12 @@ function ShopView() {
 function AdminView() {
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [users, setUsers] = useState<any[]>([])
+  const [usersLoading, setUsersLoading] = useState(false)
+  const [searchFilter, setSearchFilter] = useState('')
+  const [activeSection, setActiveSection] = useState<'overview' | 'users' | 'create'>('overview')
+  const [actionLoading, setActionLoading] = useState(false)
+  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'user' })
 
   useEffect(() => {
     fetch('/api/admin/stats')
@@ -2346,49 +2481,334 @@ function AdminView() {
       .catch(() => setLoading(false))
   }, [])
 
+  const loadUsers = useCallback(() => {
+    setUsersLoading(true)
+    fetch('/api/admin/users')
+      .then(r => r.json())
+      .then(data => {
+        setUsers(data.users || [])
+        setUsersLoading(false)
+      })
+      .catch(() => setUsersLoading(false))
+  }, [])
+
+  // Load users when switching to users tab (via click handler, not effect)
+
+  const handleAdminAction = async (action: string, userId: string, data?: any) => {
+    setActionLoading(true)
+    try {
+      const res = await fetch('/api/admin/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, userId, ...data }),
+      })
+      const result = await res.json()
+      if (res.ok) {
+        useAppStore.getState().setNotification({ type: 'success', message: result.message || 'Action completed!' })
+        loadUsers()
+      } else {
+        useAppStore.getState().setNotification({ type: 'error', message: result.error || 'Action failed' })
+      }
+    } catch (err) {
+      useAppStore.getState().setNotification({ type: 'error', message: 'Network error' })
+    }
+    setActionLoading(false)
+  }
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setActionLoading(true)
+    try {
+      const res = await fetch('/api/admin/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create_user', ...newUser }),
+      })
+      const result = await res.json()
+      if (res.ok) {
+        useAppStore.getState().setNotification({ type: 'success', message: 'User created successfully!' })
+        setNewUser({ name: '', email: '', password: '', role: 'user' })
+        loadUsers()
+      } else {
+        useAppStore.getState().setNotification({ type: 'error', message: result.error || 'Failed to create user' })
+      }
+    } catch (err) {
+      useAppStore.getState().setNotification({ type: 'error', message: 'Network error' })
+    }
+    setActionLoading(false)
+  }
+
+  const filteredUsers = users.filter((u: any) =>
+    u.name?.toLowerCase().includes(searchFilter.toLowerCase()) ||
+    u.email?.toLowerCase().includes(searchFilter.toLowerCase()) ||
+    u.role?.toLowerCase().includes(searchFilter.toLowerCase())
+  )
+
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
+    <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
       <h2 className="text-2xl font-bold mb-6 text-center">🛡️ Admin Panel</h2>
 
-      {loading ? (
-        <div className="grid grid-cols-2 gap-3">
-          {Array.from({length: 4}).map((_, i) => (
-            <div key={i} className="animate-pulse h-24 rounded-xl bg-secondary" />
-          ))}
-        </div>
-      ) : (
+      {/* Section Tabs */}
+      <div className="flex gap-2 mb-6">
+        {[
+          { key: 'overview', label: '📊 Overview' },
+          { key: 'users', label: '👥 Users' },
+          { key: 'create', label: '➕ Create User' },
+        ].map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => {
+              setActiveSection(tab.key as any)
+              if (tab.key === 'users') loadUsers()
+            }}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              activeSection === tab.key
+                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                : 'bg-secondary/50 text-muted-foreground border border-transparent'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Overview Section */}
+      {activeSection === 'overview' && (
         <>
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-              <p className="text-2xl font-bold text-emerald-400">{stats?.totalUsers || 0}</p>
-              <p className="text-xs text-muted-foreground">Total Users</p>
+          {loading ? (
+            <div className="grid grid-cols-2 gap-3">
+              {Array.from({length: 4}).map((_, i) => (
+                <div key={i} className="animate-pulse h-24 rounded-xl bg-secondary" />
+              ))}
             </div>
-            <div className="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
-              <p className="text-2xl font-bold text-cyan-400">{stats?.totalExercises || 0}</p>
-              <p className="text-xs text-muted-foreground">Exercises Completed</p>
-            </div>
-            <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/20">
-              <p className="text-2xl font-bold text-orange-400">{stats?.totalXp || 0}</p>
-              <p className="text-xs text-muted-foreground">Total XP Earned</p>
-            </div>
-            <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
-              <p className="text-2xl font-bold text-purple-400">{stats?.activeToday || 0}</p>
-              <p className="text-xs text-muted-foreground">Active Today</p>
-            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                  <p className="text-2xl font-bold text-emerald-400">{stats?.totalUsers || 0}</p>
+                  <p className="text-xs text-muted-foreground">Total Users</p>
+                </div>
+                <div className="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+                  <p className="text-2xl font-bold text-cyan-400">{stats?.totalExercisesCompleted || 0}</p>
+                  <p className="text-xs text-muted-foreground">Exercises Completed</p>
+                </div>
+                <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/20">
+                  <p className="text-2xl font-bold text-orange-400">{stats?.totalXpEarned || 0}</p>
+                  <p className="text-xs text-muted-foreground">Total XP Earned</p>
+                </div>
+                <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                  <p className="text-2xl font-bold text-purple-400">{stats?.activeUsersToday || 0}</p>
+                  <p className="text-xs text-muted-foreground">Active Today</p>
+                </div>
+              </div>
+
+              <div className="glass rounded-2xl p-6 border border-border">
+                <h3 className="font-bold mb-4">Platform Overview</h3>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p>📚 3 Levels (75 Scenarios)</p>
+                  <p>📝 6 Exams (Midterm + Final per level)</p>
+                  <p>🏆 15 Achievements</p>
+                  <p>📋 18 Missions (8 Daily + 6 Weekly + 4 Special)</p>
+                  <p>🎁 68 Shop Items (33 Avatars, 18 Frames, 17 Titles)</p>
+                  <p>👤 {stats?.totalUsers || 0} Users</p>
+                </div>
+              </div>
+            </>
+          )}
+        </>
+      )}
+
+      {/* Users Section */}
+      {activeSection === 'users' && (
+        <>
+          {/* Search */}
+          <div className="mb-4">
+            <input
+              type="text"
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              placeholder="🔍 Search by name, email, or role..."
+              className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground focus:ring-2 focus:ring-purple-500 outline-none"
+            />
           </div>
 
-          <div className="glass rounded-2xl p-6 border border-border">
-            <h3 className="font-bold mb-4">Platform Overview</h3>
-            <div className="space-y-3 text-sm text-muted-foreground">
-              <p>📚 3 Levels (75 Scenarios)</p>
-              <p>📝 6 Exams (Midterm + Final per level)</p>
-              <p>🏆 15 Achievements</p>
-              <p>📋 18 Missions (8 Daily + 6 Weekly + 4 Special)</p>
-              <p>🎁 68 Shop Items (33 Avatars, 18 Frames, 17 Titles)</p>
-              <p>👤 2 Users (1 Demo + 1 Admin)</p>
+          {usersLoading ? (
+            <div className="space-y-3">
+              {Array.from({length: 3}).map((_, i) => (
+                <div key={i} className="animate-pulse h-20 rounded-xl bg-secondary" />
+              ))}
             </div>
-          </div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="text-center py-12">
+              <span className="text-4xl block mb-3">👥</span>
+              <p className="text-muted-foreground">No users found</p>
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+              {filteredUsers.map((u: any) => (
+                <motion.div
+                  key={u.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 rounded-xl border border-border glass"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{u.avatar || '👤'}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm">{u.name}</p>
+                      <p className="text-xs text-muted-foreground">{u.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        u.role === 'admin' ? 'bg-purple-500/20 text-purple-400' :
+                        u.blocked ? 'bg-red-500/20 text-red-400' :
+                        'bg-emerald-500/20 text-emerald-400'
+                      }`}>
+                        {u.role === 'admin' ? 'Admin' : u.blocked ? 'Blocked' : 'Active'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* User Stats */}
+                  <div className="grid grid-cols-4 gap-2 mt-3">
+                    <div className="text-center p-1.5 rounded-lg bg-secondary/50">
+                      <p className="text-xs font-bold text-emerald-400">{u.xp || 0}</p>
+                      <p className="text-[8px] text-muted-foreground">XP</p>
+                    </div>
+                    <div className="text-center p-1.5 rounded-lg bg-secondary/50">
+                      <p className="text-xs font-bold text-yellow-400">{u.coins || 0}</p>
+                      <p className="text-[8px] text-muted-foreground">Coins</p>
+                    </div>
+                    <div className="text-center p-1.5 rounded-lg bg-secondary/50">
+                      <p className="text-xs font-bold text-red-400">{u.lives || 0}</p>
+                      <p className="text-[8px] text-muted-foreground">Lives</p>
+                    </div>
+                    <div className="text-center p-1.5 rounded-lg bg-secondary/50">
+                      <p className="text-xs font-bold text-orange-400">{u.streak || 0}</p>
+                      <p className="text-[8px] text-muted-foreground">Streak</p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <button
+                      onClick={() => handleAdminAction('give_lives', u.id, { amount: 5 })}
+                      disabled={actionLoading}
+                      className="px-2.5 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold hover:bg-red-500/20 disabled:opacity-50"
+                    >
+                      ❤️ +5 Lives
+                    </button>
+                    <button
+                      onClick={() => handleAdminAction('give_coins', u.id, { amount: 100 })}
+                      disabled={actionLoading}
+                      className="px-2.5 py-1 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-[10px] font-bold hover:bg-yellow-500/20 disabled:opacity-50"
+                    >
+                      🪙 +100 Coins
+                    </button>
+                    <button
+                      onClick={() => handleAdminAction('give_xp', u.id, { amount: 50 })}
+                      disabled={actionLoading}
+                      className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold hover:bg-emerald-500/20 disabled:opacity-50"
+                    >
+                      ⚡ +50 XP
+                    </button>
+                    <button
+                      onClick={() => handleAdminAction(u.blocked ? 'unblock' : 'block', u.id)}
+                      disabled={actionLoading}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold disabled:opacity-50 ${
+                        u.blocked
+                          ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'
+                          : 'bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500/20'
+                      }`}
+                    >
+                      {u.blocked ? '✅ Unblock' : '🚫 Block'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm('Are you sure you want to delete this user?')) {
+                          handleAdminAction('delete_user', u.id)
+                        }
+                      }}
+                      disabled={actionLoading || u.role === 'admin'}
+                      className="px-2.5 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold hover:bg-red-500/20 disabled:opacity-30"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          <button
+            onClick={loadUsers}
+            className="w-full mt-4 p-3 rounded-xl bg-secondary border border-border text-muted-foreground text-sm font-medium hover:bg-secondary/80 transition-colors"
+          >
+            🔄 Refresh Users
+          </button>
         </>
+      )}
+
+      {/* Create User Section */}
+      {activeSection === 'create' && (
+        <form onSubmit={handleCreateUser} className="glass rounded-2xl p-6 border border-border">
+          <h3 className="font-bold mb-4">➕ Create New User</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-1">Name</label>
+              <input
+                type="text"
+                value={newUser.name}
+                onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                required
+                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground focus:ring-2 focus:ring-purple-500 outline-none"
+                placeholder="User name"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-1">Email</label>
+              <input
+                type="email"
+                value={newUser.email}
+                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                required
+                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground focus:ring-2 focus:ring-purple-500 outline-none"
+                placeholder="user@example.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-1">Password</label>
+              <input
+                type="password"
+                value={newUser.password}
+                onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                required
+                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground focus:ring-2 focus:ring-purple-500 outline-none"
+                placeholder="Min 6 characters"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-1">Role</label>
+              <select
+                value={newUser.role}
+                onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground focus:ring-2 focus:ring-purple-500 outline-none"
+              >
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              disabled={actionLoading}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-violet-500 text-white font-bold disabled:opacity-50"
+            >
+              {actionLoading ? '⏳ Creating...' : '✨ Create User'}
+            </motion.button>
+          </div>
+        </form>
       )}
     </div>
   )
@@ -2405,13 +2825,20 @@ export default function Home() {
   const showLevelUpAnimation = useAppStore((s) => s.showLevelUpAnimation)
   const setShowLevelUpAnimation = useAppStore((s) => s.setShowLevelUpAnimation)
   const updateStreak = useAppStore((s) => s.updateStreak)
+  const checkStreakGift = useAppStore((s) => s.checkStreakGift)
+  const showStreakGiftModal = useAppStore((s) => s.showStreakGiftModal)
+  const claimStreakGift = useAppStore((s) => s.claimStreakGift)
+  const setShowStreakGiftModal = useAppStore((s) => s.setShowStreakGiftModal)
+  const viewMode = useAppStore((s) => s.viewMode)
 
   // Update streak on login
   useEffect(() => {
     if (isLoggedIn) {
       updateStreak()
+      // Check for streak gift after streak update
+      setTimeout(() => checkStreakGift(), 500)
     }
-  }, [isLoggedIn, updateStreak])
+  }, [isLoggedIn, updateStreak, checkStreakGift])
 
   // Auto-hide confetti
   useEffect(() => {
@@ -2420,6 +2847,18 @@ export default function Home() {
       return () => clearTimeout(timer)
     }
   }, [showConfetti, setShowConfetti])
+
+  // Clear infinite lives when expired
+  const infiniteLivesUntil = useAppStore((s) => s.infiniteLivesUntil)
+  useEffect(() => {
+    if (infiniteLivesUntil > Date.now()) {
+      const remaining = infiniteLivesUntil - Date.now()
+      const timer = setTimeout(() => {
+        useAppStore.setState({ infiniteLivesUntil: 0 })
+      }, remaining + 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [infiniteLivesUntil])
 
   if (!isLoggedIn) {
     return <LoginScreen />
@@ -2441,7 +2880,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-game">
+    <div className={`min-h-screen flex flex-col bg-gradient-game ${viewMode === 'clean' ? 'view-mode-clean' : ''}`}>
       <Header />
       <main className="flex-1">
         <AnimatePresence mode="wait">
@@ -2460,6 +2899,50 @@ export default function Home() {
 
       {/* Confetti overlay */}
       {showConfetti && <ConfettiEffect />}
+
+      {/* Streak Gift Modal */}
+      <AnimatePresence>
+        {showStreakGiftModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80"
+          >
+            <motion.div
+              initial={{ scale: 0.8, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.8, y: 30 }}
+              className="glass rounded-3xl p-6 max-w-sm w-full text-center"
+            >
+              <div className="text-5xl mb-2">🎁</div>
+              <h2 className="text-2xl font-black mb-2">Streak Reward!</h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                You reached a 7-day streak! Pick one gift box:
+              </p>
+              <div className="grid grid-cols-3 gap-3">
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <motion.button
+                    key={i}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => claimStreakGift(i)}
+                    className="aspect-square rounded-xl bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/30 flex items-center justify-center text-4xl hover:border-yellow-400/60 hover:shadow-lg hover:shadow-yellow-500/20 transition-all"
+                  >
+                    🎁
+                  </motion.button>
+                ))}
+              </div>
+              <button
+                onClick={() => setShowStreakGiftModal(false)}
+                className="mt-4 px-6 py-2 rounded-xl bg-secondary text-muted-foreground text-sm font-medium hover:bg-secondary/80 transition-colors"
+              >
+                Skip
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Level Up Animation */}
       <AnimatePresence>

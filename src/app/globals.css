@@ -289,3 +289,173 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* ============================================
+   CLEAN / LIGHT VIEW MODE
+   ============================================ */
+.view-mode-clean {
+  --background: oklch(0.97 0.005 270);
+  --foreground: oklch(0.15 0.02 270);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.02 270);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.02 270);
+  --primary: oklch(0.45 0.18 250);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.93 0.01 270);
+  --secondary-foreground: oklch(0.2 0.02 270);
+  --muted: oklch(0.93 0.01 270);
+  --muted-foreground: oklch(0.4 0.02 270);
+  --accent: oklch(0.93 0.02 270);
+  --accent-foreground: oklch(0.15 0.02 270);
+  --destructive: oklch(0.55 0.22 25);
+  --border: oklch(0.85 0.02 270);
+  --input: oklch(0.9 0.01 270);
+  --ring: oklch(0.45 0.18 250);
+  --chart-1: oklch(0.45 0.18 250);
+  --chart-2: oklch(0.55 0.2 45);
+  --chart-3: oklch(0.5 0.25 310);
+  --chart-4: oklch(0.5 0.15 200);
+  --chart-5: oklch(0.55 0.2 25);
+  background: oklch(0.97 0.005 270) !important;
+  color: oklch(0.15 0.02 270) !important;
+}
+
+/* Clean mode: Override all text colors to be dark */
+.view-mode-clean h1,
+.view-mode-clean h2,
+.view-mode-clean h3,
+.view-mode-clean h4,
+.view-mode-clean h5,
+.view-mode-clean h6 {
+  color: oklch(0.12 0.03 270) !important;
+}
+
+.view-mode-clean p,
+.view-mode-clean span,
+.view-mode-clean label,
+.view-mode-clean a,
+.view-mode-clean li,
+.view-mode-clean td,
+.view-mode-clean th {
+  color: oklch(0.2 0.02 270) !important;
+}
+
+.view-mode-clean .text-muted-foreground {
+  color: oklch(0.45 0.02 270) !important;
+}
+
+.view-mode-clean .text-foreground {
+  color: oklch(0.15 0.02 270) !important;
+}
+
+/* Clean mode: Force specific colored text to be dark variants */
+.view-mode-clean .text-white {
+  color: oklch(0.15 0.03 270) !important;
+}
+
+.view-mode-clean .text-emerald-400 {
+  color: oklch(0.35 0.15 160) !important;
+}
+
+.view-mode-clean .text-cyan-400 {
+  color: oklch(0.35 0.15 200) !important;
+}
+
+.view-mode-clean .text-orange-400 {
+  color: oklch(0.4 0.15 45) !important;
+}
+
+.view-mode-clean .text-yellow-400 {
+  color: oklch(0.4 0.15 85) !important;
+}
+
+.view-mode-clean .text-red-400 {
+  color: oklch(0.4 0.18 25) !important;
+}
+
+.view-mode-clean .text-purple-400 {
+  color: oklch(0.4 0.18 310) !important;
+}
+
+.view-mode-clean .text-pink-400 {
+  color: oklch(0.4 0.15 340) !important;
+}
+
+/* Clean mode: Glass override - light cards */
+.view-mode-clean .glass {
+  background: oklch(1 0 0 / 90%) !important;
+  backdrop-filter: blur(8px);
+  border-color: oklch(0.85 0.01 270) !important;
+}
+
+.view-mode-clean .glass-light {
+  background: oklch(1 0 0 / 95%) !important;
+  border-color: oklch(0.85 0.01 270) !important;
+}
+
+/* Clean mode: Match exercise buttons - dark text */
+.view-mode-clean .glass button,
+.view-mode-clean button.glass,
+.view-mode-clean .match-btn {
+  color: oklch(0.15 0.05 250) !important;
+}
+
+/* Clean mode: Background gradients - light */
+.view-mode-clean .bg-gradient-game {
+  background: oklch(0.97 0.005 270) !important;
+}
+
+.view-mode-clean .bg-gradient-card {
+  background: oklch(0.97 0.005 270) !important;
+}
+
+/* Clean mode: Neon text - make it dark instead of glowing */
+.view-mode-clean .neon-green {
+  text-shadow: none !important;
+  color: oklch(0.35 0.15 160) !important;
+}
+
+.view-mode-clean .neon-orange {
+  text-shadow: none !important;
+  color: oklch(0.4 0.15 45) !important;
+}
+
+.view-mode-clean .neon-purple {
+  text-shadow: none !important;
+  color: oklch(0.4 0.18 310) !important;
+}
+
+/* Clean mode: XP bar dark */
+.view-mode-clean .xp-bar {
+  background: linear-gradient(90deg, oklch(0.35 0.15 160), oklch(0.35 0.15 200)) !important;
+}
+
+/* Clean mode: Input fields */
+.view-mode-clean input,
+.view-mode-clean textarea,
+.view-mode-clean select {
+  background: oklch(0.97 0.005 270) !important;
+  color: oklch(0.15 0.02 270) !important;
+  border-color: oklch(0.8 0.02 270) !important;
+}
+
+/* Clean mode: Scrollbar */
+.view-mode-clean ::-webkit-scrollbar-thumb {
+  background: oklch(0.7 0.02 270);
+}
+
+/* Clean mode: Borders visible on light */
+.view-mode-clean .border-border {
+  border-color: oklch(0.82 0.02 270) !important;
+}
+
+/* Clean mode: Exercise buttons with white text fix */
+.view-mode-clean button[class*="text-white"] {
+  color: oklch(0.15 0.03 270) !important;
+}
+
+/* Clean mode: Gradient text on light background */
+.view-mode-clean .bg-clip-text {
+  -webkit-text-fill-color: oklch(0.2 0.05 250) !important;
+}

@@ -50,6 +50,7 @@ export interface UserData {
   speakingScore: number;
   currentLevelId: string;
   theme: string;
+  blocked?: boolean;
 }
 
 export interface Level {
@@ -146,7 +147,7 @@ export interface NotificationData {
   message: string;
 }
 
-export type SoundType = 'correct' | 'wrong' | 'reward' | 'levelup' | 'unlock';
+export type SoundType = 'correct' | 'wrong' | 'reward' | 'levelup' | 'unlock' | 'bark';
 
 export interface ShopItem {
   id: string;
@@ -183,12 +184,17 @@ export interface InventoryItem {
 // ============================================
 export type SpeechSpeed = 'slow' | 'normal';
 
+export type ViewMode = 'normal' | 'clean';
+
 interface PersistedPreferences {
   soundEnabled: boolean;
   musicEnabled: boolean;
   theme: string;
   speechSpeed: SpeechSpeed;
   speechVoiceIndex: number;
+  viewMode: ViewMode;
+  infiniteLivesUntil: number;
+  lastStreakGiftAt: number;
 }
 
 // ============================================
@@ -233,6 +239,10 @@ export interface AppStoreState {
   musicEnabled: boolean;
   speechSpeed: SpeechSpeed;
   speechVoiceIndex: number;
+  viewMode: ViewMode;
+  infiniteLivesUntil: number;
+  lastStreakGiftAt: number;
+  showStreakGiftModal: boolean;
   showRewardModal: boolean;
   rewardData: RewardData | null;
   isLoading: boolean;
@@ -277,6 +287,12 @@ export interface AppStoreState {
   setShowConfetti: (val: boolean) => void;
   setSpeechSpeed: (speed: SpeechSpeed) => void;
   setSpeechVoiceIndex: (index: number) => void;
+  setViewMode: (mode: ViewMode) => void;
+  activateInfiniteLives: (minutes: number) => void;
+  hasInfiniteLives: () => boolean;
+  checkStreakGift: () => void;
+  claimStreakGift: (boxIndex: number) => void;
+  setShowStreakGiftModal: (val: boolean) => void;
   playSound: (type: SoundType) => void;
   claimReward: (reward: RewardData) => void;
   setNotification: (notification: NotificationData | null) => void;
@@ -355,6 +371,10 @@ export const useAppStore = create<AppStoreState>()(
       musicEnabled: true,
       speechSpeed: 'normal' as SpeechSpeed,
       speechVoiceIndex: -1, // -1 = default voice
+      viewMode: 'normal' as ViewMode,
+      infiniteLivesUntil: 0,
+      lastStreakGiftAt: 0,
+      showStreakGiftModal: false,
       showRewardModal: false,
       rewardData: null,
       isLoading: false,
@@ -768,8 +788,10 @@ export const useAppStore = create<AppStoreState>()(
       },
 
       loseLife: () => {
-        const { user } = get();
+        const { user, infiniteLivesUntil } = get();
         if (!user || user.lives <= 0) return;
+        // Don't lose lives if infinite lives is active
+        if (infiniteLivesUntil > Date.now()) return;
         set({ user: { ...user, lives: user.lives - 1 } });
       },
 
@@ -915,6 +937,80 @@ export const useAppStore = create<AppStoreState>()(
 
       setSpeechVoiceIndex: (index) => set({ speechVoiceIndex: index }),
 
+      setViewMode: (mode) => set({ viewMode: mode }),
+
+      activateInfiniteLives: (minutes) => {
+        const until = Date.now() + minutes * 60 * 1000;
+        set({ infiniteLivesUntil: until });
+        // Also set lives to max during infinite lives
+        const { user } = get();
+        if (user) {
+          set({ user: { ...user, lives: user.maxLives } });
+        }
+      },
+
+      hasInfiniteLives: () => {
+        const { infiniteLivesUntil } = get();
+        return infiniteLivesUntil > Date.now();
+      },
+
+      checkStreakGift: () => {
+        const { user, lastStreakGiftAt } = get();
+        if (!user) return;
+        // Show gift modal every 7 streak days
+        if (user.streak >= 7 && user.streak !== lastStreakGiftAt && user.streak % 7 === 0) {
+          set({ showStreakGiftModal: true, lastStreakGiftAt: user.streak });
+        }
+      },
+
+      claimStreakGift: (boxIndex) => {
+        // Generate gift contents: 3 prizes and 3 dogs, shuffled
+        const prizes = [
+          { type: 'coins', amount: 100, label: '100 Monedas', icon: '🪙' },
+          { type: 'energy', amount: 50, label: '50 Energía', icon: '⚡' },
+          { type: 'infinite_lives', amount: 10, label: 'Vidas Infinitas 10 min', icon: '💖' },
+          { type: 'dog', amount: 0, label: 'Perro Bravo!', icon: '🐕' },
+          { type: 'dog', amount: 0, label: 'Perro Bravo!', icon: '🐕' },
+          { type: 'dog', amount: 0, label: 'Perro Bravo!', icon: '🐕' },
+        ];
+        // Shuffle the prizes deterministically based on current date + streak
+        const { user } = get();
+        if (!user) return;
+        const seed = new Date().toDateString().length + user.streak;
+        const shuffled = [...prizes].sort(() => {
+          // Simple pseudo-random based on seed
+          const x = Math.sin(seed + boxIndex) * 10000;
+          return x - Math.floor(x) - 0.5;
+        });
+        const selected = shuffled[boxIndex];
+
+        if (selected.type === 'dog') {
+          get().playSound('bark');
+          set({ showStreakGiftModal: false });
+          get().setNotification({ type: 'error', message: '🐕 ¡Perro bravo! Más suerte la próxima vez' });
+        } else {
+          get().playSound('reward');
+          const updatedUser = { ...user };
+          if (selected.type === 'coins') {
+            updatedUser.coins += selected.amount;
+          } else if (selected.type === 'energy') {
+            updatedUser.coins += 25; // Energy equivalent as coins bonus
+          } else if (selected.type === 'infinite_lives') {
+            get().activateInfiniteLives(selected.amount);
+          }
+          set({ user: updatedUser, showStreakGiftModal: false, showConfetti: true });
+          get().setNotification({ type: 'success', message: `🎁 ¡Ganaste: ${selected.label}!` });
+          // Sync to backend
+          fetch(`${API_BASE}/user/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id, coins: updatedUser.coins, xp: updatedUser.xp }),
+          }).catch(() => {});
+        }
+      },
+
+      setShowStreakGiftModal: (val) => set({ showStreakGiftModal: val }),
+
       playSound: (type) => {
         const { soundEnabled } = get();
         if (!soundEnabled) return;
@@ -931,6 +1027,7 @@ export const useAppStore = create<AppStoreState>()(
             reward: 659.25, // E5
             levelup: 783.99, // G5
             unlock: 880,    // A5
+            bark: 350,      // rough bark
           };
 
           const frequency = frequencies[type] ?? 440;
@@ -947,6 +1044,22 @@ export const useAppStore = create<AppStoreState>()(
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
             osc.start(audioCtx.currentTime);
             osc.stop(audioCtx.currentTime + 0.3);
+          } else if (type === 'bark') {
+            // Dog bark: two short bursts
+            for (let i = 0; i < 2; i++) {
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              osc.type = 'square';
+              const startTime = audioCtx.currentTime + i * 0.15;
+              osc.frequency.setValueAtTime(400, startTime);
+              osc.frequency.exponentialRampToValueAtTime(250, startTime + 0.1);
+              gain.gain.setValueAtTime(0.2, startTime);
+              gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.12);
+              osc.start(startTime);
+              osc.stop(startTime + 0.12);
+            }
           } else {
             // Pleasant ascending tone for positive sounds
             const osc = audioCtx.createOscillator();
@@ -1015,6 +1128,9 @@ export const useAppStore = create<AppStoreState>()(
         theme: state.user?.theme ?? 'default',
         speechSpeed: state.speechSpeed,
         speechVoiceIndex: state.speechVoiceIndex,
+        viewMode: state.viewMode,
+        infiniteLivesUntil: state.infiniteLivesUntil,
+        lastStreakGiftAt: state.lastStreakGiftAt,
       }),
       // Rehydrate persisted preferences back into the store
       merge: (persistedState, currentState) => {
@@ -1025,6 +1141,9 @@ export const useAppStore = create<AppStoreState>()(
           musicEnabled: persisted.musicEnabled ?? currentState.musicEnabled,
           speechSpeed: persisted.speechSpeed ?? currentState.speechSpeed,
           speechVoiceIndex: persisted.speechVoiceIndex ?? currentState.speechVoiceIndex,
+          viewMode: persisted.viewMode ?? currentState.viewMode,
+          infiniteLivesUntil: persisted.infiniteLivesUntil ?? currentState.infiniteLivesUntil,
+          lastStreakGiftAt: persisted.lastStreakGiftAt ?? currentState.lastStreakGiftAt,
         };
       },
     }
