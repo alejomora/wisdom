@@ -53,6 +53,8 @@ export interface UserData {
   currentLevelId: string;
   theme: string;
   infiniteLivesUntil: number;
+  energy: number;
+  maxEnergy: number;
   blocked?: boolean;
 }
 
@@ -272,6 +274,7 @@ export interface AppStoreState {
   battleIsActive: boolean;
   battleResults: ExerciseResult[];
   battleOpponentScore: number;
+  battleOpponent: { name: string; avatar: string } | null;
 
   // Reading State
   readings: ReadingData[];
@@ -329,6 +332,7 @@ export interface AppStoreState {
   addXp: (amount: number) => void;
   addCoins: (amount: number) => void;
   loseLife: () => void;
+  consumeEnergy: (amount: number) => void;
   refillLives: () => void;
   updateStreak: () => void;
 
@@ -696,6 +700,326 @@ function isFirstInLevel(readingId: string, level: string): boolean {
 }
 
 // ============================================
+// BATTLE QUESTIONS
+// ============================================
+export interface BattleQuestion {
+  id: string;
+  prompt: string;
+  promptEs: string;
+  options: string[];
+  correctIndex: number;
+  level: 'basic' | 'intermediate' | 'advanced';
+}
+
+const BATTLE_QUESTIONS: BattleQuestion[] = [
+  // ── BASIC (100 questions) ──────────────────
+  { id: 'bq-1', prompt: 'What color is the sky on a clear day?', promptEs: '¿De qué color es el cielo en un día despejado?', options: ['Red', 'Blue', 'Green', 'Yellow'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-2', prompt: 'How do you say "rojo" in English?', promptEs: '¿Cómo se dice "rojo" en inglés?', options: ['Red', 'Blue', 'Green', 'White'], correctIndex: 0, level: 'basic' },
+  { id: 'bq-3', prompt: 'What number comes after seven?', promptEs: '¿Qué número viene después del siete?', options: ['Six', 'Eight', 'Nine', 'Ten'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-4', prompt: 'What is the English word for "perro"?', promptEs: '¿Cuál es la palabra en inglés para "perro"?', options: ['Cat', 'Dog', 'Bird', 'Fish'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-5', prompt: 'Which day comes after Monday?', promptEs: '¿Qué día viene después del lunes?', options: ['Sunday', 'Wednesday', 'Tuesday', 'Friday'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-6', prompt: 'What is "agua" in English?', promptEs: '¿Qué es "agua" en inglés?', options: ['Fire', 'Water', 'Air', 'Earth'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-7', prompt: 'How many months are in a year?', promptEs: '¿Cuántos meses hay en un año?', options: ['Ten', 'Eleven', 'Twelve', 'Thirteen'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-8', prompt: 'What is the opposite of "hot"?', promptEs: '¿Cuál es lo opuesto de "hot"?', options: ['Warm', 'Cold', 'Cool', 'Mild'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-9', prompt: 'What color is grass?', promptEs: '¿De qué color es la hierba?', options: ['Blue', 'Red', 'Green', 'Yellow'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-10', prompt: 'What is "madre" in English?', promptEs: '¿Qué es "madre" en inglés?', options: ['Father', 'Sister', 'Mother', 'Brother'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-11', prompt: 'Which season comes after winter?', promptEs: '¿Qué estación viene después del invierno?', options: ['Summer', 'Fall', 'Spring', 'Winter'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-12', prompt: 'What is the English word for "casa"?', promptEs: '¿Cuál es la palabra en inglés para "casa"?', options: ['Car', 'House', 'School', 'Store'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-13', prompt: 'How do you say "grande" in English?', promptEs: '¿Cómo se dice "grande" en inglés?', options: ['Small', 'Big', 'Tall', 'Short'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-14', prompt: 'What fruit is yellow and curved?', promptEs: '¿Qué fruta es amarilla y curvada?', options: ['Apple', 'Orange', 'Banana', 'Grape'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-15', prompt: 'What is "libro" in English?', promptEs: '¿Qué es "libro" en inglés?', options: ['Pen', 'Book', 'Desk', 'Chair'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-16', prompt: 'Which body part do you see with?', promptEs: '¿Con qué parte del cuerpo ves?', options: ['Ears', 'Nose', 'Mouth', 'Eyes'], correctIndex: 3, level: 'basic' },
+  { id: 'bq-17', prompt: 'What is "comer" in English?', promptEs: '¿Qué es "comer" en inglés?', options: ['Drink', 'Sleep', 'Eat', 'Run'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-18', prompt: 'What day is between Friday and Sunday?', promptEs: '¿Qué día está entre el viernes y el domingo?', options: ['Thursday', 'Saturday', 'Monday', 'Wednesday'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-19', prompt: 'What is the English word for "gato"?', promptEs: '¿Cuál es la palabra en inglés para "gato"?', options: ['Dog', 'Mouse', 'Cat', 'Rabbit'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-20', prompt: 'How do you say "bienvenido" in English?', promptEs: '¿Cómo se dice "bienvenido" en inglés?', options: ['Goodbye', 'Welcome', 'Hello', 'Thanks'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-21', prompt: 'What is "mesa" in English?', promptEs: '¿Qué es "mesa" en inglés?', options: ['Chair', 'Table', 'Desk', 'Sofa'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-22', prompt: 'Which animal says "moo"?', promptEs: '¿Qué animal dice "mu"?', options: ['Pig', 'Sheep', 'Cow', 'Horse'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-23', prompt: 'What is the opposite of "big"?', promptEs: '¿Cuál es lo opuesto de "big"?', options: ['Small', 'Large', 'Huge', 'Wide'], correctIndex: 0, level: 'basic' },
+  { id: 'bq-24', prompt: 'What color is a banana?', promptEs: '¿De qué color es una banana?', options: ['Red', 'Green', 'Yellow', 'Orange'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-25', prompt: 'How do you say "amigo" in English?', promptEs: '¿Cómo se dice "amigo" en inglés?', options: ['Enemy', 'Friend', 'Neighbor', 'Teacher'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-26', prompt: 'What is "escuela" in English?', promptEs: '¿Qué es "escuela" en inglés?', options: ['Hospital', 'School', 'Church', 'Office'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-27', prompt: 'How many days are in a week?', promptEs: '¿Cuántos días hay en una semana?', options: ['Five', 'Six', 'Seven', 'Eight'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-28', prompt: 'What is the English word for "sol"?', promptEs: '¿Cuál es la palabra en inglés para "sol"?', options: ['Moon', 'Star', 'Sun', 'Cloud'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-29', prompt: 'Which month comes after March?', promptEs: '¿Qué mes viene después de marzo?', options: ['February', 'April', 'May', 'June'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-30', prompt: 'What is "hermano" in English?', promptEs: '¿Qué es "hermano" en inglés?', options: ['Sister', 'Cousin', 'Brother', 'Uncle'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-31', prompt: 'What do you wear on your feet?', promptEs: '¿Qué te pones en los pies?', options: ['Hat', 'Gloves', 'Shoes', 'Scarf'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-32', prompt: 'What is "leche" in English?', promptEs: '¿Qué es "leche" en inglés?', options: ['Water', 'Juice', 'Milk', 'Tea'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-33', prompt: 'What is the opposite of "happy"?', promptEs: '¿Cuál es lo opuesto de "happy"?', options: ['Glad', 'Sad', 'Angry', 'Tired'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-34', prompt: 'Which room do you cook in?', promptEs: '¿En qué habitación cocinas?', options: ['Bedroom', 'Bathroom', 'Kitchen', 'Living room'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-35', prompt: 'What is "flor" in English?', promptEs: '¿Qué es "flor" en inglés?', options: ['Tree', 'Grass', 'Flower', 'Leaf'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-36', prompt: 'How do you say "buenos días" in English?', promptEs: '¿Cómo se dice "buenos días" en inglés?', options: ['Good night', 'Good morning', 'Good evening', 'Goodbye'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-37', prompt: 'What is the English word for "pollo"?', promptEs: '¿Cuál es la palabra en inglés para "pollo"?', options: ['Beef', 'Fish', 'Chicken', 'Pork'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-38', prompt: 'What number is between 10 and 12?', promptEs: '¿Qué número está entre 10 y 12?', options: ['9', '13', '11', '14'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-39', prompt: 'What is "cielo" in English?', promptEs: '¿Qué es "cielo" en inglés?', options: ['Ground', 'Sky', 'Sea', 'Mountain'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-40', prompt: 'Which weather involves snow?', promptEs: '¿Qué clima implica nieve?', options: ['Sunny', 'Rainy', 'Cloudy', 'Snowy'], correctIndex: 3, level: 'basic' },
+  { id: 'bq-41', prompt: 'What is "padre" in English?', promptEs: '¿Qué es "padre" en inglés?', options: ['Father', 'Mother', 'Uncle', 'Grandfather'], correctIndex: 0, level: 'basic' },
+  { id: 'bq-42', prompt: 'What do you use to write?', promptEs: '¿Qué usas para escribir?', options: ['Eraser', 'Pen', 'Ruler', 'Scissors'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-43', prompt: 'How do you say "gracias" in English?', promptEs: '¿Cómo se dice "gracias" en inglés?', options: ['Please', 'Sorry', 'Thank you', 'Hello'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-44', prompt: 'What is the opposite of "fast"?', promptEs: '¿Cuál es lo opuesto de "fast"?', options: ['Quick', 'Slow', 'Rapid', 'Swift'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-45', prompt: 'What is "mariposa" in English?', promptEs: '¿Qué es "mariposa" en inglés?', options: ['Bee', 'Butterfly', 'Spider', 'Ant'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-46', prompt: 'What fruit is typically red and round?', promptEs: '¿Qué fruta es típicamente roja y redonda?', options: ['Banana', 'Orange', 'Apple', 'Pear'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-47', prompt: 'What is "playa" in English?', promptEs: '¿Qué es "playa" en inglés?', options: ['Mountain', 'Beach', 'River', 'Lake'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-48', prompt: 'Which animal lives in water?', promptEs: '¿Qué animal vive en el agua?', options: ['Dog', 'Cat', 'Fish', 'Bird'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-49', prompt: 'What is "puerta" in English?', promptEs: '¿Qué es "puerta" en inglés?', options: ['Window', 'Wall', 'Door', 'Floor'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-50', prompt: 'How do you say "por favor" in English?', promptEs: '¿Cómo se dice "por favor" en inglés?', options: ['Thank you', 'Please', 'Sorry', 'Excuse me'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-51', prompt: 'What is the English word for "naranja" (fruit)?', promptEs: '¿Cuál es la palabra en inglés para "naranja" (fruta)?', options: ['Lemon', 'Apple', 'Orange', 'Peach'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-52', prompt: 'What body part do you hear with?', promptEs: '¿Con qué parte del cuerpo escuchas?', options: ['Eyes', 'Ears', 'Nose', 'Hands'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-53', prompt: 'What is "cama" in English?', promptEs: '¿Qué es "cama" en inglés?', options: ['Chair', 'Sofa', 'Bed', 'Table'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-54', prompt: 'Which season is the hottest?', promptEs: '¿Qué estación es la más caliente?', options: ['Spring', 'Summer', 'Fall', 'Winter'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-55', prompt: 'What is "estrella" in English?', promptEs: '¿Qué es "estrella" en inglés?', options: ['Moon', 'Sun', 'Star', 'Planet'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-56', prompt: 'What do you drink from a cup?', promptEs: '¿Qué bebes de una taza?', options: ['Bread', 'Rice', 'Coffee', 'Salad'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-57', prompt: 'How do you say "adiós" in English?', promptEs: '¿Cómo se dice "adiós" en inglés?', options: ['Hello', 'Please', 'Goodbye', 'Thanks'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-58', prompt: 'What is the English word for "nieve"?', promptEs: '¿Cuál es la palabra en inglés para "nieve"?', options: ['Rain', 'Snow', 'Wind', 'Ice'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-59', prompt: 'What is "caballo" in English?', promptEs: '¿Qué es "caballo" en inglés?', options: ['Cow', 'Horse', 'Pig', 'Sheep'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-60', prompt: 'Which shape has three sides?', promptEs: '¿Qué forma tiene tres lados?', options: ['Circle', 'Square', 'Triangle', 'Rectangle'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-61', prompt: 'What is "ventana" in English?', promptEs: '¿Qué es "ventana" en inglés?', options: ['Door', 'Wall', 'Window', 'Roof'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-62', prompt: 'What is the English word for "árbol"?', promptEs: '¿Cuál es la palabra en inglés para "árbol"?', options: ['Bush', 'Flower', 'Tree', 'Grass'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-63', prompt: 'What do you wear on your head?', promptEs: '¿Qué te pones en la cabeza?', options: ['Hat', 'Shoes', 'Gloves', 'Socks'], correctIndex: 0, level: 'basic' },
+  { id: 'bq-64', prompt: 'What is "pájaro" in English?', promptEs: '¿Qué es "pájaro" en inglés?', options: ['Fish', 'Dog', 'Cat', 'Bird'], correctIndex: 3, level: 'basic' },
+  { id: 'bq-65', prompt: 'How do you count from one to three?', promptEs: '¿Cómo cuentas de uno a tres?', options: ['One, two, three', 'Uno, dos, tres', 'First, second, third', 'A, B, C'], correctIndex: 0, level: 'basic' },
+  { id: 'bq-66', prompt: 'What is "plato" in English?', promptEs: '¿Qué es "plato" en inglés?', options: ['Cup', 'Fork', 'Plate', 'Knife'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-67', prompt: 'What color are leaves in spring?', promptEs: '¿De qué color son las hojas en primavera?', options: ['Brown', 'Green', 'Yellow', 'Red'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-68', prompt: 'What is "pelota" in English?', promptEs: '¿Qué es "pelota" en inglés?', options: ['Ball', 'Bat', 'Racket', 'Net'], correctIndex: 0, level: 'basic' },
+  { id: 'bq-69', prompt: 'Which meal do you eat in the morning?', promptEs: '¿Qué comida comes por la mañana?', options: ['Lunch', 'Dinner', 'Breakfast', 'Snack'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-70', prompt: 'What is "tren" in English?', promptEs: '¿Qué es "tren" en inglés?', options: ['Bus', 'Train', 'Car', 'Plane'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-71', prompt: 'What is the opposite of "tall"?', promptEs: '¿Cuál es lo opuesto de "tall"?', options: ['High', 'Short', 'Long', 'Wide'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-72', prompt: 'What is "silla" in English?', promptEs: '¿Qué es "silla" en inglés?', options: ['Table', 'Desk', 'Chair', 'Sofa'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-73', prompt: 'How do you say "lo siento" in English?', promptEs: '¿Cómo se dice "lo siento" en inglés?', options: ['Thank you', 'Please', 'I\'m sorry', 'Excuse me'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-74', prompt: 'What is "río" in English?', promptEs: '¿Qué es "río" en inglés?', options: ['Lake', 'River', 'Ocean', 'Pond'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-75', prompt: 'What do you use to cut paper?', promptEs: '¿Qué usas para cortar papel?', options: ['Glue', 'Scissors', 'Pen', 'Eraser'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-76', prompt: 'What is the English word for "olla"?', promptEs: '¿Cuál es la palabra en inglés para "olla"?', options: ['Pan', 'Pot', 'Plate', 'Cup'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-77', prompt: 'Which animal says "oink"?', promptEs: '¿Qué animal dice "oink"?', options: ['Cow', 'Sheep', 'Pig', 'Duck'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-78', prompt: 'What is "montaña" in English?', promptEs: '¿Qué es "montaña" en inglés?', options: ['Hill', 'Mountain', 'Valley', 'Cliff'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-79', prompt: 'How do you say "buenas noches" in English?', promptEs: '¿Cómo se dice "buenas noches" en inglés?', options: ['Good morning', 'Good afternoon', 'Good night', 'Good day'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-80', prompt: 'What is "maestro" in English?', promptEs: '¿Qué es "maestro" en inglés?', options: ['Student', 'Teacher', 'Doctor', 'Driver'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-81', prompt: 'What is the opposite of "new"?', promptEs: '¿Cuál es lo opuesto de "new"?', options: ['Modern', 'Old', 'Fresh', 'Recent'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-82', prompt: 'What is "luna" in English?', promptEs: '¿Qué es "luna" en inglés?', options: ['Sun', 'Star', 'Moon', 'Planet'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-83', prompt: 'Which vegetable is orange and long?', promptEs: '¿Qué vegetal es naranja y largo?', options: ['Potato', 'Tomato', 'Carrot', 'Onion'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-84', prompt: 'What is "manzana" in English?', promptEs: '¿Qué es "manzana" en inglés?', options: ['Orange', 'Banana', 'Apple', 'Grape'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-85', prompt: 'What do you sleep on?', promptEs: '¿En qué duermes?', options: ['Table', 'Chair', 'Bed', 'Floor'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-86', prompt: 'What is "llave" in English?', promptEs: '¿Qué es "llave" en inglés?', options: ['Lock', 'Key', 'Door', 'Handle'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-87', prompt: 'How do you say "me llamo..." in English?', promptEs: '¿Cómo se dice "me llamo..." en inglés?', options: ['I am called...', 'My name is...', 'I live in...', 'I come from...'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-88', prompt: 'What is "televisión" in English?', promptEs: '¿Qué es "televisión" en inglés?', options: ['Radio', 'Computer', 'Television', 'Phone'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-89', prompt: 'Which is a primary color?', promptEs: '¿Cuál es un color primario?', options: ['Purple', 'Orange', 'Green', 'Red'], correctIndex: 3, level: 'basic' },
+  { id: 'bq-90', prompt: 'What is "helado" in English?', promptEs: '¿Qué es "helado" en inglés?', options: ['Cake', 'Ice cream', 'Candy', 'Cookie'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-91', prompt: 'What is "zapato" in English?', promptEs: '¿Qué es "zapato" en inglés?', options: ['Shirt', 'Pants', 'Shoe', 'Hat'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-92', prompt: 'Which animal can fly?', promptEs: '¿Qué animal puede volar?', options: ['Fish', 'Bird', 'Dog', 'Horse'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-93', prompt: 'What is "reloj" in English?', promptEs: '¿Qué es "reloj" en inglés?', options: ['Watch/Clock', 'Phone', 'Calendar', 'Timer'], correctIndex: 0, level: 'basic' },
+  { id: 'bq-94', prompt: 'What is the opposite of "open"?', promptEs: '¿Cuál es lo opuesto de "open"?', options: ['Wide', 'Closed', 'Narrow', 'Shut'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-95', prompt: 'What is "pan" in English?', promptEs: '¿Qué es "pan" en inglés?', options: ['Rice', 'Bread', 'Pasta', 'Cereal'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-96', prompt: 'How do you say "¿Cómo estás?" in English?', promptEs: '¿Cómo se dice "¿Cómo estás?" en inglés?', options: ['How are you?', 'What is your name?', 'Where are you?', 'Who are you?'], correctIndex: 0, level: 'basic' },
+  { id: 'bq-97', prompt: 'What is "camiseta" in English?', promptEs: '¿Qué es "camiseta" en inglés?', options: ['Jacket', 'T-shirt', 'Coat', 'Sweater'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-98', prompt: 'What is the English word for "bosque"?', promptEs: '¿Cuál es la palabra en inglés para "bosque"?', options: ['Desert', 'Forest', 'Beach', 'Field'], correctIndex: 1, level: 'basic' },
+  { id: 'bq-99', prompt: 'Which number is fifty?', promptEs: '¿Qué número es cincuenta?', options: ['15', '40', '50', '60'], correctIndex: 2, level: 'basic' },
+  { id: 'bq-100', prompt: 'What is "hijo" in English?', promptEs: '¿Qué es "hijo" en inglés?', options: ['Daughter', 'Son', 'Child', 'Baby'], correctIndex: 1, level: 'basic' },
+
+  // ── INTERMEDIATE (100 questions) ───────────
+  { id: 'bq-101', prompt: 'What is the past tense of "go"?', promptEs: '¿Cuál es el pasado de "go"?', options: ['Goed', 'Gone', 'Went', 'Going'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-102', prompt: 'Which word means "to arrive at a place"?', promptEs: '¿Qué palabra significa "llegar a un lugar"?', options: ['Leave', 'Reach', 'Depart', 'Exit'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-103', prompt: 'What is the comparative of "beautiful"?', promptEs: '¿Cuál es el comparativo de "beautiful"?', options: ['More beautiful', 'Beautifuller', 'Most beautiful', 'Beautifuler'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-104', prompt: 'Complete: "If it rains, I ___ take an umbrella."', promptEs: 'Completa: "Si llueve, yo ___ llevar una sombrilla."', options: ['will', 'would', 'had', 'was'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-105', prompt: 'What is "receta médica" in English?', promptEs: '¿Qué es "receta médica" en inglés?', options: ['Receipt', 'Prescription', 'Recipe', 'Invoice'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-106', prompt: 'Which word is an adverb?', promptEs: '¿Qué palabra es un adverbio?', options: ['Quick', 'Quickly', 'Quicker', 'Quickest'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-107', prompt: 'What does "to look forward to" mean?', promptEs: '¿Qué significa "to look forward to"?', options: ['To regret', 'To anticipate eagerly', 'To avoid', 'To forget'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-108', prompt: 'What is the past tense of "write"?', promptEs: '¿Cuál es el pasado de "write"?', options: ['Writed', 'Wrote', 'Written', 'Writing'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-109', prompt: 'Which preposition fits: "She arrived ___ the airport"?', promptEs: '¿Qué preposición cabe: "Ella llegó ___ el aeropuerto"?', options: ['in', 'on', 'at', 'to'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-110', prompt: 'What is "entrevista de trabajo" in English?', promptEs: '¿Qué es "entrevista de trabajo" en inglés?', options: ['Job interview', 'Work meeting', 'Business talk', 'Office chat'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-111', prompt: 'What is the superlative of "expensive"?', promptEs: '¿Cuál es el superlativo de "expensive"?', options: ['Expensivest', 'Most expensive', 'More expensive', 'Expensiver'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-112', prompt: 'Complete: "She has been studying ___ three hours."', promptEs: 'Completa: "Ella ha estado estudiando ___ tres horas."', options: ['since', 'for', 'during', 'while'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-113', prompt: 'What is "medio ambiente" in English?', promptEs: '¿Qué es "medio ambiente" en inglés?', options: ['Environment', 'Atmosphere', 'Climate', 'Weather'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-114', prompt: 'What is the past tense of "buy"?', promptEs: '¿Cuál es el pasado de "buy"?', options: ['Buyed', 'Bought', 'Buied', 'Buying'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-115', prompt: 'Which sentence is correct?', promptEs: '¿Cuál oración es correcta?', options: ['She don\'t like coffee', 'She doesn\'t likes coffee', 'She doesn\'t like coffee', 'She not like coffee'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-116', prompt: 'What does "to give up" mean?', promptEs: '¿Qué significa "to give up"?', options: ['To continue', 'To surrender', 'To start', 'To delay'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-117', prompt: 'What is "billete de avión" in English?', promptEs: '¿Qué es "billete de avión" en inglés?', options: ['Plane ticket', 'Boarding pass', 'Flight card', 'Air voucher'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-118', prompt: 'Which preposition fits: "The book is ___ the table"?', promptEs: '¿Qué preposición cabe: "El libro está ___ la mesa"?', options: ['in', 'at', 'on', 'by'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-119', prompt: 'What is the past participle of "eat"?', promptEs: '¿Cuál es el participio pasado de "eat"?', options: ['Eated', 'Ate', 'Eaten', 'Eating'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-120', prompt: 'Complete: "I wish I ___ speak French."', promptEs: 'Completa: "Ojalá yo ___ hablar francés."', options: ['can', 'could', 'would', 'should'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-121', prompt: 'What is "ecuación" in English?', promptEs: '¿Qué es "ecuación" en inglés?', options: ['Equation', 'Question', 'Solution', 'Problem'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-122', prompt: 'What does "to run out of" mean?', promptEs: '¿Qué significa "to run out of"?', options: ['To have plenty', 'To exhaust a supply', 'To create more', 'To organize'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-123', prompt: 'What is the comparative of "good"?', promptEs: '¿Cuál es el comparativo de "good"?', options: ['Gooder', 'More good', 'Better', 'Best'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-124', prompt: 'Which word means "a person who travels for work"?', promptEs: '¿Qué palabra significa "una persona que viaja por trabajo"?', options: ['Tourist', 'Commuter', 'Business traveler', 'Explorer'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-125', prompt: 'Complete: "He ___ to the store yesterday."', promptEs: 'Completa: "Él ___ a la tienda ayer."', options: ['goes', 'went', 'going', 'has gone'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-126', prompt: 'What is "contaminación" in English?', promptEs: '¿Qué es "contaminación" en inglés?', options: ['Pollution', 'Contamination', 'Infection', 'Dirtiness'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-127', prompt: 'What is the past tense of "teach"?', promptEs: '¿Cuál es el pasado de "teach"?', options: ['Teached', 'Taught', 'Teached', 'Teaching'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-128', prompt: 'Which preposition fits: "I was born ___ 1995"?', promptEs: '¿Qué preposición cabe: "Yo nací ___ 1995"?', options: ['on', 'at', 'in', 'by'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-129', prompt: 'What does "to figure out" mean?', promptEs: '¿Qué significa "to figure out"?', options: ['To be confused', 'To understand/solve', 'To ignore', 'To forget'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-130', prompt: 'What is "desarrollo sostenible" in English?', promptEs: '¿Qué es "desarrollo sostenible" en inglés?', options: ['Economic growth', 'Sustainable development', 'Green energy', 'Ecological balance'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-131', prompt: 'Complete: "She is ___ than her sister."', promptEs: 'Completa: "Ella es ___ que su hermana."', options: ['more tall', 'taller', 'tallest', 'most tall'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-132', prompt: 'What is the past tense of "think"?', promptEs: '¿Cuál es el pasado de "think"?', options: ['Thinked', 'Thought', 'Thinks', 'Thinking'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-133', prompt: 'What does "to turn down" mean?', promptEs: '¿Qué significa "to turn down"?', options: ['To accept', 'To reject', 'To increase', 'To rotate'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-134', prompt: 'What is "reciclaje" in English?', promptEs: '¿Qué es "reciclaje" en inglés?', options: ['Recycling', 'Reusing', 'Reducing', 'Rebuilding'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-135', prompt: 'Complete: "They have ___ here since morning."', promptEs: 'Completa: "Ellos han ___ aquí desde la mañana."', options: ['be', 'being', 'been', 'was'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-136', prompt: 'What is the opposite of "polite"?', promptEs: '¿Cuál es lo opuesto de "polite"?', options: ['Gentle', 'Rude', 'Kind', 'Nice'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-137', prompt: 'Which sentence uses the present perfect correctly?', promptEs: '¿Cuál oración usa el presente perfecto correctamente?', options: ['I have went to Paris', 'I have gone to Paris', 'I has gone to Paris', 'I have go to Paris'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-138', prompt: 'What is "enchufe" in English?', promptEs: '¿Qué es "enchufe" en inglés?', options: ['Plug', 'Switch', 'Wire', 'Battery'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-139', prompt: 'What does "to catch up" mean?', promptEs: '¿Qué significa "to catch up"?', options: ['To fall behind', 'To reach the same level', 'To slow down', 'To leave early'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-140', prompt: 'Complete: "If I ___ you, I would study harder."', promptEs: 'Completa: "Si yo ___ tú, estudiaría más duro."', options: ['am', 'was', 'were', 'be'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-141', prompt: 'What is "emergencia" in English?', promptEs: '¿Qué es "emergencia" en inglés?', options: ['Emergency', 'Urgency', 'Danger', 'Alert'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-142', prompt: 'What is the past tense of "catch"?', promptEs: '¿Cuál es el pasado de "catch"?', options: ['Catched', 'Caught', 'Catched', 'Catching'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-143', prompt: 'Which word means "relating to the mind"?', promptEs: '¿Qué palabra significa "relacionado con la mente"?', options: ['Physical', 'Mental', 'Emotional', 'Spiritual'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-144', prompt: 'What does "to call off" mean?', promptEs: '¿Qué significa "to call off"?', options: ['To shout', 'To cancel', 'To invite', 'To dial'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-145', prompt: 'What is "ahorro de energía" in English?', promptEs: '¿Qué es "ahorro de energía" en inglés?', options: ['Energy waste', 'Energy saving', 'Power cut', 'Energy boost'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-146', prompt: 'Complete: "She ___ already left when I arrived."', promptEs: 'Completa: "Ella ya ___ salido cuando yo llegué."', options: ['has', 'have', 'had', 'was'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-147', prompt: 'What is "consejo" in English?', promptEs: '¿Qué es "consejo" en inglés?', options: ['Advice', 'Advise', 'Council', 'Counsel'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-148', prompt: 'What is the past tense of "bring"?', promptEs: '¿Cuál es el pasado de "bring"?', options: ['Bringed', 'Brought', 'Brang', 'Bringed'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-149', prompt: 'Which preposition fits: "He depends ___ his parents"?', promptEs: '¿Qué preposición cabe: "Él depende ___ sus padres"?', options: ['of', 'on', 'at', 'from'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-150', prompt: 'What does "to put off" mean?', promptEs: '¿Qué significa "to put off"?', options: ['To wear', 'To postpone', 'To remove', 'To place'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-151', prompt: 'Complete: "This is the ___ movie I have ever seen."', promptEs: 'Completa: "Esta es la película ___ que he visto."', options: ['worse', 'worst', 'bad', 'more bad'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-152', prompt: 'What is "estacionamiento" in English?', promptEs: '¿Qué es "estacionamiento" en inglés?', options: ['Garage', 'Parking', 'Driveway', 'Highway'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-153', prompt: 'What is the past tense of "choose"?', promptEs: '¿Cuál es el pasado de "choose"?', options: ['Choosed', 'Chose', 'Chosen', 'Choosing'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-154', prompt: 'What does "to look after" mean?', promptEs: '¿Qué significa "to look after"?', options: ['To search', 'To take care of', 'To observe', 'To ignore'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-155', prompt: 'Complete: "She asked me where I ___."', promptEs: 'Completa: "Ella me preguntó dónde yo ___."', options: ['live', 'lived', 'living', 'lives'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-156', prompt: 'What is "servicio al cliente" in English?', promptEs: '¿Qué es "servicio al cliente" en inglés?', options: ['Customer service', 'Client help', 'User support', 'Shopper aid'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-157', prompt: 'What is the superlative of "bad"?', promptEs: '¿Cuál es el superlativo de "bad"?', options: ['Baddest', 'Worse', 'Worst', 'More bad'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-158', prompt: 'Which sentence uses "used to" correctly?', promptEs: '¿Cuál oración usa "used to" correctamente?', options: ['I use to play tennis', 'I used to play tennis', 'I used play tennis', 'I am used to play tennis'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-159', prompt: 'What does "to get along with" mean?', promptEs: '¿Qué significa "to get along with"?', options: ['To argue', 'To have a good relationship', 'To travel', 'To meet'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-160', prompt: 'What is "gobierno" in English?', promptEs: '¿Qué es "gobierno" en inglés?', options: ['Government', 'Governor', 'Governance', 'Gallery'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-161', prompt: 'Complete: "By the time we arrived, the movie ___."', promptEs: 'Completa: "Cuando llegamos, la película ___."', options: ['starts', 'started', 'had started', 'has started'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-162', prompt: 'What is the past tense of "fly"?', promptEs: '¿Cuál es el pasado de "fly"?', options: ['Flyed', 'Flied', 'Flew', 'Flown'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-163', prompt: 'What does "to come across" mean?', promptEs: '¿Qué significa "to come across"?', options: ['To cross the street', 'To find by chance', 'To disagree', 'To travel'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-164', prompt: 'Which word is a conjunction?', promptEs: '¿Qué palabra es una conjunción?', options: ['Quickly', 'Although', 'Beautiful', 'Running'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-165', prompt: 'What is "tecnología de la información" in English?', promptEs: '¿Qué es "tecnología de la información" en inglés?', options: ['Information technology', 'Computer science', 'Data systems', 'Digital media'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-166', prompt: 'Complete: "I have been living here ___ 2010."', promptEs: 'Completa: "He estado viviendo aquí ___ 2010."', options: ['for', 'since', 'from', 'during'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-167', prompt: 'What is the past tense of "swim"?', promptEs: '¿Cuál es el pasado de "swim"?', options: ['Swimmed', 'Swam', 'Swum', 'Swimming'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-168', prompt: 'What does "to break down" mean?', promptEs: '¿Qué significa "to break down"?', options: ['To repair', 'To stop working', 'To build', 'To improve'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-169', prompt: 'What is "factura" in English (business context)?', promptEs: '¿Qué es "factura" en inglés (contexto de negocios)?', options: ['Recipe', 'Invoice', 'Receipt', 'Bill'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-170', prompt: 'Complete: "She told me that she ___ the exam."', promptEs: 'Completa: "Ella me dijo que ella ___ el examen."', options: ['passes', 'pass', 'had passed', 'has passed'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-171', prompt: 'What is "experiencia laboral" in English?', promptEs: '¿Qué es "experiencia laboral" en inglés?', options: ['Work experience', 'Job interview', 'Career path', 'Professional skill'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-172', prompt: 'What is the comparative of "far"?', promptEs: '¿Cuál es el comparativo de "far"?', options: ['Farrer', 'Farther', 'More far', 'Farest'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-173', prompt: 'What does "to take over" mean?', promptEs: '¿Qué significa "to take over"?', options: ['To surrender', 'To assume control', 'To give away', 'To release'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-174', prompt: 'Which sentence uses reported speech correctly?', promptEs: '¿Cuál oración usa el estilo indirecto correctamente?', options: ['He said he is happy', 'He said he was happy', 'He said he happy', 'He said was happy'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-175', prompt: 'What is "combustible fósil" in English?', promptEs: '¿Qué es "combustible fósil" en inglés?', options: ['Fossil fuel', 'Natural gas', 'Organic matter', 'Fossil energy'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-176', prompt: 'Complete: "Neither John ___ Mary could attend."', promptEs: 'Completa: "Ni John ___ Mary pudieron asistir."', options: ['or', 'and', 'nor', 'but'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-177', prompt: 'What is the past tense of "break"?', promptEs: '¿Cuál es el pasado de "break"?', options: ['Breaked', 'Broke', 'Broken', 'Breaking'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-178', prompt: 'What does "to hang out" mean?', promptEs: '¿Qué significa "to hang out"?', options: ['To wait', 'To spend time socially', 'To exercise', 'To decorate'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-179', prompt: 'What is "derechos humanos" in English?', promptEs: '¿Qué es "derechos humanos" en inglés?', options: ['Human resources', 'Human rights', 'Legal rights', 'Civil laws'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-180', prompt: 'Complete: "I would have helped you if I ___ known."', promptEs: 'Completa: "Yo te habría ayudado si yo ___ sabido."', options: ['have', 'has', 'had', 'would'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-181', prompt: 'What is "efecto invernadero" in English?', promptEs: '¿Qué es "efecto invernadero" en inglés?', options: ['Greenhouse effect', 'Solar effect', 'Heating effect', 'Climate shift'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-182', prompt: 'What is the past participle of "see"?', promptEs: '¿Cuál es el participio pasado de "see"?', options: ['Saw', 'Seeded', 'Seen', 'Seeing'], correctIndex: 2, level: 'intermediate' },
+  { id: 'bq-183', prompt: 'What does "to point out" mean?', promptEs: '¿Qué significa "to point out"?', options: ['To hide', 'To draw attention to', 'To ignore', 'To remove'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-184', prompt: 'Complete: "She is used ___ early."', promptEs: 'Completa: "Ella está acostumbrada ___ temprano."', options: ['to wake up', 'to waking up', 'wake up', 'waking up'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-185', prompt: 'What is "conocimiento" in English?', promptEs: '¿Qué es "conocimiento" en inglés?', options: ['Knowledge', 'Intelligence', 'Wisdom', 'Information'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-186', prompt: 'What is the past tense of "sleep"?', promptEs: '¿Cuál es el pasado de "sleep"?', options: ['Sleeped', 'Slept', 'Slept', 'Sleeping'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-187', prompt: 'What does "to carry on" mean?', promptEs: '¿Qué significa "to carry on"?', options: ['To stop', 'To continue', 'To transport', 'To return'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-188', prompt: 'Which word means "happening every two years"?', promptEs: '¿Qué palabra significa "que ocurre cada dos años"?', options: ['Annual', 'Biannual', 'Monthly', 'Weekly'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-189', prompt: 'What is "responsabilidad social" in English?', promptEs: '¿Qué es "responsabilidad social" en inglés?', options: ['Social media', 'Social responsibility', 'Community service', 'Public duty'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-190', prompt: 'Complete: "The cake was ___ by my grandmother."', promptEs: 'Completa: "El pastel fue ___ por mi abuela."', options: ['bake', 'baked', 'baking', 'bakes'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-191', prompt: 'What is "vida silvestre" in English?', promptEs: '¿Qué es "vida silvestre" en inglés?', options: ['Wildlife', 'Nature', 'Animals', 'Forest life'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-192', prompt: 'What does "to make up" mean (as in a story)?', promptEs: '¿Qué significa "to make up" (como en una historia)?', options: ['To improve', 'To invent', 'To reconcile', 'To apply makeup'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-193', prompt: 'Complete: "He suggested that she ___ a doctor."', promptEs: 'Completa: "Él sugirió que ella ___ un médico."', options: ['sees', 'see', 'saw', 'seeing'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-194', prompt: 'What is "energía renovable" in English?', promptEs: '¿Qué es "energía renovable" en inglés?', options: ['Nuclear energy', 'Renewable energy', 'Fossil energy', 'Electric energy'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-195', prompt: 'What is the past tense of "drive"?', promptEs: '¿Cuál es el pasado de "drive"?', options: ['Drived', 'Drove', 'Driven', 'Driving'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-196', prompt: 'What does "to stand for" mean?', promptEs: '¿Qué significa "to stand for"?', options: ['To sit down', 'To represent', 'To oppose', 'To tolerate'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-197', prompt: 'Complete: "Not only ___ intelligent, but she is also kind."', promptEs: 'Completa: "No solo ___ inteligente, sino que también es amable."', options: ['she is', 'is she', 'does she', 'she does'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-198', prompt: 'What is "igualdad de oportunidades" in English?', promptEs: '¿Qué es "igualdad de oportunidades" en inglés?', options: ['Equal opportunity', 'Fair chance', 'Equal rights', 'Job security'], correctIndex: 0, level: 'intermediate' },
+  { id: 'bq-199', prompt: 'What is the past tense of "grow"?', promptEs: '¿Cuál es el pasado de "grow"?', options: ['Growed', 'Grew', 'Grown', 'Growing'], correctIndex: 1, level: 'intermediate' },
+  { id: 'bq-200', prompt: 'What does "to set up" mean?', promptEs: '¿Qué significa "to set up"?', options: ['To tear down', 'To establish', 'To close', 'To reduce'], correctIndex: 1, level: 'intermediate' },
+
+  // ── ADVANCED (100 questions) ───────────────
+  { id: 'bq-201', prompt: 'What does the idiom "break the ice" mean?', promptEs: '¿Qué significa el modismo "break the ice"?', options: ['To cause damage', 'To initiate conversation', 'To create conflict', 'To cool down'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-202', prompt: 'Which sentence uses the passive voice correctly?', promptEs: '¿Cuál oración usa la voz pasiva correctamente?', options: ['The report was wrote by Jane', 'The report was written by Jane', 'The report is write by Jane', 'The report writing by Jane'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-203', prompt: 'What does "to bear in mind" mean?', promptEs: '¿Qué significa "to bear in mind"?', options: ['To forget', 'To remember/consider', 'To ignore', 'To imagine'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-204', prompt: 'Complete: "Had I known about the meeting, I ___ attended."', promptEs: 'Completa: "Si hubiera sabido sobre la reunión, yo ___ asistido."', options: ['will have', 'would have', 'should', 'must have'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-205', prompt: 'What is "rendimiento" in a business context?', promptEs: '¿Qué es "rendimiento" en un contexto de negocios?', options: ['Performance', 'Attendance', 'Schedule', 'Salary'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-206', prompt: 'What does the idiom "hit the nail on the head" mean?', promptEs: '¿Qué significa el modismo "hit the nail on the head"?', options: ['To be exactly right', 'To cause injury', 'To build something', 'To make a mistake'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-207', prompt: 'Which sentence uses reported speech correctly?', promptEs: '¿Cuál oración usa el estilo indirecto correctamente?', options: ['She said she will come tomorrow', 'She said she would come the next day', 'She said she comes tomorrow', 'She said she would come tomorrow'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-208', prompt: 'What does "to be on the fence" mean?', promptEs: '¿Qué significa "to be on the fence"?', options: ['To be certain', 'To be undecided', 'To be angry', 'To be seated'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-209', prompt: 'What is "rentabilidad" in English?', promptEs: '¿Qué es "rentabilidad" en inglés?', options: ['Profitability', 'Renting', 'Payment', 'Discount'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-210', prompt: 'Complete: "The committee ___ divided in their opinions."', promptEs: 'Completa: "El comité ___ dividido en sus opiniones."', options: ['is', 'are', 'were', 'have been'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-211', prompt: 'What does the idiom "a blessing in disguise" mean?', promptEs: '¿Qué significa el modismo "a blessing in disguise"?', options: ['A hidden curse', 'Something good from a bad situation', 'A religious event', 'A fake gift'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-212', prompt: 'Which phrasal verb means "to postpone"?', promptEs: '¿Qué phrasal verb significa "posponer"?', options: ['Put off', 'Put on', 'Put in', 'Put up'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-213', prompt: 'What is "cadena de suministro" in English?', promptEs: '¿Qué es "cadena de suministro" en inglés?', options: ['Supply chain', 'Production line', 'Distribution network', 'Delivery route'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-214', prompt: 'Complete: "Not until he arrived ___ the news."', promptEs: 'Completa: "No hasta que él llegó ___ la noticia."', options: ['we heard', 'did we hear', 'we did hear', 'heard we'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-215', prompt: 'What does "to pull someone\'s leg" mean?', promptEs: '¿Qué significa "to pull someone\'s leg"?', options: ['To injure someone', 'To joke with someone', 'To delay someone', 'To help someone walk'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-216', prompt: 'What is the formal register of "I want to talk to you"?', promptEs: '¿Cuál es el registro formal de "I want to talk to you"?', options: ['I gotta talk to ya', 'I would like to speak with you', 'I need a word', 'Let\'s chat'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-217', prompt: 'What is "deuda externa" in English?', promptEs: '¿Qué es "deuda externa" en inglés?', options: ['Foreign debt', 'Internal debt', 'National loan', 'External credit'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-218', prompt: 'Complete: "She insisted ___ paying for the meal."', promptEs: 'Completa: "Ella insistió ___ pagar la comida."', options: ['to', 'on', 'for', 'at'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-219', prompt: 'What does "to burn the midnight oil" mean?', promptEs: '¿Qué significa "to burn the midnight oil"?', options: ['To waste resources', 'To work late into the night', 'To start a fire', 'To be careless'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-220', prompt: 'Which sentence uses the subjunctive mood?', promptEs: '¿Cuál oración usa el modo subjuntivo?', options: ['I wish I was rich', 'I wish I were rich', 'I wish I am rich', 'I wish I will be rich'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-221', prompt: 'What is "inflación" in English?', promptEs: '¿Qué es "inflación" en inglés?', options: ['Inflation', 'Deflation', 'Recession', 'Depression'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-222', prompt: 'What does the idiom "the ball is in your court" mean?', promptEs: '¿Qué significa el modismo "the ball is in your court"?', options: ['You are playing tennis', 'It is your decision/responsibility', 'You have won', 'The game is over'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-223', prompt: 'Complete: "Scarcely had she arrived ___ the phone rang."', promptEs: 'Completa: "Apenas había llegado ___ el teléfono sonó."', options: ['when', 'than', 'that', 'after'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-224', prompt: 'What is "ventaja competitiva" in English?', promptEs: '¿Qué es "ventaja competitiva" en inglés?', options: ['Competitive advantage', 'Market share', 'Business edge', 'Profit margin'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-225', prompt: 'What does "to go the extra mile" mean?', promptEs: '¿Qué significa "to go the extra mile"?', options: ['To travel far', 'To make more effort than expected', 'To complain', 'To give up'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-226', prompt: 'Which word means "to make something less severe"?', promptEs: '¿Qué palabra significa "hacer algo menos severo"?', options: ['Exacerbate', 'Mitigate', 'Amplify', 'Complicate'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-227', prompt: 'What is "responsabilidad corporativa" in English?', promptEs: '¿Qué es "responsabilidad corporativa" en inglés?', options: ['Corporate responsibility', 'Company duty', 'Business ethics', 'Corporate law'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-228', prompt: 'Complete: "He ___ have finished by now; he started hours ago."', promptEs: 'Completa: "Él ___ haber terminado ya; empezó hace horas."', options: ['can\'t', 'must', 'shouldn\'t', 'might not'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-229', prompt: 'What does "to read between the lines" mean?', promptEs: '¿Qué significa "to read between the lines"?', options: ['To read carefully', 'To understand hidden meanings', 'To skip words', 'To read quickly'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-230', prompt: 'What is the past participle of "arise"?', promptEs: '¿Cuál es el participio pasado de "arise"?', options: ['Arised', 'Arose', 'Arisen', 'Arising'], correctIndex: 2, level: 'advanced' },
+  { id: 'bq-231', prompt: 'What is "análisis de viabilidad" in English?', promptEs: '¿Qué es "análisis de viabilidad" en inglés?', options: ['Cost analysis', 'Feasibility study', 'Risk assessment', 'Market research'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-232', prompt: 'What does the idiom "to be on thin ice" mean?', promptEs: '¿Qué significa el modismo "to be on thin ice"?', options: ['To be in a risky situation', 'To be cold', 'To be athletic', 'To be careful with sports'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-233', prompt: 'Complete: "Were she ___ , she would understand."', promptEs: 'Completa: "Si ella ___ , entendería."', options: ['here', 'there', 'to come', 'arriving'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-234', prompt: 'What does "to bring to the table" mean?', promptEs: '¿Qué significa "to bring to the table"?', options: ['To serve food', 'To contribute something valuable', 'To have a meeting', 'To eat together'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-235', prompt: 'What is "fusión empresarial" in English?', promptEs: '¿Qué es "fusión empresarial" en inglés?', options: ['Business merger', 'Company split', 'Hostile takeover', 'Joint venture'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-236', prompt: 'Which sentence uses inversion correctly?', promptEs: '¿Cuál oración usa la inversión correctamente?', options: ['Never I have seen such beauty', 'Never have I seen such beauty', 'Have I never seen such beauty', 'Such beauty I have never seen'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-237', prompt: 'What does the idiom "to cut corners" mean?', promptEs: '¿Qué significa el modismo "to cut corners"?', options: ['To be efficient', 'To do something poorly to save time/money', 'To turn around', 'To make a shortcut in driving'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-238', prompt: 'What is "cultura corporativa" in English?', promptEs: '¿Qué es "cultura corporativa" en inglés?', options: ['Corporate culture', 'Company tradition', 'Office rules', 'Team spirit'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-239', prompt: 'Complete: "It\'s high time we ___ about the environment."', promptEs: 'Completa: "Ya es hora de que ___ sobre el medio ambiente."', options: ['do something', 'did something', 'doing something', 'have done something'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-240', prompt: 'What does "to get your act together" mean?', promptEs: '¿Qué significa "to get your act together"?', options: ['To perform on stage', 'To organize yourself effectively', 'To rehearse', 'To act professionally'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-241', prompt: 'What is "estados financieros" in English?', promptEs: '¿Qué es "estados financieros" en inglés?', options: ['Financial statements', 'Money reports', 'Bank records', 'Economic data'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-242', prompt: 'What does the idiom "to beat around the bush" mean?', promptEs: '¿Qué significa el modismo "to beat around the bush"?', options: ['To be direct', 'To avoid the main topic', 'To garden', 'To hit something'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-243', prompt: 'Complete: "So intense ___ that we couldn\'t look away."', promptEs: 'Completa: "Tan intenso ___ que no podíamos mirar hacia otro lado."', options: ['was it', 'it was', 'did it', 'it did'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-244', prompt: 'What does "to keep someone in the loop" mean?', promptEs: '¿Qué significa "to keep someone in the loop"?', options: ['To trap someone', 'To keep someone informed', 'To exclude someone', 'To circle around'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-245', prompt: 'What is "capital de riesgo" in English?', promptEs: '¿Qué es "capital de riesgo" en inglés?', options: ['Risk capital', 'Venture capital', 'Danger money', 'Loan guarantee'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-246', prompt: 'What does "to think outside the box" mean?', promptEs: '¿Qué significa "to think outside the box"?', options: ['To be confused', 'To think creatively/unconventionally', 'To leave a room', 'To be outdoors'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-247', prompt: 'Complete: "Little ___ know what was about to happen."', promptEs: 'Completa: "Poco ___ saber lo que estaba a punto de suceder."', options: ['did they', 'they did', 'do they', 'they do'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-248', prompt: 'What is "plan de contingencia" in English?', promptEs: '¿Qué es "plan de contingencia" en inglés?', options: ['Emergency plan', 'Contingency plan', 'Backup strategy', 'Crisis response'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-249', prompt: 'What does the idiom "to throw in the towel" mean?', promptEs: '¿Qué significa el modismo "to throw in the towel"?', options: ['To clean up', 'To give up/admit defeat', 'To start a fight', 'To do laundry'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-250', prompt: 'Which sentence demonstrates nominalization?', promptEs: '¿Cuál oración demuestra nominalización?', options: ['They decided quickly', 'They made a quick decision', 'They were deciding fast', 'They decide with speed'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-251', prompt: 'What is "producto interior bruto" in English?', promptEs: '¿Qué es "producto interior bruto" en inglés?', options: ['Gross domestic product', 'National income', 'Economic output', 'Market value'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-252', prompt: 'What does "to play it by ear" mean?', promptEs: '¿Qué significa "to play it by ear"?', options: ['To listen carefully', 'To improvise/decide as you go', 'To play music', 'To be deaf'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-253', prompt: 'Complete: "Only then ___ understand the truth."', promptEs: 'Completa: "Solo entonces ___ entender la verdad."', options: ['she did', 'did she', 'she does', 'does she'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-254', prompt: 'What does "to step up to the plate" mean?', promptEs: '¿Qué significa "to step up to the plate"?', options: ['To play baseball', 'To take responsibility', 'To eat a meal', 'To arrive late'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-255', prompt: 'What is "alianza estratégica" in English?', promptEs: '¿Qué es "alianza estratégica" en inglés?', options: ['Strategic alliance', 'Business friendship', 'Corporate bond', 'Mutual agreement'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-256', prompt: 'What does the idiom "to be a dime a dozen" mean?', promptEs: '¿Qué significa el modismo "to be a dime a dozen"?', options: ['To be very expensive', 'To be common/not special', 'To be rare', 'To cost ten cents'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-257', prompt: 'Complete: "Under no circumstances ___ reveal the password."', promptEs: 'Completa: "Bajo ninguna circunstancia ___ revelar la contraseña."', options: ['you should', 'should you', 'you must', 'must you to'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-258', prompt: 'What is "balance general" in English?', promptEs: '¿Qué es "balance general" en inglés?', options: ['Balance sheet', 'Income statement', 'Cash flow', 'Profit report'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-259', prompt: 'What does "to get to the bottom of" mean?', promptEs: '¿Qué significa "to get to the bottom of"?', options: ['To dig a hole', 'To find the real cause', 'To fall down', 'To be last'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-260', prompt: 'Which word means "to make something happen faster"?', promptEs: '¿Qué palabra significa "hacer que algo ocurra más rápido"?', options: ['Hinder', 'Expedite', 'Delay', 'Complicate'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-261', prompt: 'What is "paradigma" in English?', promptEs: '¿Qué es "paradigma" en inglés?', options: ['Paradigm', 'Paragraph', 'Paradox', 'Parallel'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-262', prompt: 'What does the idiom "to bite the bullet" mean?', promptEs: '¿Qué significa el modismo "to bite the bullet"?', options: ['To eat metal', 'To face something unpleasant bravely', 'To be reckless', 'To avoid a problem'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-263', prompt: 'Complete: "The more you practice, ___ you become."', promptEs: 'Completa: "Cuanto más practicas, ___ te vuelves."', options: ['the better', 'the best', 'better', 'best'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-264', prompt: 'What is "comercio internacional" in English?', promptEs: '¿Qué es "comercio internacional" en inglés?', options: ['International trade', 'Foreign exchange', 'Global market', 'World commerce'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-265', prompt: 'What does "to be at a crossroads" mean?', promptEs: '¿Qué significa "to be at a crossroads"?', options: ['To be lost', 'To face an important decision', 'To be at an intersection', 'To be confused'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-266', prompt: 'Which is an example of a mixed conditional?', promptEs: '¿Cuál es un ejemplo de un condicional mixto?', options: ['If I had studied, I would pass', 'If I study, I will pass', 'If I had studied, I would have passed', 'If I study, I pass'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-267', prompt: 'What is "diferencia competitiva" in English?', promptEs: '¿Qué es "diferencia competitiva" en inglés?', options: ['Competitive differentiation', 'Market gap', 'Price advantage', 'Quality control'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-268', prompt: 'What does "to let the cat out of the bag" mean?', promptEs: '¿Qué significa "to let the cat out of the bag"?', options: ['To free an animal', 'To reveal a secret', 'To cause chaos', 'To be surprised'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-269', prompt: 'Complete: "It is essential that every student ___ the exam."', promptEs: 'Completa: "Es esencial que cada estudiante ___ el examen."', options: ['passes', 'pass', 'passed', 'passing'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-270', prompt: 'What is "acuerdo de confidencialidad" in English?', promptEs: '¿Qué es "acuerdo de confidencialidad" en inglés?', options: ['Confidentiality agreement', 'Privacy policy', 'Non-disclosure agreement', 'Secrecy contract'], correctIndex: 2, level: 'advanced' },
+  { id: 'bq-271', prompt: 'What does "to be in hot water" mean?', promptEs: '¿Qué significa "to be in hot water"?', options: ['To take a bath', 'To be in trouble', 'To be thirsty', 'To cook'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-272', prompt: 'What is "cuota de mercado" in English?', promptEs: '¿Qué es "cuota de mercado" en inglés?', options: ['Market share', 'Market price', 'Trade quota', 'Sales rate'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-273', prompt: 'Complete: "She objected ___ treated unfairly."', promptEs: 'Completa: "Ella se opuso ___ tratada injustamente."', options: ['to be', 'to being', 'being', 'on being'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-274', prompt: 'What does "to see eye to eye" mean?', promptEs: '¿Qué significa "to see eye to eye"?', options: ['To look at each other', 'To agree completely', 'To stare', 'To examine closely'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-275', prompt: 'What is "auditoría externa" in English?', promptEs: '¿Qué es "auditoría externa" en inglés?', options: ['External audit', 'Outside inspection', 'Financial review', 'Compliance check'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-276', prompt: 'What does the idiom "to miss the boat" mean?', promptEs: '¿Qué significa el modismo "to miss the boat"?', options: ['To be late for a trip', 'To miss an opportunity', 'To be seasick', 'To lose transportation'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-277', prompt: 'Complete: "Rarely ___ such a magnificent performance."', promptEs: 'Completa: "Rara vez ___ una actuación tan magnífica."', options: ['we have seen', 'have we seen', 'we saw', 'saw we'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-278', prompt: 'What is "ley antimonopolio" in English?', promptEs: '¿Qué es "ley antimonopolio" en inglés?', options: ['Anti-monopoly law', 'Competition law', 'Trade regulation', 'Market control act'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-279', prompt: 'What does "to take something with a grain of salt" mean?', promptEs: '¿Qué significa "to take something with a grain of salt"?', options: ['To eat something salty', 'To not take something too seriously', 'To add flavor', 'To be suspicious of food'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-280', prompt: 'Which sentence uses a cleft structure?', promptEs: '¿Cuál oración usa una estructura escindida?', options: ['I like pizza', 'It is pizza that I like', 'Pizza is my favorite', 'I enjoy eating pizza'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-281', prompt: 'What is "proceso de debida diligencia" in English?', promptEs: '¿Qué es "proceso de debida diligencia" en inglés?', options: ['Due diligence process', 'Careful investigation', 'Legal review', 'Background check'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-282', prompt: 'What does "to put all your eggs in one basket" mean?', promptEs: '¿Qué significa "to put all your eggs in one basket"?', options: ['To shop for groceries', 'To risk everything on one thing', 'To be organized', 'To carry many items'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-283', prompt: 'Complete: "He could hardly believe his eyes, ___?"', promptEs: 'Completa: "Apenas podía creer sus ojos, ___?"', options: ['could he', 'couldn\'t he', 'did he', 'didn\'t he'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-284', prompt: 'What is "inversión extranjera directa" in English?', promptEs: '¿Qué es "inversión extranjera directa" en inglés?', options: ['Direct foreign investment', 'Foreign direct investment', 'International funding', 'Overseas capital'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-285', prompt: 'What does "to be the tip of the iceberg" mean?', promptEs: '¿Qué significa "to be the tip of the iceberg"?', options: ['To be very cold', 'To be a small visible part of a larger problem', 'To be floating', 'To be sharp'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-286', prompt: 'Which word means "to officially confirm"?', promptEs: '¿Qué palabra significa "confirmar oficialmente"?', options: ['Ratify', 'Reject', 'Postpone', 'Debate'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-287', prompt: 'What is "depreciación acelerada" in English?', promptEs: '¿Qué es "depreciación acelerada" en inglés?', options: ['Fast depreciation', 'Accelerated depreciation', 'Quick value loss', 'Rapid decline'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-288', prompt: 'What does "to be on the same page" mean?', promptEs: '¿Qué significa "to be on the same page"?', options: ['To read together', 'To have a shared understanding', 'To write the same thing', 'To study together'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-289', prompt: 'Complete: "But for your help, I ___ finished the project."', promptEs: 'Completa: "Si no fuera por tu ayuda, yo ___ terminado el proyecto."', options: ['wouldn\'t have', 'won\'t have', 'don\'t have', 'can\'t have'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-290', prompt: 'What is "punto de equilibrio" in English?', promptEs: '¿Qué es "punto de equilibrio" en inglés?', options: ['Equilibrium point', 'Break-even point', 'Balance center', 'Stability mark'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-291', prompt: 'What does the idiom "to add insult to injury" mean?', promptEs: '¿Qué significa el modismo "to add insult to injury"?', options: ['To be rude to a patient', 'To make a bad situation worse', 'To apologize', 'To get revenge'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-292', prompt: 'Which sentence is an example of hedging?', promptEs: '¿Cuál oración es un ejemplo de hedging?', options: ['This is definitely wrong', 'This may possibly be incorrect', 'This is wrong', 'I know this is wrong'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-293', prompt: 'What is "costo de oportunidad" in English?', promptEs: '¿Qué es "costo de oportunidad" en inglés?', options: ['Opportunity cost', 'Lost profit', 'Missed chance', 'Alternative expense'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-294', prompt: 'What does "to keep your chin up" mean?', promptEs: '¿Qué significa "to keep your chin up"?', options: ['To exercise', 'To stay positive in difficulty', 'To look up', 'To be tall'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-295', prompt: 'Complete: "No sooner had she left ___ it started to rain."', promptEs: 'Completa: "Apenas había salido ___ empezó a llover."', options: ['when', 'than', 'that', 'before'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-296', prompt: 'What is "flujo de caja" in English?', promptEs: '¿Qué es "flujo de caja" en inglés?', options: ['Cash flow', 'Money stream', 'Payment flow', 'Revenue current'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-297', prompt: 'What does "to give someone the benefit of the doubt" mean?', promptEs: '¿Qué significa "to give someone the benefit of the doubt"?', options: ['To distrust someone', 'To believe someone despite uncertainty', 'To be doubtful', 'To benefit from doubt'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-298', prompt: 'What is "propiedad intelectual" in English?', promptEs: '¿Qué es "propiedad intelectual" en inglés?', options: ['Intellectual property', 'Mental ownership', 'Brain asset', 'Creative patent'], correctIndex: 0, level: 'advanced' },
+  { id: 'bq-299', prompt: 'What does "to be a game changer" mean?', promptEs: '¿Qué significa "to be a game changer"?', options: ['To play a different sport', 'To significantly change a situation', 'To cheat in a game', 'To switch teams'], correctIndex: 1, level: 'advanced' },
+  { id: 'bq-300', prompt: 'Complete: "Seldom ___ such dedication in a young employee."', promptEs: 'Completa: "Rara vez ___ tanta dedicación en un empleado joven."', options: ['we see', 'do we see', 'we saw', 'did we saw'], correctIndex: 1, level: 'advanced' },
+];
+
+// ============================================
 // ZUSTAND STORE
 // ============================================
 export const useAppStore = create<AppStoreState>()(
@@ -741,6 +1065,7 @@ export const useAppStore = create<AppStoreState>()(
       battleIsActive: false,
       battleResults: [],
       battleOpponentScore: 0,
+      battleOpponent: null,
 
       // ── Reading State ───────────────────────────
       readings: [],
@@ -813,6 +1138,10 @@ export const useAppStore = create<AppStoreState>()(
 
           // Calculate lives refill based on time elapsed since last refill
           if (userData) {
+            // Ensure energy/maxEnergy defaults
+            userData.energy = userData.energy ?? 100;
+            userData.maxEnergy = userData.maxEnergy ?? 200;
+
             const now = new Date();
             const lastRefill = new Date(userData.livesLastRefill);
             const minutesSinceRefill = (now.getTime() - lastRefill.getTime()) / 60000;
@@ -1212,6 +1541,15 @@ export const useAppStore = create<AppStoreState>()(
         syncUserToDb(user.id, { lives: updatedUser.lives });
       },
 
+      consumeEnergy: (amount) => {
+        const { user } = get();
+        if (!user) return;
+        const newEnergy = Math.max(0, (user.energy || 100) - amount);
+        const updatedUser = { ...user, energy: newEnergy };
+        set({ user: updatedUser });
+        syncUserToDb(user.id, { energy: newEnergy });
+      },
+
       refillLives: () => {
         const { user } = get();
         if (!user) return;
@@ -1361,27 +1699,57 @@ export const useAppStore = create<AppStoreState>()(
       startBattle: async () => {
         set({ isLoading: true });
         try {
-          // Try to fetch random battle questions from API
-          const res = await fetch(`${API_BASE}/battle/questions`);
-          let battleQuestions: Question[] = [];
+          const { user } = get();
+          const userLevel = user?.currentLevelId || 'basic';
 
-          if (res.ok) {
-            const data = await res.json();
-            battleQuestions = (data.questions ?? data).slice(0, 5);
+          // Determine available question levels based on user level
+          const availableLevels: string[] = ['basic'];
+          if (userLevel === 'intermediate' || userLevel === 'advanced') {
+            availableLevels.push('intermediate');
+          }
+          if (userLevel === 'advanced') {
+            availableLevels.push('advanced');
           }
 
-          // Fallback: use existing questions from the store if API fails or returns empty
-          if (battleQuestions.length === 0) {
-            const storeQuestions = get().questions;
-            if (storeQuestions.length > 0) {
-              // Shuffle and pick up to 5
-              const shuffled = [...storeQuestions].sort(() => Math.random() - 0.5);
-              battleQuestions = shuffled.slice(0, 5);
-            }
-          }
+          // Filter battle questions by available levels
+          const pool = BATTLE_QUESTIONS.filter(q => availableLevels.includes(q.level));
 
-          // Generate a random opponent score for fun
+          // Shuffle and pick 5
+          const shuffled = [...pool].sort(() => Math.random() - 0.5);
+          const selectedQuestions = shuffled.slice(0, 5);
+
+          // Create virtual opponent
+          const opponents = [
+            { name: 'María', avatar: '👩' },
+            { name: 'Carlos', avatar: '👨' },
+            { name: 'Sofía', avatar: '👧' },
+            { name: 'Diego', avatar: '🧑' },
+            { name: 'Ana', avatar: '👩‍🎓' },
+            { name: 'Pedro', avatar: '👨‍💻' },
+            { name: 'Lucía', avatar: '👩‍🏫' },
+            { name: 'Javier', avatar: '🧑‍🎓' },
+          ];
+          const opponent = opponents[Math.floor(Math.random() * opponents.length)];
           const opponentScore = Math.floor(Math.random() * 4) + 1; // 1-4
+
+          // Convert BattleQuestion to Question format for compatibility
+          const battleQuestions = selectedQuestions.map(bq => ({
+            id: bq.id,
+            lessonId: 'battle',
+            type: 'multiple_choice',
+            prompt: bq.prompt,
+            promptEs: bq.promptEs,
+            hintEn: '',
+            hintEs: '',
+            audioText: bq.prompt,
+            options: JSON.stringify(bq.options),
+            correctAnswer: bq.options[bq.correctIndex],
+            explanation: '',
+            explanationEs: '',
+            image: '',
+            points: 10,
+            order: 0,
+          }));
 
           set({
             battleQuestions,
@@ -1391,32 +1759,14 @@ export const useAppStore = create<AppStoreState>()(
             battleIsActive: true,
             battleResults: [],
             battleOpponentScore: opponentScore,
+            battleOpponent: opponent,
             currentView: 'battle',
             isLoading: false,
           });
         } catch (error) {
           console.error('Failed to start battle:', error);
-          // Fallback: try to use existing questions
-          const storeQuestions = get().questions;
-          if (storeQuestions.length > 0) {
-            const shuffled = [...storeQuestions].sort(() => Math.random() - 0.5);
-            const battleQuestions = shuffled.slice(0, 5);
-            const opponentScore = Math.floor(Math.random() * 4) + 1;
-            set({
-              battleQuestions,
-              battleCurrentIndex: 0,
-              battleScore: 0,
-              battleTimeLeft: 30,
-              battleIsActive: true,
-              battleResults: [],
-              battleOpponentScore: opponentScore,
-              currentView: 'battle',
-              isLoading: false,
-            });
-          } else {
-            set({ isLoading: false });
-            get().setNotification({ type: 'error', message: 'No questions available for battle. Complete some lessons first!' });
-          }
+          set({ isLoading: false });
+          get().setNotification({ type: 'error', message: 'Error al iniciar la batalla' });
         }
       },
 
@@ -1518,6 +1868,7 @@ export const useAppStore = create<AppStoreState>()(
           battleIsActive: false,
           battleResults: [],
           battleOpponentScore: 0,
+          battleOpponent: null,
         });
       },
 
@@ -1629,35 +1980,36 @@ export const useAppStore = create<AppStoreState>()(
         get().setNotification({ type: 'success', message: '¡Lectura comprada!' });
       },
 
-      buyReadingPack: (level, count) => {
+      buyReadingPack: (level, _count) => {
+        // Now buys ONE reading at a time (count param ignored for single purchase)
         const { user, purchasedReadings } = get();
         if (!user) return;
-        // Pricing: basic: 1=1000, 3=2800, 5=4000; intermediate: 1=1500, 3=4000, 5=6500; advanced: 1=2000, 3=5000, 5=8000
-        const prices: Record<string, Record<number, number>> = {
-          basic: { 1: 1000, 3: 2800, 5: 4000 },
-          intermediate: { 1: 1500, 3: 4000, 5: 6500 },
-          advanced: { 1: 2000, 3: 5000, 5: 8000 },
+        // Price per single reading by level
+        const pricePerLevel: Record<string, number> = {
+          basic: 1000,
+          intermediate: 1500,
+          advanced: 2000,
         };
-        const cost = prices[level]?.[count];
+        const cost = pricePerLevel[level];
         if (!cost) return;
         if (user.coins < cost) {
           get().setNotification({ type: 'error', message: `¡Necesitas ${cost} monedas!` });
           return;
         }
-        // Find unpurchased readings of this level
+        // Find first unpurchased reading of this level (excluding the free first one)
         const readings = get().readings;
         const available = readings.filter(r => r.level === level && !purchasedReadings.includes(r.id) && !isFirstInLevel(r.id, level));
-        const toBuy = available.slice(0, count);
-        if (toBuy.length === 0) {
+        if (available.length === 0) {
           get().setNotification({ type: 'error', message: 'Ya tienes todas las lecturas de este nivel.' });
           return;
         }
+        const toBuy = available[0]; // Just buy the first unpurchased one
         const updatedUser = { ...user, coins: user.coins - cost };
-        const updatedPurchased = [...purchasedReadings, ...toBuy.map(r => r.id)];
+        const updatedPurchased = [...purchasedReadings, toBuy.id];
         set({ user: updatedUser, purchasedReadings: updatedPurchased });
         syncUserToDb(user.id, { coins: updatedUser.coins });
         get().playSound('reward');
-        get().setNotification({ type: 'success', message: `¡${toBuy.length} lecturas compradas!` });
+        get().setNotification({ type: 'success', message: `¡Lectura "${toBuy.title}" comprada!` });
       },
 
       isReadingUnlocked: (readingId) => {
@@ -1680,7 +2032,7 @@ export const useAppStore = create<AppStoreState>()(
           get().setNotification({ type: 'error', message: `¡Necesitas ${cost} monedas!` });
           return;
         }
-        const updatedUser = { ...user, coins: user.coins - cost, lives: Math.min(user.lives + amount, user.maxLives) };
+        const updatedUser = { ...user, coins: user.coins - cost, lives: Math.min(user.lives + amount, 20) };
         set({ user: updatedUser });
         syncUserToDb(user.id, { coins: updatedUser.coins, lives: updatedUser.lives });
         get().playSound('reward');
@@ -1694,12 +2046,12 @@ export const useAppStore = create<AppStoreState>()(
           get().setNotification({ type: 'error', message: '¡Necesitas 500 monedas para energía!' });
           return;
         }
-        // Energy gives +1 life as proxy (since there's no separate energy field)
-        const updatedUser = { ...user, coins: user.coins - 500, lives: Math.min(user.lives + 1, user.maxLives) };
+        const maxE = user.maxEnergy || 200;
+        const updatedUser = { ...user, coins: user.coins - 500, energy: maxE, maxEnergy: maxE };
         set({ user: updatedUser });
-        syncUserToDb(user.id, { coins: updatedUser.coins, lives: updatedUser.lives });
+        syncUserToDb(user.id, { coins: updatedUser.coins, energy: updatedUser.energy });
         get().playSound('reward');
-        get().setNotification({ type: 'success', message: '¡Energía recargada!' });
+        get().setNotification({ type: 'success', message: '¡Energía recargada! ⚡' });
       },
 
       buyCoinPack: (amount) => {
@@ -1718,6 +2070,23 @@ export const useAppStore = create<AppStoreState>()(
       },
 
       activateMiniGame: (gameType) => {
+        const { user, sessionStartTime, miniGameCompleted } = get();
+        // Admin can open anytime
+        if (user?.role === 'admin') {
+          set({ showMiniGame: true, miniGameType: gameType });
+          return;
+        }
+        // Regular users: only when timer has completed and haven't used this round
+        if (!sessionStartTime || miniGameCompleted) {
+          get().setNotification({ type: 'error', message: '¡Debes esperar a que el reloj llegue a cero!' });
+          return;
+        }
+        const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+        if (elapsed < 15 * 60) {
+          const remaining = Math.ceil((15 * 60 - elapsed) / 60);
+          get().setNotification({ type: 'error', message: `¡Debes esperar ${remaining} minutos más!` });
+          return;
+        }
         set({ showMiniGame: true, miniGameType: gameType });
       },
 

@@ -221,6 +221,12 @@ function Header() {
               <span className="text-sm font-bold text-orange-400">{user.streak}</span>
             </div>
 
+            {/* Energy */}
+            <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+              <span className="text-sm">⚡</span>
+              <span className="text-sm font-bold text-cyan-400">{user.energy ?? 100}</span>
+            </div>
+
             {/* Lives */}
             <div className={`flex items-center gap-1 px-3 py-1.5 rounded-xl border ${
               hasInfiniteLives 
@@ -240,7 +246,7 @@ function Header() {
 
             {/* XP */}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-              <Icons.zap size={14} className="text-emerald-400" />
+              <span className="text-[10px] font-black text-emerald-400">XP</span>
               <span className="text-sm font-bold text-emerald-400">{user.xp}</span>
               <div className="w-16 h-1.5 bg-secondary rounded-full overflow-hidden hidden sm:block">
                 <div className="xp-bar h-full rounded-full" style={{ width: `${Math.min(xpProgress, 100)}%` }} />
@@ -478,6 +484,7 @@ function Dashboard() {
       {/* Mini Juegos */}
       <div className="mt-6">
         <h3 className="text-lg font-bold mb-3 flex items-center gap-2">🎮 Mini Juegos</h3>
+        <p className="text-xs text-muted-foreground mb-3">Espera a que el reloj llegue a cero para jugar</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { icon: '🎁', label: 'Cajas Sorpresa', gameType: 'boxes' },
@@ -493,10 +500,13 @@ function Dashboard() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => useAppStore.getState().activateMiniGame(game.gameType)}
-              className="glass rounded-xl p-4 text-center hover:bg-secondary/50 transition-colors border border-cyan-500/10"
+              className="glass rounded-xl p-4 text-center hover:bg-secondary/50 transition-colors border border-cyan-500/10 relative"
             >
               <span className="text-2xl">{game.icon}</span>
               <p className="text-xs font-medium mt-2 text-cyan-400">{game.label}</p>
+              {user?.role !== 'admin' && (
+                <span className="absolute top-1 right-1 text-[10px]">⏰</span>
+              )}
             </motion.button>
           ))}
         </div>
@@ -2407,9 +2417,9 @@ function ShopView() {
   ]
 
   const readingPacks = [
-    { level: 'basic', label: 'Básico (4 lecturas)', icon: '🌱', cost: 1600, count: 4 },
-    { level: 'intermediate', label: 'Intermedio (4 lecturas)', icon: '🔥', cost: 1800, count: 4 },
-    { level: 'advanced', label: 'Avanzado (4 lecturas)', icon: '🧠', cost: 2000, count: 4 },
+    { level: 'basic', label: 'Lectura Básico', icon: '🌱', cost: 1000 },
+    { level: 'intermediate', label: 'Lectura Intermedio', icon: '🔥', cost: 1500 },
+    { level: 'advanced', label: 'Lectura Avanzado', icon: '🧠', cost: 2000 },
   ]
 
   return (
@@ -2668,46 +2678,54 @@ function ShopView() {
         <div className="space-y-3">
           <div className="text-center mb-4">
             <span className="text-4xl">📖</span>
-            <p className="text-sm text-muted-foreground mt-2">Compra paquetes de lecturas por nivel</p>
+            <p className="text-sm text-muted-foreground mt-2">Compra lecturas individuales por nivel</p>
             <p className="text-xs text-muted-foreground">La primera de cada nivel es gratis</p>
           </div>
           <div className="space-y-3">
             {readingPacks.map((pack, i) => {
-              const canAfford = (user?.coins || 0) >= pack.cost
+              const purchasedReadings = useAppStore.getState().purchasedReadings;
+              const readings = useAppStore.getState().readings;
+              const levelReadings = readings.filter(r => r.level === pack.level);
+              const purchased = levelReadings.filter(r => purchasedReadings.includes(r.id) || levelReadings.indexOf(r) === 0).length;
+              const remaining = levelReadings.length - purchased;
+              const canAfford = (user?.coins || 0) >= pack.cost;
               const levelColors: Record<string, string> = {
                 basic: 'border-emerald-500/30 bg-emerald-500/5',
                 intermediate: 'border-orange-500/30 bg-orange-500/5',
                 advanced: 'border-purple-500/30 bg-purple-500/5',
-              }
+              };
               const levelText: Record<string, string> = {
                 basic: 'text-emerald-400',
                 intermediate: 'text-orange-400',
                 advanced: 'text-purple-400',
-              }
+              };
               return (
                 <motion.button
                   key={i}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  whileHover={canAfford ? { scale: 1.02 } : {}}
-                  whileTap={canAfford ? { scale: 0.98 } : {}}
-                  onClick={() => { buyReadingPack(pack.level, pack.count); playSound('reward'); setSuccessMsg(`¡Paquete ${pack.label} desbloqueado!`) }}
-                  disabled={!canAfford}
+                  whileHover={canAfford && remaining > 0 ? { scale: 1.02 } : {}}
+                  whileTap={canAfford && remaining > 0 ? { scale: 0.98 } : {}}
+                  onClick={() => { if (remaining > 0) { buyReadingPack(pack.level, 1); playSound('reward'); setSuccessMsg(`¡Lectura ${pack.label} comprada!`) } }}
+                  disabled={!canAfford || remaining <= 0}
                   className={`w-full p-4 rounded-xl border text-left disabled:opacity-40 disabled:cursor-not-allowed ${levelColors[pack.level]}`}
                 >
                   <div className="flex items-center gap-4">
                     <span className="text-3xl">{pack.icon}</span>
                     <div className="flex-1">
                       <p className={`font-bold ${levelText[pack.level]}`}>{pack.label}</p>
-                      <p className="text-xs text-muted-foreground">{pack.count} lecturas adicionales</p>
+                      <p className="text-xs text-muted-foreground">{purchased}/{levelReadings.length} lecturas desbloqueadas</p>
+                      <p className="text-xs text-muted-foreground">{remaining > 0 ? `${remaining} disponibles` : '¡Todas compradas! ✅'}</p>
                     </div>
-                    <div className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-xs font-bold">
-                      {pack.cost} 🪙
-                    </div>
+                    {remaining > 0 && (
+                      <div className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-xs font-bold">
+                        {pack.cost} 🪙
+                      </div>
+                    )}
                   </div>
                 </motion.button>
-              )
+              );
             })}
           </div>
         </div>
@@ -3091,6 +3109,7 @@ function BattleView() {
   const battleTimeLeft = useAppStore((s) => s.battleTimeLeft)
   const battleIsActive = useAppStore((s) => s.battleIsActive)
   const battleOpponentScore = useAppStore((s) => s.battleOpponentScore)
+  const battleOpponent = useAppStore((s) => s.battleOpponent)
   const startBattle = useAppStore((s) => s.startBattle)
   const answerBattleQuestion = useAppStore((s) => s.answerBattleQuestion)
   const nextBattleQuestion = useAppStore((s) => s.nextBattleQuestion)
@@ -3146,6 +3165,7 @@ function BattleView() {
   // Battle complete
   if (battleQuestions.length > 0 && battleCurrentIndex >= battleQuestions.length) {
     const won = battleScore > battleOpponentScore
+    const tied = battleScore === battleOpponentScore
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 text-center">
         <motion.div
@@ -3153,21 +3173,48 @@ function BattleView() {
           animate={{ scale: 1, opacity: 1 }}
           className="glass rounded-2xl p-8"
         >
-          <span className="text-6xl block mb-4">{won ? '🏆' : '😅'}</span>
-          <h2 className="text-3xl font-black mb-2">{won ? '¡Victoria!' : '¡Buena Batalla!'}</h2>
+          {/* Fun result animation */}
+          <motion.div
+            animate={{ rotate: won ? [0, -10, 10, -10, 0] : [0, 0], scale: won ? [1, 1.2, 1] : [1, 0.9, 1] }}
+            transition={{ duration: 0.5 }}
+          >
+            <span className="text-7xl block mb-4">{won ? '🏆' : tied ? '🤝' : '😅'}</span>
+          </motion.div>
+          
+          <h2 className="text-3xl font-black mb-2">
+            {won ? '¡VICTORIA!' : tied ? '¡EMPATE!' : '¡BUENA BATALLA!'}
+          </h2>
           <p className="text-muted-foreground mb-6">
-            {won ? '¡Derrotaste a tu oponente!' : 'Tu oponente fue más rápido esta vez'}
+            {won ? '¡Derrotaste a tu oponente! Eres increíble 🎉' : tied ? '¡Quedaron iguales! Intenta de nuevo 💪' : 'Tu oponente fue más rápido esta vez 😢'}
           </p>
-          <div className="flex justify-center gap-8 mb-6">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-emerald-400">{battleScore}</p>
-              <p className="text-xs text-muted-foreground">Tu puntaje</p>
+          
+          {/* VS Result */}
+          <div className="flex items-center justify-center gap-6 mb-6">
+            <div className={`text-center p-4 rounded-xl ${won ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-secondary border border-border'}`}>
+              <div className="text-3xl mb-2">{user?.avatar || '🎯'}</div>
+              <p className="text-sm font-bold">{user?.name}</p>
+              <p className="text-3xl font-black text-emerald-400">{battleScore}</p>
+              <p className="text-[10px] text-muted-foreground">correctas</p>
             </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-red-400">{battleOpponentScore}</p>
-              <p className="text-xs text-muted-foreground">Oponente</p>
+            <div className="text-2xl font-black text-muted-foreground">VS</div>
+            <div className={`text-center p-4 rounded-xl ${!won ? 'bg-red-500/10 border border-red-500/30' : 'bg-secondary border border-border'}`}>
+              <div className="text-3xl mb-2">{battleOpponent?.avatar || '🤖'}</div>
+              <p className="text-sm font-bold">{battleOpponent?.name || 'Oponente'}</p>
+              <p className="text-3xl font-black text-red-400">{battleOpponentScore}</p>
+              <p className="text-[10px] text-muted-foreground">correctas</p>
             </div>
           </div>
+          
+          {/* Fun message based on score */}
+          <p className="text-sm text-muted-foreground mb-4">
+            {battleScore === 5 ? '🌟 ¡PERFECTO! ¡5 de 5! ¡Eres un maestro!' : 
+             battleScore === 4 ? '🔥 ¡Casi perfecto! ¡Muy bien!' :
+             battleScore === 3 ? '👍 ¡Buen trabajo! Puedes mejorar' :
+             battleScore === 2 ? '💪 ¡Sigue practicando!' :
+             battleScore === 1 ? '📚 ¡Estudia más y vuelve!' :
+             '😅 ¡No te rindas! La práctica hace al maestro'}
+          </p>
+          
           <div className="flex gap-3 justify-center">
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -3203,8 +3250,28 @@ function BattleView() {
           <span className="text-6xl block mb-4">⚔️</span>
           <h2 className="text-3xl font-black mb-2">¡Batalla de Inglés!</h2>
           <p className="text-muted-foreground mb-6">
-            Responde 5 preguntas lo más rápido posible. ¡Compite contra un oponente virtual!
+            Responde 5 preguntas de selección lo más rápido posible. ¡Compite contra un oponente virtual!
           </p>
+          
+          {/* VS Display */}
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center text-3xl mx-auto mb-2">
+                {user?.avatar || '🎯'}
+              </div>
+              <p className="text-sm font-bold text-emerald-400">{user?.name || 'Tú'}</p>
+              <p className="text-[10px] text-muted-foreground">Nivel {user?.currentLevelId === 'advanced' ? 'Avanzado' : user?.currentLevelId === 'intermediate' ? 'Intermedio' : 'Básico'}</p>
+            </div>
+            <div className="text-3xl font-black text-red-400">VS</div>
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500/40 flex items-center justify-center text-3xl mx-auto mb-2">
+                🤖
+              </div>
+              <p className="text-sm font-bold text-red-400">Oponente</p>
+              <p className="text-[10px] text-muted-foreground">Virtual</p>
+            </div>
+          </div>
+          
           <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
               <p className="text-2xl font-bold text-emerald-400">5</p>
@@ -3226,7 +3293,7 @@ function BattleView() {
             disabled={isStarting}
             className="px-8 py-4 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold text-lg shadow-lg shadow-red-500/25"
           >
-            {isStarting ? '⏳ Cargando...' : '⚔️ ¡A Batalla!'}
+            {isStarting ? '⏳ Buscando oponente...' : '⚔️ ¡A Batalla!'}
           </motion.button>
         </motion.div>
       </div>
@@ -3241,16 +3308,27 @@ function BattleView() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4">
-      {/* Battle header */}
+      {/* Battle header with VS */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-emerald-400">🟢 {battleScore}</span>
+          <span className="text-2xl">{user?.avatar || '🎯'}</span>
+          <div>
+            <p className="text-xs text-muted-foreground">{user?.name}</p>
+            <span className="text-lg font-bold text-emerald-400">{battleScore}</span>
+          </div>
         </div>
         <div className="text-center">
-          <span className="text-xs text-muted-foreground">Pregunta {battleCurrentIndex + 1}/{battleQuestions.length}</span>
+          <span className="text-xs text-muted-foreground font-bold">⚔️ VS</span>
+          <div>
+            <span className="text-[10px] text-muted-foreground">Pregunta {battleCurrentIndex + 1}/{battleQuestions.length}</span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-red-400">{battleOpponentScore} 🔴</span>
+          <div className="text-right">
+            <p className="text-xs text-muted-foreground">{battleOpponent?.name || 'Oponente'}</p>
+            <span className="text-lg font-bold text-red-400">{battleOpponentScore}</span>
+          </div>
+          <span className="text-2xl">{battleOpponent?.avatar || '🤖'}</span>
         </div>
       </div>
 
@@ -3830,7 +3908,7 @@ function MiniGameBoxes() {
     const prizeOptions = [
       { isDog: false, prize: 'Vidas', amount: 5 },
       { isDog: false, prize: 'Monedas', amount: 1000 },
-      { isDog: false, prize: 'Monedas', amount: 500 },
+      { isDog: false, prize: 'Energía', amount: 100 },
       { isDog: true, prize: 'Perro Bravo', amount: 0 },
       { isDog: true, prize: 'Perro Bravo', amount: 0 },
       { isDog: true, prize: 'Perro Bravo', amount: 0 },
@@ -3865,7 +3943,20 @@ function MiniGameBoxes() {
       if (prize.prize === 'Vidas') {
         if (!livesUsed.current) {
           livesUsed.current = true
-          useAppStore.getState().buyLives(prize.amount)
+          // Free lives from mini game - add directly without deducting coins
+          const { user } = useAppStore.getState()
+          if (user) {
+            const updatedUser = { ...user, lives: Math.min(user.lives + prize.amount, 20) }
+            useAppStore.setState({ user: updatedUser })
+            useAppStore.getState().playSound('reward')
+          }
+        }
+      }
+      if (prize.prize === 'Energía') {
+        const { user } = useAppStore.getState()
+        if (user) {
+          const updatedUser = { ...user, energy: Math.min((user.energy || 100) + prize.amount, user.maxEnergy || 200) }
+          useAppStore.setState({ user: updatedUser })
         }
       }
     }
@@ -3901,7 +3992,7 @@ function MiniGameBoxes() {
               }`}
             >
               {box.opened ? (
-                box.isDog ? '🐕' : box.prize === 'Vidas' ? '❤️' : '🪙'
+                box.isDog ? '🐕' : box.prize === 'Vidas' ? '❤️' : box.prize === 'Energía' ? '⚡' : '🪙'
               ) : (
                 <motion.span
                   animate={{ rotate: [0, -5, 5, -5, 0] }}
@@ -3933,7 +4024,7 @@ function MiniGameBoxes() {
             )}
             <motion.button
               whileTap={{ scale: 0.95 }}
-              onClick={closeMiniGame}
+              onClick={() => { closeMiniGame(); useAppStore.getState().startSessionTimer() }}
               className="px-6 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold text-sm"
             >
               Cerrar
@@ -4030,7 +4121,7 @@ function MiniGameWheel() {
         {result && <p className="text-sm mb-3 font-medium">{result}</p>}
         <motion.button
           whileTap={{ scale: 0.95 }}
-          onClick={result ? closeMiniGame : handleSpin}
+          onClick={result ? () => { closeMiniGame(); useAppStore.getState().startSessionTimer() } : handleSpin}
           disabled={spinning}
           className="px-8 py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-amber-500 text-white font-bold disabled:opacity-50"
         >
@@ -4166,7 +4257,7 @@ function MiniGameMemory() {
             <p className="text-sm text-emerald-400 mb-2">🎉 ¡Completado en {moves} movimientos! +50 XP +300 monedas</p>
             <motion.button
               whileTap={{ scale: 0.95 }}
-              onClick={closeMiniGame}
+              onClick={() => { closeMiniGame(); useAppStore.getState().startSessionTimer() }}
               className="px-6 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold text-sm"
             >
               Cerrar
@@ -4309,7 +4400,7 @@ function MiniGameTrivia() {
             <p className="text-sm text-emerald-400 mb-4">+{score * 15} XP +{score * 100} monedas</p>
             <motion.button
               whileTap={{ scale: 0.95 }}
-              onClick={closeMiniGame}
+              onClick={() => { closeMiniGame(); useAppStore.getState().startSessionTimer() }}
               className="px-6 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold text-sm"
             >
               Cerrar

@@ -28,6 +28,8 @@ model User {
   lives           Int       @default(5)
   maxLives        Int       @default(5)
   livesLastRefill DateTime  @default(now())
+  energy          Int       @default(100)
+  maxEnergy       Int       @default(200)
   streak          Int       @default(0)
   longestStreak   Int       @default(0)
   lastActiveDate  String    @default("") // YYYY-MM-DD
