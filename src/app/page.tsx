@@ -3767,7 +3767,7 @@ function BattleView() {
               <p className="text-xs text-muted-foreground">Preguntas</p>
             </div>
             <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/20">
-              <p className="text-xl sm:text-2xl font-bold text-orange-400">30s</p>
+              <p className="text-xl sm:text-2xl font-bold text-orange-400">10s</p>
               <p className="text-xs text-muted-foreground">Por pregunta</p>
             </div>
             <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
@@ -4511,9 +4511,7 @@ function SessionTimer() {
               </svg>
               <span className="text-[8px]">⏱️</span>
             </div>
-            <p className={`text-[10px] font-bold ${isUrgent ? 'text-red-400' : 'text-cyan-400'}`}>
-              {minutes}:{seconds.toString().padStart(2, '0')}
-            </p>
+
           </motion.div>
         </div>
       )}
