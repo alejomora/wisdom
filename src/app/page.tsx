@@ -4455,14 +4455,23 @@ function ReadingsView() {
 // ============================================
 // SESSION TIMER
 // ============================================
+const MINI_GAME_TYPES = ['boxes', 'wheel', 'memory', 'trivia']
+
 function SessionTimer() {
   const sessionStartTime = useAppStore((s) => s.sessionStartTime)
   const showMiniGame = useAppStore((s) => s.showMiniGame)
+  const miniGameCompleted = useAppStore((s) => s.miniGameCompleted)
   const activateMiniGame = useAppStore((s) => s.activateMiniGame)
+  const playSound = useAppStore((s) => s.playSound)
   const currentView = useAppStore((s) => s.currentView)
   const [timeLeft, setTimeLeft] = useState(15 * 60)
-  const [timerComplete, setTimerComplete] = useState(false)
-  const [showPlayNotification, setShowPlayNotification] = useState(false)
+  const soundPlayedRef = useRef(false)
+  const [dismissedSessionStart, setDismissedSessionStart] = useState<number>(0)
+
+  // Derived state: timer is complete when time reaches 0
+  const timerComplete = timeLeft <= 0 && !!sessionStartTime
+  // Show notification only if timer is complete, game not played this cycle, and not dismissed for this session
+  const showPlayNotification = timerComplete && !miniGameCompleted && sessionStartTime !== dismissedSessionStart
 
   useEffect(() => {
     if (!sessionStartTime || showMiniGame) return
@@ -4471,21 +4480,35 @@ function SessionTimer() {
       const remaining = Math.max(0, 15 * 60 - elapsed)
       setTimeLeft(remaining)
       if (remaining <= 0) {
-        setTimerComplete(true)
-        setShowPlayNotification(true)
+        // Play sound notification once when timer completes
+        if (!miniGameCompleted && !soundPlayedRef.current) {
+          soundPlayedRef.current = true
+          playSound('reward')
+        }
         clearInterval(interval)
       }
     }, 1000)
     return () => clearInterval(interval)
-  }, [sessionStartTime, showMiniGame])
+  }, [sessionStartTime, showMiniGame, miniGameCompleted, playSound])
+
+  // Reset sound flag when a new session starts
+  useEffect(() => {
+    if (sessionStartTime) {
+      soundPlayedRef.current = false
+    }
+  }, [sessionStartTime])
 
   // Don't show timer during exercise view
   if (!sessionStartTime || showMiniGame || currentView === 'exercise') return null
 
-  const minutes = Math.floor(timeLeft / 60)
-  const seconds = timeLeft % 60
   const progress = ((15 * 60 - timeLeft) / (15 * 60)) * 100
   const isUrgent = timeLeft <= 60 && !timerComplete
+
+  const handleRandomMiniGame = () => {
+    const randomGame = MINI_GAME_TYPES[Math.floor(Math.random() * MINI_GAME_TYPES.length)]
+    activateMiniGame(randomGame)
+    setDismissedSessionStart(sessionStartTime || 0)
+  }
 
   return (
     <>
@@ -4517,7 +4540,7 @@ function SessionTimer() {
       )}
 
       {/* Play notification popup when timer completes */}
-      {showPlayNotification && (
+      {showPlayNotification && !miniGameCompleted && (
         <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 sm:bottom-20">
           <motion.div
             initial={{ y: 60, opacity: 0, scale: 0.9 }}
@@ -4539,13 +4562,13 @@ function SessionTimer() {
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={() => { activateMiniGame('boxes'); setShowPlayNotification(false) }}
+              onClick={handleRandomMiniGame}
               className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-[10px] font-bold shadow-md shadow-yellow-500/30 flex-shrink-0"
             >
               🎮 Jugar
             </motion.button>
             <button
-              onClick={() => setShowPlayNotification(false)}
+              onClick={() => setDismissedSessionStart(sessionStartTime || 0)}
               className="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground"
             >
               <Icons.x size={14} />
@@ -4643,6 +4666,13 @@ function MiniGameBoxes() {
         animate={{ scale: 1, opacity: 1 }}
         className="glass rounded-3xl p-4 sm:p-6 w-full max-w-sm relative overflow-hidden"
       >
+        {/* Close button */}
+        <button
+          onClick={() => { closeMiniGame(); useAppStore.getState().startSessionTimer() }}
+          className="absolute top-3 right-3 z-20 p-1.5 rounded-full bg-secondary/80 hover:bg-secondary border border-border/50 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Icons.x size={16} />
+        </button>
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-amber-500/5 pointer-events-none" />
         <div className="absolute top-0 left-0 w-20 h-20 bg-yellow-500/5 rounded-full -translate-x-1/2 -translate-y-1/2" />
@@ -4826,6 +4856,13 @@ function MiniGameWheel() {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/90">
       <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-3xl p-4 sm:p-6 w-full max-w-sm text-center relative overflow-hidden">
+        {/* Close button */}
+        <button
+          onClick={() => { closeMiniGame(); useAppStore.getState().startSessionTimer() }}
+          className="absolute top-3 right-3 z-20 p-1.5 rounded-full bg-secondary/80 hover:bg-secondary border border-border/50 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Icons.x size={16} />
+        </button>
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 pointer-events-none" />
         
@@ -5039,6 +5076,13 @@ function MiniGameMemory() {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/90">
       <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-3xl p-4 sm:p-6 w-full max-w-sm relative overflow-hidden">
+        {/* Close button */}
+        <button
+          onClick={() => { closeMiniGame(); useAppStore.getState().startSessionTimer() }}
+          className="absolute top-3 right-3 z-20 p-1.5 rounded-full bg-secondary/80 hover:bg-secondary border border-border/50 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Icons.x size={16} />
+        </button>
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-cyan-500/5 pointer-events-none" />
 
@@ -5217,6 +5261,13 @@ function MiniGameTrivia() {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/90">
       <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="glass rounded-3xl p-4 sm:p-6 w-full max-w-sm relative overflow-hidden">
+        {/* Close button */}
+        <button
+          onClick={() => { closeMiniGame(); useAppStore.getState().startSessionTimer() }}
+          className="absolute top-3 right-3 z-20 p-1.5 rounded-full bg-secondary/80 hover:bg-secondary border border-border/50 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Icons.x size={16} />
+        </button>
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-emerald-500/5 pointer-events-none" />
 

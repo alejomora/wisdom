@@ -2609,7 +2609,9 @@ export const useAppStore = create<AppStoreState>()(
       },
 
       closeMiniGame: () => {
-        set({ showMiniGame: false, miniGameType: '', miniGameCompleted: true, sessionStartTime: 0 });
+        set({ showMiniGame: false, miniGameType: '', miniGameCompleted: true });
+        // Start a new 15-minute timer cycle so the user has to wait again
+        set({ sessionStartTime: Date.now() });
       },
 
       setShowConfetti: (val) => set({ showConfetti: val }),
