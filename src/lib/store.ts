@@ -1311,11 +1311,12 @@ export const useAppStore = create<AppStoreState>()(
           ],
         });
 
-        // Play sound
+        // Play sound & lose life on wrong answer
         if (isCorrect) {
           get().playSound('correct');
         } else {
           get().playSound('wrong');
+          get().loseLife();
         }
       },
 

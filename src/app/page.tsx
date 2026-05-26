@@ -1084,6 +1084,8 @@ function ExerciseView() {
   const [showHint, setShowHint] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [recognitionResult, setRecognitionResult] = useState('')
+  const matchConceptsState = useRef<{ questionId: string; selectedLeft: string | null; matches: Record<string, string> } | null>(null)
+  const [matchConceptsKey, setMatchConceptsKey] = useState(0)
 
   // Reset exercise state when question changes (using useMemo for derived state)
   const shuffledItems = React.useMemo(() => {
@@ -1102,6 +1104,7 @@ function ExerciseView() {
     setInputAnswer('')
     setShowHint(false)
     setRecognitionResult('')
+    matchConceptsState.current = null
   }, [currentQuestionIndex])
 
   const handleAnswer = useCallback((answer: string) => {
@@ -1574,9 +1577,163 @@ function ExerciseView() {
           </div>
         )
 
-      case 'choose_image':
-      case 'match_concepts':
-      default:
+      case 'match_concepts': {
+        // Parse options like "A-Apple" into left/right pairs
+        const options = parseQuestionOptions(q.options)
+        const pairs = options.map(opt => {
+          const sepIndex = opt.indexOf('-')
+          return { left: sepIndex >= 0 ? opt.substring(0, sepIndex) : opt, right: sepIndex >= 0 ? opt.substring(sepIndex + 1) : opt }
+        })
+        const leftItems = pairs.map(p => p.left)
+        const rightItems = [...pairs.map(p => p.right)].sort(() => Math.random() - 0.5)
+
+        // We use a ref for match selections to persist across re-renders of the same question
+        // Initialize match state
+        if (!matchConceptsState.current || matchConceptsState.current.questionId !== q.id) {
+          matchConceptsState.current = {
+            questionId: q.id,
+            selectedLeft: null as string | null,
+            matches: {} as Record<string, string>,
+          }
+        }
+        const mState = matchConceptsState.current
+
+        // Handle left item click
+        const handleLeftClick = (left: string) => {
+          if (showResult) return
+          mState.selectedLeft = left
+          // Force re-render by updating a dummy state
+          setMatchConceptsKey(prev => prev + 1)
+        }
+
+        // Handle right item click
+        const handleRightClick = (right: string) => {
+          if (showResult || !mState.selectedLeft) return
+          // Remove any existing match for this right item
+          Object.keys(mState.matches).forEach(key => {
+            if (mState.matches[key] === right) delete mState.matches[key]
+          })
+          mState.matches[mState.selectedLeft] = right
+          mState.selectedLeft = null
+          setMatchConceptsKey(prev => prev + 1)
+
+          // Check if all matched
+          const allNowMatched = leftItems.every(left => mState.matches[left])
+          if (allNowMatched) {
+            // Build answer string in correct order matching correctAnswer format
+            const answerParts = leftItems.map(left => mState.matches[left])
+            handleAnswer(answerParts.join(' '))
+          }
+        }
+
+        // Get matched right for a left item
+        const getMatchedRight = (left: string) => mState.matches[left] || null
+        // Get matched left for a right item
+        const getMatchedLeft = (right: string) => {
+          const found = Object.entries(mState.matches).find(([, v]) => v === right)
+          return found ? found[0] : null
+        }
+
+        return (
+          <div className="space-y-4">
+            <p className="text-xs text-muted-foreground text-center">Toca un elemento de la izquierda y luego su par de la derecha</p>
+            <div className="flex gap-3">
+              {/* Left column */}
+              <div className="flex-1 space-y-2">
+                {leftItems.map((left) => {
+                  const isSelected = mState.selectedLeft === left
+                  const matchedRight = getMatchedRight(left)
+                  const isMatched = !!matchedRight
+                  return (
+                    <motion.button
+                      key={left}
+                      whileHover={!showResult && !isMatched ? { scale: 1.03 } : {}}
+                      whileTap={!showResult && !isMatched ? { scale: 0.97 } : {}}
+                      onClick={() => !isMatched && handleLeftClick(left)}
+                      disabled={showResult}
+                      className={`w-full p-3 rounded-xl text-center font-medium text-sm transition-all ${
+                        showResult
+                          ? isMatched && pairs.find(p => p.left === left && p.right === matchedRight)
+                            ? 'bg-emerald-500/20 border-2 border-emerald-500/50 text-emerald-400'
+                            : 'bg-red-500/20 border-2 border-red-500/50 text-red-400'
+                          : isSelected
+                            ? 'bg-cyan-500/20 border-2 border-cyan-500/50 text-cyan-400 shadow-lg shadow-cyan-500/20'
+                            : isMatched
+                              ? 'bg-purple-500/15 border-2 border-purple-500/30 text-purple-300'
+                              : 'glass border border-border hover:border-cyan-500/30'
+                      }`}
+                    >
+                      <div>{left}</div>
+                      {isMatched && !showResult && (
+                        <div className="text-[10px] mt-1 opacity-70">↔ {matchedRight}</div>
+                      )}
+                    </motion.button>
+                  )
+                })}
+              </div>
+
+              {/* Right column */}
+              <div className="flex-1 space-y-2">
+                {rightItems.map((right) => {
+                  const matchedLeft = getMatchedLeft(right)
+                  const isMatched = !!matchedLeft
+                  const isCorrectPair = matchedLeft && pairs.find(p => p.left === matchedLeft && p.right === right)
+                  return (
+                    <motion.button
+                      key={right}
+                      whileHover={!showResult && !isMatched && mState.selectedLeft ? { scale: 1.03 } : {}}
+                      whileTap={!showResult && !isMatched && mState.selectedLeft ? { scale: 0.97 } : {}}
+                      onClick={() => handleRightClick(right)}
+                      disabled={showResult || isMatched || !mState.selectedLeft}
+                      className={`w-full p-3 rounded-xl text-center font-medium text-sm transition-all ${
+                        showResult
+                          ? isCorrectPair
+                            ? 'bg-emerald-500/20 border-2 border-emerald-500/50 text-emerald-400'
+                            : isMatched
+                              ? 'bg-red-500/20 border-2 border-red-500/50 text-red-400'
+                              : 'glass border border-border opacity-50'
+                          : isMatched
+                            ? 'bg-purple-500/15 border-2 border-purple-500/30 text-purple-300'
+                            : mState.selectedLeft
+                              ? 'glass border border-cyan-500/30 hover:bg-cyan-500/10 cursor-pointer'
+                              : 'glass border border-border opacity-60 cursor-not-allowed'
+                      }`}
+                    >
+                      {right}
+                    </motion.button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Hint for matching */}
+            {!showResult && q.hintEs && (
+              <div className="text-center">
+                <p className="text-[10px] text-muted-foreground opacity-50">💡 {q.hintEs}</p>
+              </div>
+            )}
+
+            {/* Show result feedback */}
+            {showResult && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`p-4 rounded-xl text-center ${
+                  isCorrect ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-red-500/10 border border-red-500/20'
+                }`}
+              >
+                <p className={`text-sm font-bold ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {isCorrect ? '✅ ¡Correcto!' : '❌ Intenta de nuevo'}
+                </p>
+                {!isCorrect && q.explanationEs && (
+                  <p className="text-xs text-muted-foreground mt-1">{q.explanationEs}</p>
+                )}
+              </motion.div>
+            )}
+          </div>
+        )
+      }
+      default: {
         // Fallback to multiple choice style
         const options = parseQuestionOptions(q.options)
         if (options.length > 0) {
@@ -1623,6 +1780,7 @@ function ExerciseView() {
             )}
           </div>
         )
+      }
     }
   }
 
@@ -3733,7 +3891,9 @@ function ReadingsView() {
   const [showReadingResults, setShowReadingResults] = useState(false)
   const [readingCompleted, setReadingCompleted] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const purchasedReadings = useAppStore((s) => s.purchasedReadings)
   const [selectedLevel, setSelectedLevel] = useState<string>('basic')
+  const [activeTab, setActiveTab] = useState<'all' | 'mine'>('all')
 
   useEffect(() => {
     loadReadings()
@@ -3953,6 +4113,7 @@ function ReadingsView() {
   }
 
   const filteredReadings = readings.filter(r => r.level === selectedLevel)
+  const myReadings = filteredReadings.filter(r => isReadingUnlocked(r.id))
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
@@ -3964,8 +4125,31 @@ function ReadingsView() {
         <span className="text-4xl sm:text-5xl block mb-3">📖</span>
         <h2 className="text-xl sm:text-2xl font-bold">Lecturas en Inglés</h2>
         <p className="text-muted-foreground text-sm">Mejora tu comprensión leyendo textos reales</p>
-        <p className="text-xs text-muted-foreground mt-1">La primera lectura de cada nivel es gratis 🎉</p>
       </motion.div>
+
+      {/* Tab selector: Todas / Mis Lecturas */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setActiveTab('all')}
+          className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            activeTab === 'all'
+              ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'
+              : 'bg-secondary/50 text-muted-foreground border border-transparent'
+          }`}
+        >
+          📚 Todas
+        </button>
+        <button
+          onClick={() => setActiveTab('mine')}
+          className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            activeTab === 'mine'
+              ? 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-400'
+              : 'bg-secondary/50 text-muted-foreground border border-transparent'
+          }`}
+        >
+          📗 Mis Lecturas {myReadings.length > 0 && <span className="text-[10px] opacity-70">({myReadings.length})</span>}
+        </button>
+      </div>
 
       {/* Level tabs */}
       <div className="flex gap-2 mb-4">
@@ -3987,83 +4171,149 @@ function ReadingsView() {
         })}
       </div>
 
-      <div className="space-y-3">
-        {filteredReadings.map((reading, i) => {
-          const cfg = levelConfig[reading.level] || levelConfig.basic
-          const unlocked = isReadingUnlocked(reading.id)
-          const isFirst = i === 0
-          const hasAudioForReading = unlockedAudioReadings.includes(reading.id)
-          const hasSpanishForReading = unlockedSpanishReadings.includes(reading.id)
-
-          return (
-            <motion.div
-              key={reading.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className={`w-full p-4 rounded-xl border text-left transition-all ${cfg.borderColor} ${cfg.bgColor}`}
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-2xl relative">
-                  {unlocked ? '📖' : '🔒'}
-                  {isFirst && unlocked && (
-                    <span className="absolute -top-1 -right-1 text-[10px]">🆓</span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-bold text-sm">{reading.title}</h4>
-                    {!unlocked && <Icons.lock size={14} className="text-yellow-400" />}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{reading.titleEs}</p>
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    <span className={`text-[10px] font-bold uppercase ${cfg.textColor}`}>
-                      {reading.level}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">
-                      {difficultyIcon[reading.difficulty]} {reading.questions.length} preguntas
-                    </span>
-                    <span className="text-[10px] text-emerald-400">+{reading.xpReward} XP</span>
-                    {hasAudioForReading && <span className="text-[10px] text-cyan-400">🔊 Audio</span>}
-                    {hasSpanishForReading && <span className="text-[10px] text-teal-400">🇪🇸 Traducción</span>}
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  {unlocked ? (
+      {activeTab === 'mine' ? (
+        /* My Purchased Readings */
+        <div className="space-y-3">
+          {myReadings.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <span className="text-3xl sm:text-4xl block mb-2">🔒</span>
+              <p className="text-sm">Aún no tienes lecturas desbloqueadas</p>
+              <p className="text-xs mt-1">La primera lectura de cada nivel es gratis 🎉</p>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setActiveTab('all')}
+                className="mt-4 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold"
+              >
+                Ver lecturas disponibles
+              </motion.button>
+            </div>
+          ) : (
+            myReadings.map((reading, i) => {
+              const cfg = levelConfig[reading.level] || levelConfig.basic
+              const hasAudioForReading = unlockedAudioReadings.includes(reading.id)
+              const hasSpanishForReading = unlockedSpanishReadings.includes(reading.id)
+              return (
+                <motion.div
+                  key={reading.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className={`w-full p-4 rounded-xl border text-left transition-all ${cfg.borderColor} ${cfg.bgColor}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-2xl">
+                      📖
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-sm">{reading.title}</h4>
+                      <p className="text-xs text-muted-foreground">{reading.titleEs}</p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className={`text-[10px] font-bold uppercase ${cfg.textColor}`}>
+                          {reading.level}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {difficultyIcon[reading.difficulty]} {reading.questions.length} preguntas
+                        </span>
+                        <span className="text-[10px] text-emerald-400">+{reading.xpReward} XP</span>
+                        {hasAudioForReading && <span className="text-[10px] text-cyan-400">🔊 Audio</span>}
+                        {hasSpanishForReading && <span className="text-[10px] text-teal-400">🇪🇸 Traducción</span>}
+                      </div>
+                    </div>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => selectReading(reading.id)}
-                      className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold"
+                      className="px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-xs font-bold shadow-lg shadow-emerald-500/20"
                     >
                       Leer →
                     </motion.button>
-                  ) : isFirst ? (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => selectReading(reading.id)}
-                      className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-xs font-bold"
-                    >
-                      🆓 Gratis
-                    </motion.button>
-                  ) : (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => buyReading(reading.id)}
-                      disabled={(user?.coins || 0) < 500}
-                      className="px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      🔓 500 🪙
-                    </motion.button>
-                  )}
+                  </div>
+                </motion.div>
+              )
+            })
+          )}
+        </div>
+      ) : (
+        /* All Readings - with purchase system */
+        <div className="space-y-3">
+          {filteredReadings.map((reading, i) => {
+            const cfg = levelConfig[reading.level] || levelConfig.basic
+            const unlocked = isReadingUnlocked(reading.id)
+            const isFirst = i === 0
+            const hasAudioForReading = unlockedAudioReadings.includes(reading.id)
+            const hasSpanishForReading = unlockedSpanishReadings.includes(reading.id)
+
+            return (
+              <motion.div
+                key={reading.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className={`w-full p-4 rounded-xl border text-left transition-all ${cfg.borderColor} ${cfg.bgColor}`}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-2xl relative">
+                    {unlocked ? '📖' : '🔒'}
+                    {isFirst && unlocked && (
+                      <span className="absolute -top-1 -right-1 text-[10px]">🆓</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-bold text-sm">{reading.title}</h4>
+                      {!unlocked && <Icons.lock size={14} className="text-yellow-400" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{reading.titleEs}</p>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <span className={`text-[10px] font-bold uppercase ${cfg.textColor}`}>
+                        {reading.level}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {difficultyIcon[reading.difficulty]} {reading.questions.length} preguntas
+                      </span>
+                      <span className="text-[10px] text-emerald-400">+{reading.xpReward} XP</span>
+                      {hasAudioForReading && <span className="text-[10px] text-cyan-400">🔊 Audio</span>}
+                      {hasSpanishForReading && <span className="text-[10px] text-teal-400">🇪🇸 Traducción</span>}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    {unlocked ? (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => selectReading(reading.id)}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold"
+                      >
+                        Leer →
+                      </motion.button>
+                    ) : isFirst ? (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => selectReading(reading.id)}
+                        className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-xs font-bold"
+                      >
+                        🆓 Gratis
+                      </motion.button>
+                    ) : (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => buyReading(reading.id)}
+                        disabled={(user?.coins || 0) < 500}
+                        className="px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        🔓 500 🪙
+                      </motion.button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          )
-        })}
-      </div>
+              </motion.div>
+            )
+          })}
+        </div>
+      )}
 
       {filteredReadings.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
@@ -4089,6 +4339,7 @@ function SessionTimer() {
   const sessionStartTime = useAppStore((s) => s.sessionStartTime)
   const showMiniGame = useAppStore((s) => s.showMiniGame)
   const activateMiniGame = useAppStore((s) => s.activateMiniGame)
+  const currentView = useAppStore((s) => s.currentView)
   const [timeLeft, setTimeLeft] = useState(15 * 60)
   const [timerComplete, setTimerComplete] = useState(false)
 
@@ -4106,54 +4357,111 @@ function SessionTimer() {
     return () => clearInterval(interval)
   }, [sessionStartTime, showMiniGame])
 
-  if (!sessionStartTime || showMiniGame) return null
+  // Don't show timer during exercise view
+  if (!sessionStartTime || showMiniGame || currentView === 'exercise') return null
 
   const minutes = Math.floor(timeLeft / 60)
   const seconds = timeLeft % 60
   const progress = ((15 * 60 - timeLeft) / (15 * 60)) * 100
+  const isUrgent = timeLeft <= 60 && !timerComplete
 
   return (
-    <div className="fixed top-16 right-2 sm:right-4 z-50">
+    <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 sm:left-auto sm:right-4 sm:translate-x-0 sm:bottom-20">
       <motion.div
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="glass rounded-2xl p-3 border border-cyan-500/30 shadow-lg shadow-cyan-500/10"
+        initial={{ y: 80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+        className={`relative rounded-2xl overflow-hidden shadow-xl ${
+          timerComplete
+            ? 'border-2 border-yellow-500/40 shadow-yellow-500/20'
+            : isUrgent
+              ? 'border-2 border-red-500/40 shadow-red-500/20 animate-pulse'
+              : 'border border-cyan-500/30 shadow-cyan-500/10'
+        }`}
+        style={{ background: 'linear-gradient(135deg, rgba(6,182,212,0.12), rgba(16,185,129,0.08), rgba(139,92,246,0.06))' }}
       >
-        <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center">
-          <svg className="absolute inset-0 w-full h-full -rotate-90">
-            <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="3" className="text-secondary" />
-            <circle
-              cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="3"
-              strokeDasharray={`${2 * Math.PI * 28}`}
-              strokeDashoffset={`${2 * Math.PI * 28 * (1 - progress / 100)}`}
-              strokeLinecap="round"
-              className={timerComplete ? 'text-yellow-400' : 'text-cyan-400'}
+        {/* Animated progress bar at top */}
+        {!timerComplete && (
+          <div className="h-1 w-full bg-secondary/50">
+            <motion.div
+              className={`h-full rounded-full ${isUrgent ? 'bg-red-400' : 'bg-gradient-to-r from-cyan-400 via-emerald-400 to-purple-400'}`}
+              initial={{ width: '0%' }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.5 }}
             />
-          </svg>
-          <div className="text-center">
+          </div>
+        )}
+
+        <div className="flex items-center gap-3 px-4 py-3">
+          {/* Circular timer */}
+          <div className="relative w-11 h-11 flex items-center justify-center flex-shrink-0">
+            <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 44 44">
+              <circle cx="22" cy="22" r="18" fill="none" stroke="currentColor" strokeWidth="3" className="text-secondary/50" />
+              <circle
+                cx="22" cy="22" r="18" fill="none" stroke="currentColor" strokeWidth="3"
+                strokeDasharray={`${2 * Math.PI * 18}`}
+                strokeDashoffset={`${2 * Math.PI * 18 * (1 - progress / 100)}`}
+                strokeLinecap="round"
+                className={
+                  timerComplete
+                    ? 'text-yellow-400'
+                    : isUrgent
+                      ? 'text-red-400'
+                      : 'text-cyan-400'
+                }
+                style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+              />
+            </svg>
+            <div className="text-center z-10">
+              {timerComplete ? (
+                <motion.span
+                  animate={{ scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                  className="text-base block"
+                >
+                  🎁
+                </motion.span>
+              ) : (
+                <p className={`text-[10px] font-black ${
+                  isUrgent ? 'text-red-400' : 'text-cyan-400'
+                }`}>
+                  {minutes}:{seconds.toString().padStart(2, '0')}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Info section */}
+          <div className="flex-1 min-w-0">
             {timerComplete ? (
-              <span className="text-lg">🎉</span>
+              <>
+                <p className="text-xs font-bold text-yellow-400">¡Mini Juego Listo!</p>
+                <p className="text-[9px] text-muted-foreground">Gana premios jugando</p>
+              </>
             ) : (
-              <p className="text-[10px] font-bold text-cyan-400">
-                {minutes}:{seconds.toString().padStart(2, '0')}
-              </p>
+              <>
+                <p className={`text-xs font-bold ${isUrgent ? 'text-red-400' : 'text-foreground'}`}>
+                  {isUrgent ? '¡Casi listo!' : 'Mini Juego'}
+                </p>
+                <p className="text-[9px] text-muted-foreground">
+                  {isUrgent ? `Disponible en ${seconds}s` : `Próximo premio en ${minutes}m`}
+                </p>
+              </>
             )}
           </div>
+
+          {/* Play button */}
+          {timerComplete && (
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => activateMiniGame('boxes')}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-xs font-bold shadow-lg shadow-yellow-500/30 flex-shrink-0"
+            >
+              🎮 ¡Jugar!
+            </motion.button>
+          )}
         </div>
-        {timerComplete && (
-          <motion.button
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => activateMiniGame('boxes')}
-            className="w-full mt-1 px-2 py-1 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-[9px] font-bold"
-          >
-            🎁 ¡Jugar!
-          </motion.button>
-        )}
-        {!timerComplete && (
-          <p className="text-[8px] text-center text-muted-foreground mt-1">Mini Juego</p>
-        )}
       </motion.div>
     </div>
   )
