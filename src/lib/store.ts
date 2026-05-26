@@ -2799,7 +2799,7 @@ export const useAppStore = create<AppStoreState>()(
       setShowLevelUpAnimation: (val) => set({ showLevelUpAnimation: val }),
     }),
     {
-      name: 'lingoquest-preferences',
+      name: 'wisdomquest-preferences',
       // Only persist user preferences, not the entire state
       partialize: (state): PersistedPreferences => ({
         soundEnabled: state.soundEnabled,

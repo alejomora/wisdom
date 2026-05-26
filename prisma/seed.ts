@@ -29,7 +29,7 @@ async function main() {
   console.log('👤 Creating users...');
   const demoUser = await db.user.create({
     data: {
-      email: 'demo@lingoquest.com',
+      email: 'demo@wisdomquest.com',
       name: 'Player',
       avatar: '🎯',
       title: 'Word Explorer',
@@ -55,7 +55,7 @@ async function main() {
 
   const adminUser = await db.user.create({
     data: {
-      email: 'admin@lingoquest.com',
+      email: 'admin@wisdomquest.com',
       name: 'Admin',
       avatar: '🛡️',
       title: 'Platform Master',

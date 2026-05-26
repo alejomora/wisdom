@@ -332,7 +332,7 @@ function AnimatedFrame({ frame, size = 120, children }: { frame?: string; size?:
 // LOGIN SCREEN
 // ============================================
 function LoginScreen() {
-  const [email, setEmail] = useState('demo@lingoquest.com')
+  const [email, setEmail] = useState('demo@wisdomquest.com')
   const [password, setPassword] = useState('demo123')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -372,7 +372,7 @@ function LoginScreen() {
             🏆
           </motion.div>
           <h1 className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-emerald-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent">
-            LingoQuest
+            Wisdom Quest
           </h1>
           <p className="text-muted-foreground mt-2">Master English like a game</p>
         </div>
@@ -385,7 +385,7 @@ function LoginScreen() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-secondary border border-border text-foreground focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-              placeholder="demo@lingoquest.com"
+              placeholder="demo@wisdomquest.com"
             />
           </div>
           <div>
@@ -423,7 +423,7 @@ function LoginScreen() {
         <div className="mt-6 p-4 rounded-xl bg-secondary/50 border border-border">
           <p className="text-xs text-muted-foreground text-center mb-2">Demo Credentials</p>
           <div className="flex gap-4 justify-center text-xs text-muted-foreground">
-            <span>👤 Player: demo@lingoquest.com</span>
+            <span>👤 Player: demo@wisdomquest.com</span>
             <span>🔑 demo123</span>
           </div>
           <div className="flex gap-4 justify-center text-xs text-muted-foreground mt-1">
@@ -469,7 +469,7 @@ function Header() {
           <button onClick={() => navigate('dashboard')} className="flex items-center gap-2">
             <span className="text-2xl">🏆</span>
             <span className="text-lg font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent hidden sm:block">
-              LingoQuest
+              Wisdom Quest
             </span>
           </button>
         </div>
