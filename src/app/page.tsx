@@ -427,7 +427,7 @@ function LoginScreen() {
             <span>🔑 demo123</span>
           </div>
           <div className="flex gap-4 justify-center text-xs text-muted-foreground mt-1">
-            <span>🛡️ Admin: admin@lingoquest.com</span>
+            <span>🛡️ Admin: admin@wisdomquest.com</span>
             <span>🔑 admin123</span>
           </div>
         </div>
