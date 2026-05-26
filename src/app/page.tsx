@@ -3094,22 +3094,20 @@ function ShopView() {
         </div>
       )}
 
-      {/* Lecturas tab */}
+      {/* Lecturas tab - EXCLUSIVE shop readings */}
       {activeTab === 'lecturas' && (
         <div className="space-y-3">
           <div className="text-center mb-4">
-            <span className="text-3xl sm:text-4xl">📖</span>
-            <p className="text-sm text-muted-foreground mt-2">Compra lecturas individuales por nivel</p>
-            <p className="text-xs text-muted-foreground">La primera de cada nivel es gratis</p>
+            <span className="text-3xl sm:text-4xl">📚</span>
+            <p className="text-sm text-muted-foreground mt-2">Lecturas exclusivas de la tienda</p>
+            <p className="text-xs text-muted-foreground">Historias diferentes que solo encuentras aquí</p>
           </div>
           <div className="space-y-3">
-            {readingPacks.map((pack, i) => {
-              const purchasedReadings = useAppStore.getState().purchasedReadings;
-              const readings = useAppStore.getState().readings;
-              const levelReadings = readings.filter(r => r.level === pack.level);
-              const purchased = levelReadings.filter(r => purchasedReadings.includes(r.id) || levelReadings.indexOf(r) === 0).length;
-              const remaining = levelReadings.length - purchased;
-              const canAfford = (user?.coins || 0) >= pack.cost;
+            {(() => {
+              const shopReadings = useAppStore.getState().shopReadings;
+              const purchasedShopReadings = useAppStore.getState().purchasedShopReadings;
+              const buyShopReading = useAppStore.getState().buyShopReading;
+              const isShopReadingUnlocked = useAppStore.getState().isShopReadingUnlocked;
               const levelColors: Record<string, string> = {
                 basic: 'border-emerald-500/30 bg-emerald-500/5',
                 intermediate: 'border-orange-500/30 bg-orange-500/5',
@@ -3120,34 +3118,57 @@ function ShopView() {
                 intermediate: 'text-orange-400',
                 advanced: 'text-purple-400',
               };
-              return (
-                <motion.button
-                  key={i}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  whileHover={canAfford && remaining > 0 ? { scale: 1.02 } : {}}
-                  whileTap={canAfford && remaining > 0 ? { scale: 0.98 } : {}}
-                  onClick={() => { if (remaining > 0) { buyReadingPack(pack.level, 1); playSound('reward'); setSuccessMsg(`¡Lectura ${pack.label} comprada!`) } }}
-                  disabled={!canAfford || remaining <= 0}
-                  className={`w-full p-4 rounded-xl border text-left disabled:opacity-40 disabled:cursor-not-allowed ${levelColors[pack.level]}`}
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="text-3xl">{pack.icon}</span>
-                    <div className="flex-1">
-                      <p className={`font-bold ${levelText[pack.level]}`}>{pack.label}</p>
-                      <p className="text-xs text-muted-foreground">{purchased}/{levelReadings.length} lecturas desbloqueadas</p>
-                      <p className="text-xs text-muted-foreground">{remaining > 0 ? `${remaining} disponibles` : '¡Todas compradas! ✅'}</p>
-                    </div>
-                    {remaining > 0 && (
-                      <div className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-xs font-bold">
-                        {pack.cost} 🪙
+              const levelIcons: Record<string, string> = {
+                basic: '🌱',
+                intermediate: '🔥',
+                advanced: '🧠',
+              };
+              return shopReadings.map((reading, i) => {
+                const unlocked = isShopReadingUnlocked(reading.id);
+                const cost = reading.level === 'basic' ? 800 : reading.level === 'intermediate' ? 1200 : 1500;
+                const canAfford = (user?.coins || 0) >= cost;
+                return (
+                  <motion.div
+                    key={reading.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className={`w-full p-4 rounded-xl border text-left ${levelColors[reading.level]}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-2xl">
+                        {unlocked ? '📖' : '🔒'}
                       </div>
-                    )}
-                  </div>
-                </motion.button>
-              );
-            })}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className={`font-bold text-sm ${levelText[reading.level]}`}>{reading.title}</p>
+                          {unlocked && <span className="text-[10px] text-emerald-400 font-bold">✅</span>}
+                        </div>
+                        <p className="text-xs text-muted-foreground">{reading.titleEs}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[10px] font-bold uppercase text-muted-foreground">{levelIcons[reading.level]} {reading.level}</span>
+                          <span className="text-[10px] text-emerald-400">+{reading.xpReward} XP</span>
+                          <span className="text-[10px] text-cyan-400">❓ {reading.questions.length} preguntas</span>
+                        </div>
+                      </div>
+                      {unlocked ? (
+                        <span className="text-xs text-emerald-400 font-bold">Desbloqueada</span>
+                      ) : (
+                        <motion.button
+                          whileHover={canAfford ? { scale: 1.05 } : {}}
+                          whileTap={canAfford ? { scale: 0.95 } : {}}
+                          onClick={() => { buyShopReading(reading.id); playSound('reward'); setSuccessMsg(`¡Lectura "${reading.title}" desbloqueada!`) }}
+                          disabled={!canAfford}
+                          className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                        >
+                          🔓 {cost} 🪙
+                        </motion.button>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              });
+            })()}
           </div>
         </div>
       )}
@@ -3541,7 +3562,7 @@ function BattleView() {
   const playSound = useAppStore((s) => s.playSound)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [showResult, setShowResult] = useState(false)
-  const [timer, setTimer] = useState(30)
+  const [timer, setTimer] = useState(10)
   const [isStarting, setIsStarting] = useState(false)
 
   // Handle answer submission (shared logic)
@@ -3571,7 +3592,7 @@ function BattleView() {
     setIsStarting(true)
     try {
       await startBattle()
-      setTimer(30)
+      setTimer(10)
     } catch (err) {
       console.error(err)
     }
@@ -3581,7 +3602,7 @@ function BattleView() {
   const handleNext = () => {
     setSelectedAnswer(null)
     setShowResult(false)
-    setTimer(30)
+    setTimer(10)
     nextBattleQuestion()
   }
 
@@ -3589,6 +3610,14 @@ function BattleView() {
   if (battleQuestions.length > 0 && battleCurrentIndex >= battleQuestions.length) {
     const won = battleScore > battleOpponentScore
     const tied = battleScore === battleOpponentScore
+    const totalQuestions = battleQuestions.length
+    const playerCorrect = battleScore
+    const playerWrong = totalQuestions - playerCorrect
+    const opponentCorrect = battleOpponentScore
+    const opponentWrong = totalQuestions - opponentCorrect
+    const playerAccuracy = totalQuestions > 0 ? Math.round((playerCorrect / totalQuestions) * 100) : 0
+    const opponentAccuracy = totalQuestions > 0 ? Math.round((opponentCorrect / totalQuestions) * 100) : 0
+
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 text-center">
         <motion.div
@@ -3610,35 +3639,68 @@ function BattleView() {
           <p className="text-muted-foreground mb-6">
             {won ? '¡Derrotaste a tu oponente! Eres increíble 🎉' : tied ? '¡Quedaron iguales! Intenta de nuevo 💪' : 'Tu oponente fue más rápido esta vez 😢'}
           </p>
-          
-          {/* VS Result */}
-          <div className="flex items-center justify-center gap-3 sm:gap-6 mb-6">
-            <div className={`text-center p-4 rounded-xl ${won ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-secondary border border-border'}`}>
+
+          {/* Detailed Score Summary */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            {/* Player stats */}
+            <div className={`p-4 rounded-xl ${won ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-secondary border border-border'}`}>
               <div className="mx-auto mb-2 w-14 h-14 rounded-full overflow-hidden">
                 <AnimatedAvatar avatar={user?.avatar || '🎯'} size={56} showExpression={won} />
               </div>
-              <p className="text-sm font-bold">{user?.name}</p>
-              <p className="text-2xl sm:text-3xl font-black text-emerald-400">{battleScore}</p>
-              <p className="text-[10px] text-muted-foreground">correctas</p>
+              <p className="text-sm font-bold mb-3">{user?.name}</p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between px-2">
+                  <span className="text-xs text-muted-foreground">✅ Correctas</span>
+                  <span className="text-lg font-black text-emerald-400">{playerCorrect}</span>
+                </div>
+                <div className="flex items-center justify-between px-2">
+                  <span className="text-xs text-muted-foreground">❌ Incorrectas</span>
+                  <span className="text-lg font-black text-red-400">{playerWrong}</span>
+                </div>
+                <div className="h-1.5 bg-secondary rounded-full overflow-hidden mt-2">
+                  <div className="h-full bg-emerald-400 rounded-full" style={{ width: `${playerAccuracy}%` }} />
+                </div>
+                <p className="text-[10px] text-muted-foreground">{playerAccuracy}% precisión</p>
+              </div>
             </div>
-            <div className="text-xl sm:text-2xl font-black text-muted-foreground animate-avatar-bounce">VS</div>
-            <div className={`text-center p-4 rounded-xl ${!won ? 'bg-red-500/10 border border-red-500/30' : 'bg-secondary border border-border'}`}>
+
+            {/* Opponent stats */}
+            <div className={`p-4 rounded-xl ${!won ? 'bg-red-500/10 border border-red-500/30' : 'bg-secondary border border-border'}`}>
               <div className="mx-auto mb-2 w-14 h-14 rounded-full overflow-hidden">
                 <AnimatedAvatar avatar="🤖" size={56} showExpression={!won} />
               </div>
-              <p className="text-sm font-bold">{battleOpponent?.name || 'Oponente'}</p>
-              <p className="text-2xl sm:text-3xl font-black text-red-400">{battleOpponentScore}</p>
-              <p className="text-[10px] text-muted-foreground">correctas</p>
+              <p className="text-sm font-bold mb-3">{battleOpponent?.name || 'Oponente'}</p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between px-2">
+                  <span className="text-xs text-muted-foreground">✅ Correctas</span>
+                  <span className="text-lg font-black text-emerald-400">{opponentCorrect}</span>
+                </div>
+                <div className="flex items-center justify-between px-2">
+                  <span className="text-xs text-muted-foreground">❌ Incorrectas</span>
+                  <span className="text-lg font-black text-red-400">{opponentWrong}</span>
+                </div>
+                <div className="h-1.5 bg-secondary rounded-full overflow-hidden mt-2">
+                  <div className="h-full bg-red-400 rounded-full" style={{ width: `${opponentAccuracy}%` }} />
+                </div>
+                <p className="text-[10px] text-muted-foreground">{opponentAccuracy}% precisión</p>
+              </div>
             </div>
+          </div>
+
+          {/* VS Score */}
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <span className="text-3xl font-black text-emerald-400">{playerCorrect}</span>
+            <span className="text-lg font-bold text-muted-foreground">VS</span>
+            <span className="text-3xl font-black text-red-400">{opponentCorrect}</span>
           </div>
           
           {/* Fun message based on score */}
-          <p className="text-sm text-muted-foreground mb-4">
-            {battleScore === 5 ? '🌟 ¡PERFECTO! ¡5 de 5! ¡Eres un maestro!' : 
-             battleScore === 4 ? '🔥 ¡Casi perfecto! ¡Muy bien!' :
-             battleScore === 3 ? '👍 ¡Buen trabajo! Puedes mejorar' :
-             battleScore === 2 ? '💪 ¡Sigue practicando!' :
-             battleScore === 1 ? '📚 ¡Estudia más y vuelve!' :
+          <p className="text-sm text-muted-foreground mb-6">
+            {playerCorrect === totalQuestions ? '🌟 ¡PERFECTO! ¡Todas correctas! ¡Eres un maestro!' : 
+             playerCorrect >= totalQuestions * 0.8 ? '🔥 ¡Casi perfecto! ¡Muy bien!' :
+             playerCorrect >= totalQuestions * 0.6 ? '👍 ¡Buen trabajo! Puedes mejorar' :
+             playerCorrect >= totalQuestions * 0.4 ? '💪 ¡Sigue practicando!' :
+             playerCorrect >= 1 ? '📚 ¡Estudia más y vuelve!' :
              '😅 ¡No te rindas! La práctica hace al maestro'}
           </p>
           
@@ -3649,7 +3711,7 @@ function BattleView() {
               onClick={() => { resetBattle(); handleStartBattle() }}
               className="px-6 py-3 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold"
             >
-              ⚔️ Revancha
+              ⚔️ Otra Batalla
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -3767,11 +3829,11 @@ function BattleView() {
       <div className="mb-4 flex items-center gap-3">
         <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
           <motion.div
-            animate={{ width: `${(timer / 30) * 100}%` }}
-            className={`h-full rounded-full transition-colors ${timer <= 5 ? 'bg-red-500' : timer <= 10 ? 'bg-orange-500' : 'bg-emerald-500'}`}
+            animate={{ width: `${(timer / 10) * 100}%` }}
+            className={`h-full rounded-full transition-colors ${timer <= 3 ? 'bg-red-500' : timer <= 5 ? 'bg-orange-500' : 'bg-emerald-500'}`}
           />
         </div>
-        <span className={`text-lg font-bold min-w-[40px] text-right ${timer <= 5 ? 'text-red-400' : timer <= 10 ? 'text-orange-400' : 'text-emerald-400'}`}>
+        <span className={`text-lg font-bold min-w-[40px] text-right ${timer <= 3 ? 'text-red-400' : timer <= 5 ? 'text-orange-400' : 'text-emerald-400'}`}>
           {timer}s
         </span>
       </div>
@@ -3892,6 +3954,9 @@ function ReadingsView() {
   const [readingCompleted, setReadingCompleted] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const purchasedReadings = useAppStore((s) => s.purchasedReadings)
+  const shopReadings = useAppStore((s) => s.shopReadings)
+  const purchasedShopReadings = useAppStore((s) => s.purchasedShopReadings)
+  const isShopReadingUnlocked = useAppStore((s) => s.isShopReadingUnlocked)
   const [selectedLevel, setSelectedLevel] = useState<string>('basic')
   const [activeTab, setActiveTab] = useState<'all' | 'mine'>('all')
 
@@ -4114,6 +4179,7 @@ function ReadingsView() {
 
   const filteredReadings = readings.filter(r => r.level === selectedLevel)
   const myReadings = filteredReadings.filter(r => isReadingUnlocked(r.id))
+  const myShopReadings = shopReadings.filter(r => isShopReadingUnlocked(r.id))
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
@@ -4174,7 +4240,7 @@ function ReadingsView() {
       {activeTab === 'mine' ? (
         /* My Purchased Readings */
         <div className="space-y-3">
-          {myReadings.length === 0 ? (
+          {myReadings.length === 0 && myShopReadings.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <span className="text-3xl sm:text-4xl block mb-2">🔒</span>
               <p className="text-sm">Aún no tienes lecturas desbloqueadas</p>
@@ -4189,49 +4255,103 @@ function ReadingsView() {
               </motion.button>
             </div>
           ) : (
-            myReadings.map((reading, i) => {
-              const cfg = levelConfig[reading.level] || levelConfig.basic
-              const hasAudioForReading = unlockedAudioReadings.includes(reading.id)
-              const hasSpanishForReading = unlockedSpanishReadings.includes(reading.id)
-              return (
-                <motion.div
-                  key={reading.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className={`w-full p-4 rounded-xl border text-left transition-all ${cfg.borderColor} ${cfg.bgColor}`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-2xl">
-                      📖
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-sm">{reading.title}</h4>
-                      <p className="text-xs text-muted-foreground">{reading.titleEs}</p>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className={`text-[10px] font-bold uppercase ${cfg.textColor}`}>
-                          {reading.level}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {difficultyIcon[reading.difficulty]} {reading.questions.length} preguntas
-                        </span>
-                        <span className="text-[10px] text-emerald-400">+{reading.xpReward} XP</span>
-                        {hasAudioForReading && <span className="text-[10px] text-cyan-400">🔊 Audio</span>}
-                        {hasSpanishForReading && <span className="text-[10px] text-teal-400">🇪🇸 Traducción</span>}
+            <>
+              {/* Regular readings */}
+              {myReadings.map((reading, i) => {
+                const cfg = levelConfig[reading.level] || levelConfig.basic
+                const hasAudioForReading = unlockedAudioReadings.includes(reading.id)
+                const hasSpanishForReading = unlockedSpanishReadings.includes(reading.id)
+                return (
+                  <motion.div
+                    key={reading.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className={`w-full p-4 rounded-xl border text-left transition-all ${cfg.borderColor} ${cfg.bgColor}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-2xl">
+                        📖
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-sm">{reading.title}</h4>
+                        <p className="text-xs text-muted-foreground">{reading.titleEs}</p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span className={`text-[10px] font-bold uppercase ${cfg.textColor}`}>
+                            {reading.level}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {difficultyIcon[reading.difficulty]} {reading.questions.length} preguntas
+                          </span>
+                          <span className="text-[10px] text-emerald-400">+{reading.xpReward} XP</span>
+                          {hasAudioForReading && <span className="text-[10px] text-cyan-400">🔊 Audio</span>}
+                          {hasSpanishForReading && <span className="text-[10px] text-teal-400">🇪🇸 Traducción</span>}
+                        </div>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => selectReading(reading.id)}
+                        className="px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-xs font-bold shadow-lg shadow-emerald-500/20"
+                      >
+                        Leer →
+                      </motion.button>
                     </div>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => selectReading(reading.id)}
-                      className="px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-xs font-bold shadow-lg shadow-emerald-500/20"
-                    >
-                      Leer →
-                    </motion.button>
+                  </motion.div>
+                )
+              })}
+              {/* Shop exclusive readings */}
+              {myShopReadings.length > 0 && (
+                <>
+                  <div className="flex items-center gap-2 mt-4 mb-2">
+                    <span className="text-xs font-bold text-yellow-400">✨ Exclusivas de Tienda</span>
+                    <div className="flex-1 h-px bg-yellow-500/20" />
                   </div>
-                </motion.div>
-              )
-            })
+                  {myShopReadings.map((reading, i) => {
+                    const cfg = levelConfig[reading.level] || levelConfig.basic
+                    return (
+                      <motion.div
+                        key={reading.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: (myReadings.length + i) * 0.05 }}
+                        className={`w-full p-4 rounded-xl border text-left transition-all border-yellow-500/20 bg-yellow-500/5`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center text-2xl">
+                            📚
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-bold text-sm text-yellow-300">{reading.title}</h4>
+                              <span className="text-[10px] text-yellow-400 font-bold">⭐</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">{reading.titleEs}</p>
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              <span className={`text-[10px] font-bold uppercase ${cfg.textColor}`}>
+                                {reading.level}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {difficultyIcon[reading.difficulty]} {reading.questions.length} preguntas
+                              </span>
+                              <span className="text-[10px] text-emerald-400">+{reading.xpReward} XP</span>
+                            </div>
+                          </div>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => selectReading(reading.id)}
+                            className="px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-xs font-bold shadow-lg shadow-yellow-500/20"
+                          >
+                            Leer →
+                          </motion.button>
+                        </div>
+                      </motion.div>
+                    )
+                  })}
+                </>
+              )}
+            </>
           )}
         </div>
       ) : (
@@ -4342,6 +4462,7 @@ function SessionTimer() {
   const currentView = useAppStore((s) => s.currentView)
   const [timeLeft, setTimeLeft] = useState(15 * 60)
   const [timerComplete, setTimerComplete] = useState(false)
+  const [showPlayNotification, setShowPlayNotification] = useState(false)
 
   useEffect(() => {
     if (!sessionStartTime || showMiniGame) return
@@ -4351,6 +4472,7 @@ function SessionTimer() {
       setTimeLeft(remaining)
       if (remaining <= 0) {
         setTimerComplete(true)
+        setShowPlayNotification(true)
         clearInterval(interval)
       }
     }, 1000)
@@ -4366,104 +4488,74 @@ function SessionTimer() {
   const isUrgent = timeLeft <= 60 && !timerComplete
 
   return (
-    <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 sm:left-auto sm:right-4 sm:translate-x-0 sm:bottom-20">
-      <motion.div
-        initial={{ y: 80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-        className={`relative rounded-2xl overflow-hidden shadow-xl ${
-          timerComplete
-            ? 'border-2 border-yellow-500/40 shadow-yellow-500/20'
-            : isUrgent
-              ? 'border-2 border-red-500/40 shadow-red-500/20 animate-pulse'
-              : 'border border-cyan-500/30 shadow-cyan-500/10'
-        }`}
-        style={{ background: 'linear-gradient(135deg, rgba(6,182,212,0.12), rgba(16,185,129,0.08), rgba(139,92,246,0.06))' }}
-      >
-        {/* Animated progress bar at top */}
-        {!timerComplete && (
-          <div className="h-1 w-full bg-secondary/50">
-            <motion.div
-              className={`h-full rounded-full ${isUrgent ? 'bg-red-400' : 'bg-gradient-to-r from-cyan-400 via-emerald-400 to-purple-400'}`}
-              initial={{ width: '0%' }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.5 }}
-            />
-          </div>
-        )}
-
-        <div className="flex items-center gap-3 px-4 py-3">
-          {/* Circular timer */}
-          <div className="relative w-11 h-11 flex items-center justify-center flex-shrink-0">
-            <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 44 44">
-              <circle cx="22" cy="22" r="18" fill="none" stroke="currentColor" strokeWidth="3" className="text-secondary/50" />
-              <circle
-                cx="22" cy="22" r="18" fill="none" stroke="currentColor" strokeWidth="3"
-                strokeDasharray={`${2 * Math.PI * 18}`}
-                strokeDashoffset={`${2 * Math.PI * 18 * (1 - progress / 100)}`}
-                strokeLinecap="round"
-                className={
-                  timerComplete
-                    ? 'text-yellow-400'
-                    : isUrgent
-                      ? 'text-red-400'
-                      : 'text-cyan-400'
-                }
-                style={{ transition: 'stroke-dashoffset 0.5s ease' }}
-              />
-            </svg>
-            <div className="text-center z-10">
-              {timerComplete ? (
-                <motion.span
-                  animate={{ scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                  className="text-base block"
-                >
-                  🎁
-                </motion.span>
-              ) : (
-                <p className={`text-[10px] font-black ${
-                  isUrgent ? 'text-red-400' : 'text-cyan-400'
-                }`}>
-                  {minutes}:{seconds.toString().padStart(2, '0')}
-                </p>
-              )}
+    <>
+      {/* Compact timer pill - bottom right */}
+      {!timerComplete && (
+        <div className="fixed bottom-16 right-2 z-50 sm:right-4 sm:bottom-20">
+          <motion.div
+            initial={{ y: 40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border shadow-lg"
+            style={{ background: 'linear-gradient(135deg, rgba(6,182,212,0.15), rgba(16,185,129,0.08))' }}
+          >
+            <div className="relative w-6 h-6 flex items-center justify-center flex-shrink-0">
+              <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-secondary/50" />
+                <circle
+                  cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2.5"
+                  strokeDasharray={`${2 * Math.PI * 9}`}
+                  strokeDashoffset={`${2 * Math.PI * 9 * (1 - progress / 100)}`}
+                  strokeLinecap="round"
+                  className={isUrgent ? 'text-red-400' : 'text-cyan-400'}
+                />
+              </svg>
+              <span className="text-[8px]">⏱️</span>
             </div>
-          </div>
+            <p className={`text-[10px] font-bold ${isUrgent ? 'text-red-400' : 'text-cyan-400'}`}>
+              {minutes}:{seconds.toString().padStart(2, '0')}
+            </p>
+          </motion.div>
+        </div>
+      )}
 
-          {/* Info section */}
-          <div className="flex-1 min-w-0">
-            {timerComplete ? (
-              <>
-                <p className="text-xs font-bold text-yellow-400">¡Mini Juego Listo!</p>
-                <p className="text-[9px] text-muted-foreground">Gana premios jugando</p>
-              </>
-            ) : (
-              <>
-                <p className={`text-xs font-bold ${isUrgent ? 'text-red-400' : 'text-foreground'}`}>
-                  {isUrgent ? '¡Casi listo!' : 'Mini Juego'}
-                </p>
-                <p className="text-[9px] text-muted-foreground">
-                  {isUrgent ? `Disponible en ${seconds}s` : `Próximo premio en ${minutes}m`}
-                </p>
-              </>
-            )}
-          </div>
-
-          {/* Play button */}
-          {timerComplete && (
+      {/* Play notification popup when timer completes */}
+      {showPlayNotification && (
+        <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 sm:bottom-20">
+          <motion.div
+            initial={{ y: 60, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            className="flex items-center gap-3 px-4 py-3 rounded-2xl border-2 border-yellow-500/40 shadow-xl shadow-yellow-500/20"
+            style={{ background: 'linear-gradient(135deg, rgba(234,179,8,0.15), rgba(245,158,11,0.1))' }}
+          >
+            <motion.span
+              animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="text-xl"
+            >
+              🎁
+            </motion.span>
+            <div>
+              <p className="text-xs font-bold text-yellow-400">¡Puedes jugar un Mini Juego!</p>
+            </div>
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={() => activateMiniGame('boxes')}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-xs font-bold shadow-lg shadow-yellow-500/30 flex-shrink-0"
+              onClick={() => { activateMiniGame('boxes'); setShowPlayNotification(false) }}
+              className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-[10px] font-bold shadow-md shadow-yellow-500/30 flex-shrink-0"
             >
-              🎮 ¡Jugar!
+              🎮 Jugar
             </motion.button>
-          )}
+            <button
+              onClick={() => setShowPlayNotification(false)}
+              className="p-1 rounded-full hover:bg-secondary/50 text-muted-foreground"
+            >
+              <Icons.x size={14} />
+            </button>
+          </motion.div>
         </div>
-      </motion.div>
-    </div>
+      )}
+    </>
   )
 }
 

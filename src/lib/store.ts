@@ -203,6 +203,8 @@ interface PersistedPreferences {
   unlockedSpanishReadings: string[];
   unlockedAudioReadings: string[];
   purchasedReadings: string[];
+  shopReadings: ReadingData[];
+  purchasedShopReadings: string[];
 }
 
 // ============================================
@@ -376,6 +378,8 @@ export interface AppStoreState {
   buyReading: (readingId: string) => void;
   buyReadingPack: (level: string, count: number) => void;
   isReadingUnlocked: (readingId: string) => boolean;
+  buyShopReading: (readingId: string) => void;
+  isShopReadingUnlocked: (readingId: string) => boolean;
 
   // Actions - Session & Mini Games
   startSessionTimer: () => void;
@@ -698,6 +702,109 @@ function isFirstInLevel(readingId: string, level: string): boolean {
   const levelReadings = READINGS_DATA.filter(r => r.level === level);
   return levelReadings.length > 0 && levelReadings[0].id === readingId;
 }
+
+// ============================================
+// SHOP EXCLUSIVE READINGS DATA
+// These are DIFFERENT readings only available through the shop
+// ============================================
+const SHOP_READINGS_DATA: ReadingData[] = [
+  {
+    id: 'shop-reading-1',
+    title: 'The Mystery of the Missing Necklace',
+    titleEs: 'El Misterio del Collar Perdido',
+    passage: 'Detective Clara received a call from Mrs. Henderson on a rainy Monday morning. Her precious diamond necklace had disappeared from the safe in her bedroom. Clara arrived at the mansion and examined the scene carefully. The safe was open but showed no signs of forced entry. There were only three people who knew the combination: Mrs. Henderson herself, her butler James, and her daughter Emily. Clara interviewed each suspect separately. James said he had been in the kitchen all morning preparing breakfast. Emily claimed she was at school and had not returned until noon. Mrs. Henderson said she had last seen the necklace the night before. Clara noticed wet footprints leading from the garden door to the study, where she found a muddy glove under the desk. The glove had the initials E.H. — Emily Henderson. When confronted, Emily confessed that she had taken the necklace to pay for her college tuition and planned to replace it with a fake. Clara returned the necklace and recommended family counseling.',
+    passageEs: 'La detective Clara recibió una llamada de la Sra. Henderson en una lluviosa mañana del lunes. Su precioso collar de diamantes había desaparecido de la caja fuerte en su dormitorio. Clara llegó a la mansión y examinó la escena con cuidado. La caja fuerte estaba abierta pero no mostraba señales de entrada forzada. Solo había tres personas que conocían la combinación: la propia Sra. Henderson, su mayordomo James y su hija Emily. Clara entrevistó a cada sospechoso por separado. James dijo que había estado en la cocina toda la mañana preparando el desayuno. Emily afirmó que estaba en la escuela y no había regresado hasta el mediodía. La Sra. Henderson dijo que había visto el collar por última vez la noche anterior. Clara notó huellas mojadas que iban de la puerta del jardín al estudio, donde encontró un guante sucio bajo el escritorio. El guante tenía las iniciales E.H. — Emily Henderson. Cuando fue confrontada, Emily confesó que había tomado el collar para pagar su matrícula universitaria y planeaba reemplazarlo con uno falso. Clara devolvió el collar y recomendó terapia familiar.',
+    level: 'intermediate',
+    difficulty: 4,
+    xpReward: 70,
+    questions: [
+      { id: 'sr1q1', question: 'Who called Detective Clara?', questionEs: '¿Quién llamó a la detective Clara?', options: ['James the butler', 'Mrs. Henderson', 'Emily Henderson', 'The police'], correctAnswer: 1, explanation: 'Mrs. Henderson called Clara about her missing necklace.', explanationEs: 'La Sra. Henderson llamó a Clara por su collar perdido.' },
+      { id: 'sr1q2', question: 'How many people knew the safe combination?', questionEs: '¿Cuántas personas conocían la combinación de la caja fuerte?', options: ['Two', 'Three', 'Four', 'Five'], correctAnswer: 1, explanation: 'Three people knew the combination: Mrs. Henderson, James, and Emily.', explanationEs: 'Tres personas conocían la combinación: la Sra. Henderson, James y Emily.' },
+      { id: 'sr1q3', question: 'What clue helped Clara solve the case?', questionEs: '¿Qué pista ayudó a Clara a resolver el caso?', options: ['A broken lock', 'A muddy glove with initials', 'A witness statement', 'A security camera video'], correctAnswer: 1, explanation: 'Clara found a muddy glove with the initials E.H. under the desk.', explanationEs: 'Clara encontró un guante sucio con las iniciales E.H. bajo el escritorio.' },
+      { id: 'sr1q4', question: 'Why did Emily take the necklace?', questionEs: '¿Por qué Emily tomó el collar?', options: ['To buy a car', 'To pay for college tuition', 'To give it as a gift', 'To sell it for travel'], correctAnswer: 1, explanation: 'Emily took the necklace to pay for her college tuition.', explanationEs: 'Emily tomó el collar para pagar su matrícula universitaria.' },
+    ]
+  },
+  {
+    id: 'shop-reading-2',
+    title: 'The Secret Garden Recipe',
+    titleEs: 'La Receta del Jardín Secreto',
+    passage: 'Grandma Rosa was famous in her small village for her delicious vegetable soup. Everyone wanted to know the secret recipe, but she never shared it. One day, her granddaughter Sofia came to visit for the summer. Sofia loved cooking and begged her grandmother to teach her the recipe. Grandma Rosa smiled and said, "The secret is not in the ingredients, my dear. It is in the garden." Every morning, Rosa took Sofia to the backyard where they grew tomatoes, carrots, onions, and herbs. Rosa explained that fresh ingredients picked at the right time make all the difference. She taught Sofia how to tell when a tomato was perfectly ripe by its color and smell. She showed her how to cut onions without crying by chilling them first. Most importantly, she taught her to add love and patience to every dish. After two weeks of practice, Sofia finally made the soup on her own. Grandma Rosa tasted it and had tears of joy. "You have learned the real secret," she said. "Cooking is about caring for the people you feed." Sofia returned home with more than a recipe — she had learned a philosophy of life.',
+    passageEs: 'La abuela Rosa era famosa en su pequeño pueblo por su deliciosa sopa de verduras. Todos querían conocer la receta secreta, pero ella nunca la compartía. Un día, su nieta Sofía vino a visitarla por el verano. A Sofía le encantaba cocinar y le rogó a su abuela que le enseñara la receta. La abuela Rosa sonrió y dijo: "El secreto no está en los ingredientes, querida. Está en el jardín." Cada mañana, Rosa llevaba a Sofía al patio donde cultivaban tomates, zanahorias, cebollas y hierbas. Rosa explicaba que los ingredientes frescos recolectados en el momento adecuado hacen toda la diferencia. Le enseñó a Sofía cómo saber cuándo un tomate estaba perfectamente maduro por su color y olor. Le mostró cómo cortar cebollas sin llorar enfriándolas primero. Lo más importante, le enseñó a añadir amor y paciencia a cada plato. Después de dos semanas de práctica, Sofía finalmente hizo la sopa por su cuenta. La abuela Rosa la probó y tuvo lágrimas de alegría. "Has aprendido el verdadero secreto," dijo. "Cocinar es cuidar a las personas que alimentas." Sofía regresó a casa con más que una receta — había aprendido una filosofía de vida.',
+    level: 'basic',
+    difficulty: 2,
+    xpReward: 55,
+    questions: [
+      { id: 'sr2q1', question: 'What was Grandma Rosa famous for?', questionEs: '¿Por qué era famosa la abuela Rosa?', options: ['Her singing', 'Her vegetable soup', 'Her garden flowers', 'Her dancing'], correctAnswer: 1, explanation: 'Grandma Rosa was famous for her delicious vegetable soup.', explanationEs: 'La abuela Rosa era famosa por su deliciosa sopa de verduras.' },
+      { id: 'sr2q2', question: 'What was the real secret of the recipe?', questionEs: '¿Cuál era el verdadero secreto de la receta?', options: ['A special spice', 'Fresh ingredients from the garden', 'Cooking time', 'A handwritten note'], correctAnswer: 1, explanation: 'The secret was fresh ingredients from the garden, picked at the right time.', explanationEs: 'El secreto era los ingredientes frescos del jardín, recolectados en el momento adecuado.' },
+      { id: 'sr2q3', question: 'How did Rosa teach Sofia to cut onions without crying?', questionEs: '¿Cómo enseñó Rosa a Sofía a cortar cebollas sin llorar?', options: ['Wearing goggles', 'Chilling them first', 'Using a food processor', 'Cutting under water'], correctAnswer: 1, explanation: 'She showed her how to cut onions without crying by chilling them first.', explanationEs: 'Le mostró cómo cortar cebollas sin llorar enfriándolas primero.' },
+      { id: 'sr2q4', question: 'What did Sofia learn beyond the recipe?', questionEs: '¿Qué aprendió Sofía más allá de la receta?', options: ['How to garden', 'That cooking is about caring for people', 'How to write a cookbook', 'How to run a restaurant'], correctAnswer: 1, explanation: 'Sofia learned that "Cooking is about caring for the people you feed."', explanationEs: 'Sofía aprendió que "Cocinar es cuidar a las personas que alimentas."' },
+    ]
+  },
+  {
+    id: 'shop-reading-3',
+    title: 'The Space Explorer\'s Journal',
+    titleEs: 'El Diario del Explorador Espacial',
+    passage: 'Captain Amelia Chen was the first human to set foot on Mars. In her journal, she described the experience as both terrifying and magnificent. The journey from Earth took seven months aboard the spacecraft Horizon. During the trip, the crew of four maintained a strict schedule of exercise, research, and equipment checks to prevent muscle loss in zero gravity. When they finally entered Mars orbit, Amelia could see the massive Olympus Mons volcano and the deep Valles Marineris canyon system from the window. Landing day was the most nerve-wracking experience of her life. The descent module shook violently as it entered the thin Martian atmosphere. When the engines finally shut down and the capsule was still, Amelia opened the hatch and stepped onto the rusty red soil. She felt the light gravity — only about thirty-eight percent of Earth\'s — and described it as feeling like she could jump over a building. The team spent thirty days on the surface, collecting rock samples and searching for signs of ancient water. On day twenty-two, they found mineral deposits that could only have formed in the presence of water, confirming that Mars once had rivers and lakes. Amelia wrote in her journal: "We came looking for the past of Mars, but we found the future of humanity."',
+    passageEs: 'La capitana Amelia Chen fue la primera humana en pisar Marte. En su diario, describió la experiencia como aterradora y magnífica al mismo tiempo. El viaje desde la Tierra tomó siete meses a bordo de la nave Horizon. Durante el viaje, la tripulación de cuatro mantuvo un estricto horario de ejercicio, investigación y revisiones de equipo para prevenir la pérdida muscular en gravedad cero. Cuando finalmente entraron en la órbita de Marte, Amelia pudo ver el enorme volcán Olympus Mons y el profundo sistema de cañones Valles Marineris desde la ventana. El día del aterrizaje fue la experiencia más estresante de su vida. El módulo de descenso se sacudió violentamente al entrar en la delgada atmósfera marciana. Cuando los motores finalmente se apagaron y la cápsula quedó quieta, Amelia abrió la escotilla y pisó el suelo rojo oxidado. Sintió la gravedad ligera — solo alrededor del treinta y ocho por ciento de la de la Tierra — y describió que sentía que podría saltar sobre un edificio. El equipo pasó treinta días en la superficie, recolectando muestras de roca y buscando señales de agua antigua. En el día veintidós, encontraron depósitos minerales que solo podrían haberse formado en presencia de agua, confirmando que Marte alguna vez tuvo ríos y lagos. Amelia escribió en su diario: "Vinimos buscando el pasado de Marte, pero encontramos el futuro de la humanidad."',
+    level: 'advanced',
+    difficulty: 5,
+    xpReward: 85,
+    questions: [
+      { id: 'sr3q1', question: 'How long did the journey from Earth to Mars take?', questionEs: '¿Cuánto tiempo tomó el viaje de la Tierra a Marte?', options: ['Three months', 'Five months', 'Seven months', 'One year'], correctAnswer: 2, explanation: 'The journey from Earth took seven months aboard the spacecraft Horizon.', explanationEs: 'El viaje desde la Tierra tomó siete meses a bordo de la nave Horizon.' },
+      { id: 'sr3q2', question: 'How many crew members were on the mission?', questionEs: '¿Cuántos miembros de la tripulación había en la misión?', options: ['Two', 'Three', 'Four', 'Six'], correctAnswer: 2, explanation: 'The crew of four maintained a strict schedule during the trip.', explanationEs: 'La tripulación de cuatro mantuvo un estricto horario durante el viaje.' },
+      { id: 'sr3q3', question: 'What is Mars gravity compared to Earth?', questionEs: '¿Cuál es la gravedad de Marte comparada con la Tierra?', options: ['About 10%', 'About 38%', 'About 50%', 'About 75%'], correctAnswer: 1, explanation: 'Mars gravity is only about thirty-eight percent of Earth\'s.', explanationEs: 'La gravedad de Marte es solo alrededor del treinta y ocho por ciento de la de la Tierra.' },
+      { id: 'sr3q4', question: 'What did they find on day twenty-two?', questionEs: '¿Qué encontraron en el día veintidós?', options: ['Alien fossils', 'Mineral deposits from ancient water', 'A frozen lake', 'Volcanic activity'], correctAnswer: 1, explanation: 'They found mineral deposits that could only have formed in the presence of water.', explanationEs: 'Encontraron depósitos minerales que solo podrían haberse formado en presencia de agua.' },
+    ]
+  },
+  {
+    id: 'shop-reading-4',
+    title: 'The Dragon of Crystal Lake',
+    titleEs: 'El Dragón del Lago de Cristal',
+    passage: 'Long ago, in a small village near Crystal Lake, the people lived in fear of a terrible dragon. Every full moon, the dragon would fly down from the mountain and demand offerings of gold and food. One day, a young girl named Lily decided she had had enough. She packed a bag with bread, cheese, and a small mirror, and climbed the mountain to the dragon\'s cave. When she entered, the dragon roared and breathed fire. But Lily stood tall and said, "I want to talk to you." The dragon was surprised — no one had ever wanted to talk before. Lily asked the dragon why it demanded offerings. The dragon looked sad and said, "I am lonely. Nobody ever visits me except to bring things. I just want a friend." Lily felt sorry for the dragon. She sat down and shared her bread and cheese with it. They talked for hours about the stars, the mountains, and the flowers by the lake. The dragon told Lily its name was Ember and that it had been living alone for a hundred years. From that day on, Lily visited Ember every week. The dragon stopped demanding offerings and instead helped the village by lighting their fires in winter and protecting them from storms. The villagers learned that sometimes the scariest things just need a little kindness.',
+    passageEs: 'Hace mucho tiempo, en un pequeño pueblo cerca del Lago de Cristal, la gente vivía con miedo de un terrible dragón. Cada luna llena, el dragón bajaba volando de la montaña y exigía ofrendas de oro y comida. Un día, una niña llamada Lily decidió que había tenido suficiente. Empacó una bolsa con pan, queso y un pequeño espejo, y subió la montaña hasta la cueva del dragón. Cuando entró, el dragón rugió y lanzó fuego. Pero Lily se mantuvo firme y dijo: "Quiero hablar contigo." El dragón se sorprendió — nadie había querido hablar antes. Lily le preguntó al dragón por qué exigía ofrendas. El dragón se veía triste y dijo: "Estoy solo. Nadie me visita nunca excepto para traer cosas. Solo quiero un amigo." Lily sintió pena por el dragón. Se sentó y compartió su pan y queso con él. Hablaron durante horas sobre las estrellas, las montañas y las flores junto al lago. El dragón le dijo a Lily que su nombre era Ember y que había vivido solo por cien años. Desde ese día, Lily visitaba a Ember cada semana. El dragón dejó de exigir ofrendas y en su lugar ayudaba al pueblo encendiendo sus fuegos en invierno y protegiéndolos de las tormentas. Los aldeanos aprendieron que a veces las cosas más aterradoras solo necesitan un poco de bondad.',
+    level: 'basic',
+    difficulty: 2,
+    xpReward: 55,
+    questions: [
+      { id: 'sr4q1', question: 'What did the dragon demand every full moon?', questionEs: '¿Qué exigía el dragón cada luna llena?', options: ['Children', 'Gold and food', 'Magic spells', 'Flowers and songs'], correctAnswer: 1, explanation: 'The dragon would demand offerings of gold and food every full moon.', explanationEs: 'El dragón exigía ofrendas de oro y comida cada luna llena.' },
+      { id: 'sr4q2', question: 'Why did the dragon demand offerings?', questionEs: '¿Por qué el dragón exigía ofrendas?', options: ['It was greedy', 'It was hungry', 'It was lonely and wanted attention', 'It was angry'], correctAnswer: 2, explanation: 'The dragon said "I am lonely. Nobody ever visits me... I just want a friend."', explanationEs: 'El dragón dijo "Estoy solo. Nadie me visita nunca... Solo quiero un amigo."' },
+      { id: 'sr4q3', question: 'What was the dragon\'s name?', questionEs: '¿Cuál era el nombre del dragón?', options: ['Firewing', 'Ember', 'Shadow', 'Crystal'], correctAnswer: 1, explanation: 'The dragon told Lily its name was Ember.', explanationEs: 'El dragón le dijo a Lily que su nombre era Ember.' },
+      { id: 'sr4q4', question: 'How did the dragon help the village after befriending Lily?', questionEs: '¿Cómo ayudó el dragón al pueblo después de hacerse amigo de Lily?', options: ['It gave them gold', 'It lit their fires and protected them from storms', 'It hunted for them', 'It built houses'], correctAnswer: 1, explanation: 'The dragon helped by lighting their fires in winter and protecting them from storms.', explanationEs: 'El dragón ayudaba encendiendo sus fuegos en invierno y protegiéndolos de las tormentas.' },
+    ]
+  },
+  {
+    id: 'shop-reading-5',
+    title: 'The Art of Negotiation',
+    titleEs: 'El Arte de la Negociación',
+    passage: 'Effective negotiation is a skill that can be learned and improved with practice. Whether you are negotiating a salary, a business deal, or a conflict resolution, the same fundamental principles apply. First, preparation is essential. Before any negotiation, research the other party\'s needs, interests, and constraints. Understand your own bottom line — the minimum outcome you would accept. Second, listen more than you speak. Many negotiators make the mistake of talking too much and revealing their position. By listening carefully, you can identify the other party\'s priorities and find areas of mutual benefit. Third, aim for a win-win outcome. The best negotiations leave both parties satisfied. If one side feels cheated, the relationship will suffer and future deals may be impossible. Fourth, be willing to walk away. Having alternatives gives you power. If you have no other options, you will be forced to accept whatever is offered. Fifth, use objective criteria to support your position. Citing market data, industry standards, or expert opinions makes your arguments more persuasive. Finally, maintain a professional and respectful attitude throughout the process. Emotions can derail negotiations, so stay calm and focused on the issues at hand.',
+    passageEs: 'La negociación efectiva es una habilidad que se puede aprender y mejorar con la práctica. Ya sea que esté negociando un salario, un acuerdo comercial o una resolución de conflictos, los mismos principios fundamentales se aplican. Primero, la preparación es esencial. Antes de cualquier negociación, investigue las necesidades, intereses y restricciones de la otra parte. Entienda su propia línea base — el resultado mínimo que aceptaría. Segundo, escuche más de lo que habla. Muchos negociadores cometen el error de hablar demasiado y revelar su posición. Al escuchar cuidadosamente, puede identificar las prioridades de la otra parte y encontrar áreas de beneficio mutuo. Tercero, busque un resultado de ganar-ganar. Las mejores negociaciones dejan a ambas partes satisfechas. Si un lado se siente engañado, la relación sufrirá y los acuerdos futuros pueden ser imposibles. Cuarto, esté dispuesto a retirarse. Tener alternativas le da poder. Si no tiene otras opciones, se verá obligado a aceptar lo que se ofrezca. Quinto, use criterios objetivos para apoyar su posición. Citar datos de mercado, estándares de la industria u opiniones de expertos hace que sus argumentos sean más persuasivos. Finalmente, mantenga una actitud profesional y respetuosa durante todo el proceso. Las emociones pueden descarrilar las negociaciones, así que mantenga la calma y concéntrese en los asuntos en cuestión.',
+    level: 'advanced',
+    difficulty: 5,
+    xpReward: 80,
+    questions: [
+      { id: 'sr5q1', question: 'What should you do before any negotiation?', questionEs: '¿Qué debe hacer antes de cualquier negociación?', options: ['Make demands', 'Prepare and research', 'Find a lawyer', 'Write a contract'], correctAnswer: 1, explanation: 'Preparation is essential — research the other party\'s needs, interests, and constraints.', explanationEs: 'La preparación es esencial — investigue las necesidades, intereses y restricciones de la otra parte.' },
+      { id: 'sr5q2', question: 'What mistake do many negotiators make?', questionEs: '¿Qué error cometen muchos negociadores?', options: ['Listening too much', 'Talking too much and revealing their position', 'Being too polite', 'Asking too many questions'], correctAnswer: 1, explanation: 'Many negotiators talk too much and reveal their position instead of listening.', explanationEs: 'Muchos negociadores hablan demasiado y revelan su posición en lugar de escuchar.' },
+      { id: 'sr5q3', question: 'What gives you power in a negotiation?', questionEs: '¿Qué le da poder en una negociación?', options: ['Speaking loudly', 'Having alternatives and being willing to walk away', 'Bringing more people', 'Being aggressive'], correctAnswer: 1, explanation: 'Having alternatives and being willing to walk away gives you power.', explanationEs: 'Tener alternativas y estar dispuesto a retirarse le da poder.' },
+      { id: 'sr5q4', question: 'Why should you use objective criteria?', questionEs: '¿Por qué debe usar criterios objetivos?', options: ['To confuse the other party', 'To make arguments more persuasive', 'To show off knowledge', 'To delay the negotiation'], correctAnswer: 1, explanation: 'Citing market data, industry standards, or expert opinions makes your arguments more persuasive.', explanationEs: 'Citar datos de mercado, estándares de la industria u opiniones de expertos hace que sus argumentos sean más persuasivos.' },
+    ]
+  },
+  {
+    id: 'shop-reading-6',
+    title: 'The Robot Soccer Championship',
+    titleEs: 'El Campeonato de Fútbol de Robots',
+    passage: 'The annual Robot Soccer Championship attracted teams from twenty different countries. Each team had built a team of five small robots programmed to play soccer autonomously. The robots could not be remotely controlled — they had to make their own decisions using artificial intelligence and sensors. Team Japan had the fastest robots with advanced vision systems. Team Germany had the most precise passing algorithms. Team Brazil, surprisingly, had the most creative plays, with robots that could fake out opponents with unexpected moves. The championship final was between Japan and Brazil. In the first half, Japan scored two quick goals using their speed advantage. But in the second half, the Brazilian robots adapted their strategy, spreading the field wider and using quick passes to confuse the Japanese defense. Brazil scored three goals in the final ten minutes to win the championship. The lead programmer for Team Brazil, a sixteen-year-old girl named Ana, explained that she had trained the robots using machine learning from thousands of real soccer matches. "The robots learned that creativity and teamwork can beat raw speed," she said with a smile. The championship proved that the future of robotics is not just about technology — it is about how creatively we use it.',
+    passageEs: 'El Campeonato Anual de Fútbol de Robots atrajo a equipos de veinte países diferentes. Cada equipo había construido un equipo de cinco pequeños robots programados para jugar al fútbol de forma autónoma. Los robots no podían ser controlados a distancia — tenían que tomar sus propias decisiones usando inteligencia artificial y sensores. El equipo de Japón tenía los robots más rápidos con sistemas de visión avanzados. El equipo de Alemania tenía los algoritmos de pases más precisos. El equipo de Brasil, sorprendentemente, tenía las jugadas más creativas, con robots que podían engañar a los oponentes con movimientos inesperados. La final del campeonato fue entre Japón y Brasil. En la primera mitad, Japón anotó dos goles rápidos usando su ventaja de velocidad. Pero en la segunda mitad, los robots brasileños adaptaron su estrategia, abriendo más el campo y usando pases rápidos para confundir la defensa japonesa. Brasil anotó tres goles en los últimos diez minutos para ganar el campeonato. La programadora principal del equipo de Brasil, una chica de dieciséis años llamada Ana, explicó que había entrenado a los robots usando aprendizaje automático a partir de miles de partidos de fútbol reales. "Los robots aprendieron que la creatividad y el trabajo en equipo pueden vencer la velocidad bruta," dijo con una sonrisa. El campeonato demostró que el futuro de la robótica no es solo sobre tecnología — se trata de qué tan creativamente la usamos.',
+    level: 'intermediate',
+    difficulty: 3,
+    xpReward: 65,
+    questions: [
+      { id: 'sr6q1', question: 'How many robots did each team have?', questionEs: '¿Cuántos robots tenía cada equipo?', options: ['Three', 'Five', 'Seven', 'Eleven'], correctAnswer: 1, explanation: 'Each team had built a team of five small robots.', explanationEs: 'Cada equipo había construido un equipo de cinco pequeños robots.' },
+      { id: 'sr6q2', question: 'What was special about the robots?', questionEs: '¿Qué era especial sobre los robots?', options: ['They were remote controlled', 'They made autonomous decisions using AI', 'They were very expensive', 'They could fly'], correctAnswer: 1, explanation: 'The robots could not be remotely controlled — they made their own decisions using artificial intelligence.', explanationEs: 'Los robots no podían ser controlados a distancia — tomaban sus propias decisiones usando inteligencia artificial.' },
+      { id: 'sr6q3', question: 'Who was the lead programmer for Team Brazil?', questionEs: '¿Quién era la programadora principal del equipo de Brasil?', options: ['A professor', 'A sixteen-year-old girl named Ana', 'A professional coach', 'A robotics engineer'], correctAnswer: 1, explanation: 'The lead programmer was a sixteen-year-old girl named Ana.', explanationEs: 'La programadora principal era una chica de dieciséis años llamada Ana.' },
+      { id: 'sr6q4', question: 'How did Team Brazil train their robots?', questionEs: '¿Cómo entrenó el equipo de Brasil a sus robots?', options: ['By manually programming each move', 'Using machine learning from thousands of real soccer matches', 'By copying other teams', 'By trial and error only'], correctAnswer: 1, explanation: 'Ana trained the robots using machine learning from thousands of real soccer matches.', explanationEs: 'Ana entrenó a los robots usando aprendizaje automático a partir de miles de partidos de fútbol reales.' },
+    ]
+  },
+]
 
 // ============================================
 // BATTLE QUESTIONS
@@ -1074,6 +1181,8 @@ export const useAppStore = create<AppStoreState>()(
       unlockedSpanishReadings: [],
       unlockedAudioReadings: [],
       purchasedReadings: [],
+      shopReadings: SHOP_READINGS_DATA,
+      purchasedShopReadings: [],
 
       // ── UI State ────────────────────────────────
       showConfetti: false,
@@ -2023,6 +2132,30 @@ export const useAppStore = create<AppStoreState>()(
         return purchasedReadings.includes(readingId);
       },
 
+      buyShopReading: (readingId) => {
+        const { user, purchasedShopReadings, shopReadings } = get();
+        if (!user) return;
+        if (purchasedShopReadings.includes(readingId)) return;
+        const reading = shopReadings.find(r => r.id === readingId);
+        if (!reading) return;
+        const cost = reading.level === 'basic' ? 800 : reading.level === 'intermediate' ? 1200 : 1500;
+        if (user.coins < cost) {
+          get().setNotification({ type: 'error', message: `¡Necesitas ${cost} monedas para comprar esta lectura!` });
+          return;
+        }
+        const updatedUser = { ...user, coins: user.coins - cost };
+        const updatedPurchased = [...purchasedShopReadings, readingId];
+        set({ user: updatedUser, purchasedShopReadings: updatedPurchased });
+        syncUserToDb(user.id, { coins: updatedUser.coins });
+        get().playSound('unlock');
+        get().setNotification({ type: 'success', message: `¡Lectura exclusiva "${reading.title}" desbloqueada!` });
+      },
+
+      isShopReadingUnlocked: (readingId) => {
+        const { purchasedShopReadings } = get();
+        return purchasedShopReadings.includes(readingId);
+      },
+
       buyLives: (amount) => {
         const { user } = get();
         if (!user) return;
@@ -2296,6 +2429,7 @@ export const useAppStore = create<AppStoreState>()(
         unlockedSpanishReadings: state.unlockedSpanishReadings,
         unlockedAudioReadings: state.unlockedAudioReadings,
         purchasedReadings: state.purchasedReadings,
+        purchasedShopReadings: state.purchasedShopReadings,
       }),
       // Rehydrate persisted preferences back into the store
       merge: (persistedState, currentState) => {
@@ -2312,6 +2446,7 @@ export const useAppStore = create<AppStoreState>()(
           unlockedSpanishReadings: persisted.unlockedSpanishReadings ?? currentState.unlockedSpanishReadings,
           unlockedAudioReadings: persisted.unlockedAudioReadings ?? currentState.unlockedAudioReadings,
           purchasedReadings: persisted.purchasedReadings ?? currentState.purchasedReadings,
+          purchasedShopReadings: persisted.purchasedShopReadings ?? currentState.purchasedShopReadings,
         };
       },
     }
