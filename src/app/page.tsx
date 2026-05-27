@@ -3772,7 +3772,7 @@ function BattleView() {
                 <div className="flex items-center justify-center gap-4">
                   <span className="text-sm">🪙 <strong className="text-yellow-400">+200</strong> monedas</span>
                   <span className="text-sm">⚡ <strong className="text-cyan-400">+40</strong> energía</span>
-                  <span className="text-sm">⭐ <strong className="text-purple-400">+{playerCorrect * 15 + 25}</strong> XP</span>
+                  <span className="text-sm">⭐ <strong className="text-purple-400">+5</strong> XP</span>
                 </div>
               </div>
             ) : (
@@ -3781,7 +3781,7 @@ function BattleView() {
                 <div className="flex items-center justify-center gap-4">
                   <span className="text-sm text-muted-foreground">🪙 <strong className="text-red-400">-100</strong> monedas</span>
                   <span className="text-sm text-muted-foreground">⚡ <strong className="text-red-400">-20</strong> energía</span>
-                  <span className="text-sm">⭐ <strong className="text-purple-400">+{playerCorrect * 15}</strong> XP</span>
+                  <span className="text-sm">⭐ <strong className="text-purple-400">+5</strong> XP</span>
                 </div>
               </div>
             )}

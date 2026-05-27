@@ -2357,10 +2357,8 @@ export const useAppStore = create<AppStoreState>()(
         const correctCount = battleResults.filter((r) => r.isCorrect).length;
         const won = battleScore > battleOpponentScore;
 
-        // XP: 15 per correct answer, bonus if won
-        const baseXp = correctCount * 15;
-        const winBonus = won ? 25 : 0;
-        const totalXp = baseXp + winBonus;
+        // XP: max 5 XP for battles
+        const totalXp = 5;
 
         // Battle bet rewards:
         // Win: +200 coins (100 bet returned + 100 bonus) and +40 energy (20 bet returned + 20 bonus)
