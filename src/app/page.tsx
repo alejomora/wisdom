@@ -1077,6 +1077,8 @@ function ExerciseView() {
   const showConfetti = useAppStore((s) => s.showConfetti)
   const setShowConfetti = useAppStore((s) => s.setShowConfetti)
   const scenarios = useAppStore((s) => s.scenarios)
+  const user = useAppStore((s) => s.user)
+  const infiniteLivesUntil = useAppStore((s) => s.infiniteLivesUntil)
 
   const currentQuestion = questions[currentQuestionIndex]
   const [inputAnswer, setInputAnswer] = useState('')
@@ -1224,7 +1226,65 @@ function ExerciseView() {
   const totalCount = exerciseResults.length
   const totalQuestions = questions.length
 
+  // No Lives Screen - shown when user runs out of lives during exercise
+  const noLives = user && user.lives <= 0 && infiniteLivesUntil <= Date.now()
+
   // Exercise Complete Screen
+  if (isExerciseComplete && noLives) {
+    const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="glass rounded-3xl p-4 sm:p-8 max-w-md w-full text-center"
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
+            className="text-6xl mb-4"
+          >
+            😢
+          </motion.div>
+
+          <h2 className="text-xl sm:text-2xl font-bold mb-2 text-red-400">
+            ¡Te quedaste sin vidas!
+          </h2>
+
+          <p className="text-muted-foreground mb-4">
+            Las vidas se recargan cada 30 minutos. ¡Sigue practicando!
+          </p>
+
+          <div className="grid grid-cols-2 gap-3 my-6">
+            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+              <p className="text-xl font-bold text-emerald-400">+{exerciseXpEarned}</p>
+              <p className="text-xs text-muted-foreground">XP Ganado</p>
+            </div>
+            <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+              <p className="text-xl font-bold text-cyan-400">{accuracy}%</p>
+              <p className="text-xs text-muted-foreground">Precisión</p>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 mb-6">
+            <p className="text-sm text-red-400">❤️ {user?.lives || 0} vidas</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Espera 30 minutos para recargar una vida</p>
+          </div>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => { resetExercise(); navigate('dashboard') }}
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold"
+          >
+            🏠 Volver al Inicio
+          </motion.button>
+        </motion.div>
+      </div>
+    )
+  }
+
   if (isExerciseComplete) {
     const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0
     return (
@@ -5116,7 +5176,7 @@ function MiniGameMemory() {
           if (matchedCards.every(c => c.matched)) {
             setGameComplete(true)
             playSound('reward')
-            addXp(50)
+            addXp(5)
             addCoins(300)
           }
         }, 500)
@@ -5307,7 +5367,7 @@ function MiniGameTrivia() {
         setSelectedAnswer(null)
       } else {
         setGameOver(true)
-        const xpEarned = (score + (optIndex === triviaQuestions[currentQ].correct ? 1 : 0)) * 15
+        const xpEarned = 5
         const coinsEarned = (score + (optIndex === triviaQuestions[currentQ].correct ? 1 : 0)) * 100
         addXp(xpEarned)
         addCoins(coinsEarned)

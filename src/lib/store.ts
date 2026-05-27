@@ -1750,6 +1750,24 @@ export const useAppStore = create<AppStoreState>()(
       startExercise: async (lessonId) => {
         set({ isLoading: true });
         try {
+          const { user, infiniteLivesUntil } = get();
+          // Validate energy: 10 energy required to start a lesson
+          if (user && (user.energy || 0) < 10) {
+            set({ isLoading: false });
+            get().setNotification({ type: 'error', message: '¡Necesitas 10 de energía para iniciar una lección!' });
+            return;
+          }
+          // Validate lives: cannot start with 0 lives (unless infinite lives active)
+          if (user && user.lives <= 0 && infiniteLivesUntil <= Date.now()) {
+            set({ isLoading: false });
+            get().setNotification({ type: 'error', message: '¡Te quedaste sin vidas! Espera a que se recarguen' });
+            return;
+          }
+          // Deduct energy cost
+          if (user) {
+            get().consumeEnergy(10);
+          }
+
           // Load questions for the lesson
           const res = await fetch(`${API_BASE}/lessons/${lessonId}/questions`);
           if (!res.ok) throw new Error('Failed to load questions');
@@ -1785,7 +1803,7 @@ export const useAppStore = create<AppStoreState>()(
 
         // Normalize answers for comparison: remove commas and extra spaces for ordering exercises
         // This fixes the bug where order_words correctAnswer is "A, B, C, D" but user input is "A B C D"
-        const normalizeAnswer = (ans: string) => ans.trim().toLowerCase().replace(/,\s*/g, ' ').replace(/\s+/g, ' ').trim();
+        const normalizeAnswer = (ans: string) => ans.trim().toLowerCase().replace(/[?!.;:'"]/g, '').replace(/,\s*/g, ' ').replace(/\s+/g, ' ').trim();
         const isCorrect = normalizeAnswer(answer) === normalizeAnswer(currentQuestion.correctAnswer);
         const timeTaken = Date.now() - exerciseStartTime;
 
@@ -1813,7 +1831,13 @@ export const useAppStore = create<AppStoreState>()(
       },
 
       nextQuestion: () => {
-        const { currentQuestionIndex, questions } = get();
+        const { currentQuestionIndex, questions, user, infiniteLivesUntil } = get();
+        // Check if user ran out of lives during exercise
+        if (user && user.lives <= 0 && infiniteLivesUntil <= Date.now()) {
+          // End exercise early - no lives remaining
+          get().completeExercise();
+          return;
+        }
         const nextIndex = currentQuestionIndex + 1;
 
         if (nextIndex >= questions.length) {
@@ -2286,7 +2310,7 @@ export const useAppStore = create<AppStoreState>()(
         const currentQuestion = battleQuestions[battleCurrentIndex];
         if (!currentQuestion) return;
 
-        const normalizeAnswer = (ans: string) => ans.trim().toLowerCase().replace(/,\s*/g, ' ').replace(/\s+/g, ' ').trim();
+        const normalizeAnswer = (ans: string) => ans.trim().toLowerCase().replace(/[?!.;:'"]/g, '').replace(/,\s*/g, ' ').replace(/\s+/g, ' ').trim();
         const isCorrect = normalizeAnswer(answer) === normalizeAnswer(currentQuestion.correctAnswer);
         const timeTaken = (10 - get().battleTimeLeft) * 1000; // approximate time taken
 
