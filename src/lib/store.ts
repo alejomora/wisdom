@@ -2193,6 +2193,24 @@ export const useAppStore = create<AppStoreState>()(
         set({ isLoading: true });
         try {
           const { user } = get();
+
+          // Validate battle cost: 100 coins + 20 energy
+          if (!user) { set({ isLoading: false }); return; }
+          if (user.coins < 100) {
+            set({ isLoading: false });
+            get().setNotification({ type: 'error', message: '¡Necesitas 100 monedas para entrar en batalla!' });
+            return;
+          }
+          if ((user.energy || 0) < 20) {
+            set({ isLoading: false });
+            get().setNotification({ type: 'error', message: '¡Necesitas 20 de energía para entrar en batalla!' });
+            return;
+          }
+
+          // Deduct battle cost
+          get().addCoins(-100);
+          get().consumeEnergy(20);
+
           const userLevel = user?.currentLevelId || 'basic';
 
           // Determine available question levels based on user level
@@ -2320,17 +2338,23 @@ export const useAppStore = create<AppStoreState>()(
         const winBonus = won ? 25 : 0;
         const totalXp = baseXp + winBonus;
 
-        // Coins: 8 per correct answer, bonus if won
-        const baseCoins = correctCount * 8;
-        const coinWinBonus = won ? 15 : 0;
-        const totalCoins = baseCoins + coinWinBonus;
+        // Battle bet rewards:
+        // Win: +200 coins (100 bet returned + 100 bonus) and +40 energy (20 bet returned + 20 bonus)
+        // Lose: nothing returned (already lost the 100 coins and 20 energy at start)
+        const totalCoins = won ? 200 : 0;
+        const totalEnergy = won ? 40 : 0;
 
         set({ battleIsActive: false });
 
         if (user) {
           // Add rewards
           get().addXp(totalXp);
-          get().addCoins(totalCoins);
+          if (totalCoins > 0) get().addCoins(totalCoins);
+          if (totalEnergy > 0) {
+            const newEnergy = Math.min((user.energy || 0) + totalEnergy, user.maxEnergy || 100);
+            set({ user: { ...user, energy: newEnergy } });
+            syncUserToDb(user.id, { energy: newEnergy });
+          }
 
           // Show reward modal
           set({
@@ -2339,8 +2363,8 @@ export const useAppStore = create<AppStoreState>()(
               type: 'battle_complete',
               title: won ? 'Victory!' : 'Battle Over!',
               message: won
-                ? `You won! ${correctCount}/${battleResults.length} correct. +${totalXp} XP, +${totalCoins} coins`
-                : `You lost ${correctCount}/${battleResults.length} correct. +${totalXp} XP, +${totalCoins} coins`,
+                ? `¡Ganaste! ${correctCount}/${battleResults.length} correctas. +${totalXp} XP, +${totalCoins} monedas, +${totalEnergy} energía`
+                : `Perdiste ${correctCount}/${battleResults.length} correctas. +${totalXp} XP`,
               xp: totalXp,
               coins: totalCoins,
             },
