@@ -2351,7 +2351,7 @@ export const useAppStore = create<AppStoreState>()(
           get().addXp(totalXp);
           if (totalCoins > 0) get().addCoins(totalCoins);
           if (totalEnergy > 0) {
-            const newEnergy = Math.min((user.energy || 0) + totalEnergy, user.maxEnergy || 100);
+            const newEnergy = Math.min((user.energy || 0) + totalEnergy, user.maxEnergy || 200);
             set({ user: { ...user, energy: newEnergy } });
             syncUserToDb(user.id, { energy: newEnergy });
           }
