@@ -3770,7 +3770,7 @@ function BattleView() {
               <div>
                 <p className="text-xs font-bold text-emerald-400 mb-2">🎁 ¡Premios por ganar!</p>
                 <div className="flex items-center justify-center gap-4">
-                  <span className="text-sm">🪙 <strong className="text-yellow-400">+200</strong> monedas</span>
+                  <span className="text-sm">🪙 <strong className="text-yellow-400">+150</strong> monedas</span>
                   <span className="text-sm">⚡ <strong className="text-cyan-400">+40</strong> energía</span>
                   <span className="text-sm">⭐ <strong className="text-purple-400">+5</strong> XP</span>
                 </div>
@@ -3779,7 +3779,7 @@ function BattleView() {
               <div>
                 <p className="text-xs font-bold text-red-400 mb-2">💸 Perdiste tu apuesta</p>
                 <div className="flex items-center justify-center gap-4">
-                  <span className="text-sm text-muted-foreground">🪙 <strong className="text-red-400">-100</strong> monedas</span>
+                  <span className="text-sm text-muted-foreground">🪙 <strong className="text-red-400">-50</strong> monedas</span>
                   <span className="text-sm text-muted-foreground">⚡ <strong className="text-red-400">-20</strong> energía</span>
                   <span className="text-sm">⭐ <strong className="text-purple-400">+5</strong> XP</span>
                 </div>
@@ -3849,7 +3849,7 @@ function BattleView() {
             <div className="p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center gap-2 justify-center">
               <span className="text-lg">🪙</span>
               <div>
-                <p className="text-lg font-bold text-yellow-400">100</p>
+                <p className="text-lg font-bold text-yellow-400">50</p>
                 <p className="text-[10px] text-muted-foreground">Costo monedas</p>
               </div>
             </div>
@@ -3872,8 +3872,8 @@ function BattleView() {
               <p className="text-xs text-muted-foreground">Por pregunta</p>
             </div>
             <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-              <p className="text-xl sm:text-2xl font-bold text-yellow-400">+25</p>
-              <p className="text-xs text-muted-foreground">XP/Correcta</p>
+              <p className="text-xl sm:text-2xl font-bold text-yellow-400">+5</p>
+              <p className="text-xs text-muted-foreground">XP Batalla</p>
             </div>
           </div>
 
@@ -3881,16 +3881,16 @@ function BattleView() {
           <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20 mb-6">
             <p className="text-xs font-bold text-emerald-400 mb-1">🎁 Si ganas recibes:</p>
             <div className="flex items-center justify-center gap-4">
-              <span className="text-sm text-muted-foreground">🪙 <strong className="text-yellow-400">200</strong> monedas</span>
+              <span className="text-sm text-muted-foreground">🪙 <strong className="text-yellow-400">150</strong> monedas</span>
               <span className="text-sm text-muted-foreground">⚡ <strong className="text-cyan-400">40</strong> energía</span>
             </div>
           </div>
 
           {/* Insufficient resources warning */}
-          {user && (user.coins < 100 || (user.energy || 0) < 20) && (
+          {user && (user.coins < 50 || (user.energy || 0) < 20) && (
             <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 mb-4">
               <p className="text-xs text-red-400 font-bold">⚠️ No tienes suficientes recursos:</p>
-              {user.coins < 100 && <p className="text-xs text-red-300">Necesitas {100 - user.coins} monedas más</p>}
+              {user.coins < 50 && <p className="text-xs text-red-300">Necesitas {50 - user.coins} monedas más</p>}
               {(user.energy || 0) < 20 && <p className="text-xs text-red-300">Necesitas {20 - (user.energy || 0)} energía más</p>}
             </div>
           )}
@@ -3899,10 +3899,10 @@ function BattleView() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleStartBattle}
-            disabled={isStarting || (user !== null && user !== undefined && (user.coins < 100 || (user.energy || 0) < 20))}
+            disabled={isStarting || (user !== null && user !== undefined && (user.coins < 50 || (user.energy || 0) < 20))}
             className="px-8 py-4 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold text-lg shadow-lg shadow-red-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isStarting ? '⏳ Buscando oponente...' : (user && (user.coins < 100 || (user.energy || 0) < 20)) ? '⚠️ Sin recursos' : '⚔️ ¡A Batalla!'}
+            {isStarting ? '⏳ Buscando oponente...' : (user && (user.coins < 50 || (user.energy || 0) < 20)) ? '⚠️ Sin recursos' : '⚔️ ¡A Batalla!'}
           </motion.button>
         </motion.div>
       </div>

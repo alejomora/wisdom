@@ -2218,11 +2218,11 @@ export const useAppStore = create<AppStoreState>()(
         try {
           const { user } = get();
 
-          // Validate battle cost: 100 coins + 20 energy
+          // Validate battle cost: 50 coins + 20 energy
           if (!user) { set({ isLoading: false }); return; }
-          if (user.coins < 100) {
+          if (user.coins < 50) {
             set({ isLoading: false });
-            get().setNotification({ type: 'error', message: '¡Necesitas 100 monedas para entrar en batalla!' });
+            get().setNotification({ type: 'error', message: '¡Necesitas 50 monedas para entrar en batalla!' });
             return;
           }
           if ((user.energy || 0) < 20) {
@@ -2232,7 +2232,7 @@ export const useAppStore = create<AppStoreState>()(
           }
 
           // Deduct battle cost
-          get().addCoins(-100);
+          get().addCoins(-50);
           get().consumeEnergy(20);
 
           const userLevel = user?.currentLevelId || 'basic';
@@ -2249,8 +2249,12 @@ export const useAppStore = create<AppStoreState>()(
           // Filter battle questions by available levels
           const pool = BATTLE_QUESTIONS.filter(q => availableLevels.includes(q.level));
 
-          // Shuffle and pick 5
-          const shuffled = [...pool].sort(() => Math.random() - 0.5);
+          // Fisher-Yates shuffle for better randomness
+          const shuffled = [...pool];
+          for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+          }
           const selectedQuestions = shuffled.slice(0, 5);
 
           // Create virtual opponent
@@ -2361,9 +2365,9 @@ export const useAppStore = create<AppStoreState>()(
         const totalXp = 5;
 
         // Battle bet rewards:
-        // Win: +200 coins (100 bet returned + 100 bonus) and +40 energy (20 bet returned + 20 bonus)
-        // Lose: nothing returned (already lost the 100 coins and 20 energy at start)
-        const totalCoins = won ? 200 : 0;
+        // Win: +150 coins (50 bet returned + 100 bonus) and +40 energy (20 bet returned + 20 bonus)
+        // Lose: nothing returned (already lost the 50 coins and 20 energy at start)
+        const totalCoins = won ? 150 : 0;
         const totalEnergy = won ? 40 : 0;
 
         set({ battleIsActive: false });
@@ -2373,9 +2377,13 @@ export const useAppStore = create<AppStoreState>()(
           get().addXp(totalXp);
           if (totalCoins > 0) get().addCoins(totalCoins);
           if (totalEnergy > 0) {
-            const newEnergy = Math.min((user.energy || 0) + totalEnergy, user.maxEnergy || 200);
-            set({ user: { ...user, energy: newEnergy } });
-            syncUserToDb(user.id, { energy: newEnergy });
+            // Use get() to get the latest user state (addXp/addCoins may have updated it)
+            const latestUser = get().user;
+            if (latestUser) {
+              const newEnergy = Math.min((latestUser.energy || 0) + totalEnergy, latestUser.maxEnergy || 200);
+              set({ user: { ...latestUser, energy: newEnergy } });
+              syncUserToDb(latestUser.id, { energy: newEnergy });
+            }
           }
 
           // Show reward modal
