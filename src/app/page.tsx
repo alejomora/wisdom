@@ -4177,23 +4177,29 @@ function ReadingsView() {
               >
                 {hasAudio ? (isSpeaking ? '⏹️ Detener Lectura' : '🔊 Escuchar Lectura') : '🔒 Audio (250 🪙)'}
               </motion.button>
-              {/* Spanish toggle */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  if (hasSpanish) {
-                    setShowSpanishTranslation(!showSpanishTranslation)
-                  } else {
-                    unlockSpanishTranslation(currentReading.id)
-                  }
-                }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
-                  hasSpanish ? 'bg-teal-500/10 border border-teal-500/20 text-teal-400' : 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-400'
-                }`}
-              >
-                {hasSpanish ? (showSpanishTranslation ? '🇬🇧 English' : '🇪🇸 Español') : '🔒 Traducción (200 🪙)'}
-              </motion.button>
+              {/* Spanish toggle - only available for basic level */}
+              {currentReading.level === 'basic' ? (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    if (hasSpanish) {
+                      setShowSpanishTranslation(!showSpanishTranslation)
+                    } else {
+                      unlockSpanishTranslation(currentReading.id)
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
+                    hasSpanish ? 'bg-teal-500/10 border border-teal-500/20 text-teal-400' : 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-400'
+                  }`}
+                >
+                  {hasSpanish ? (showSpanishTranslation ? '🇬🇧 English' : '🇪🇸 Español') : '🔒 Traducción (200 🪙)'}
+                </motion.button>
+              ) : (
+                <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-secondary border border-border text-muted-foreground cursor-not-allowed" title="Solo disponible en nivel básico">
+                  🇪🇸 Solo Básico
+                </span>
+              )}
             </div>
           </div>
           <p className="text-sm leading-relaxed">
