@@ -2587,7 +2587,7 @@ export const useAppStore = create<AppStoreState>()(
         if (purchasedShopReadings.includes(readingId)) return;
         const reading = shopReadings.find(r => r.id === readingId);
         if (!reading) return;
-        const cost = reading.level === 'basic' ? 800 : reading.level === 'intermediate' ? 1200 : 1500;
+        const cost = reading.level === 'basic' ? 5000 : reading.level === 'intermediate' ? 10000 : 15000;
         if (user.coins < cost) {
           get().setNotification({ type: 'error', message: `¡Necesitas ${cost} monedas para comprar esta lectura!` });
           return;

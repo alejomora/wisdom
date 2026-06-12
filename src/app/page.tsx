@@ -2922,16 +2922,16 @@ function ShopView() {
   ]
 
   const coinPacks = [
-    { amount: 1000, label: '1,000 Monedas', icon: '🪙' },
-    { amount: 3000, label: '3,000 Monedas', icon: '💰' },
-    { amount: 5000, label: '5,000 Monedas', icon: '💎' },
-    { amount: 10000, label: '10,000 Monedas', icon: '👑' },
+    { amount: 500, label: '500 Monedas', icon: '🪙', active: true },
+    { amount: 3000, label: '3,000 Monedas', icon: '💰', active: false },
+    { amount: 5000, label: '5,000 Monedas', icon: '💎', active: false },
+    { amount: 10000, label: '10,000 Monedas', icon: '👑', active: false },
   ]
 
   const readingPacks = [
-    { level: 'basic', label: 'Lectura Básico', icon: '🌱', cost: 1000 },
-    { level: 'intermediate', label: 'Lectura Intermedio', icon: '🔥', cost: 1500 },
-    { level: 'advanced', label: 'Lectura Avanzado', icon: '🧠', cost: 2000 },
+    { level: 'basic', label: 'Lectura Básico', icon: '🌱', cost: 5000 },
+    { level: 'intermediate', label: 'Lectura Intermedio', icon: '🔥', cost: 10000 },
+    { level: 'advanced', label: 'Lectura Avanzado', icon: '🧠', cost: 15000 },
   ]
 
   return (
@@ -3168,16 +3168,16 @@ function ShopView() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.05 }}
-                whileHover={!watchingVideo ? { scale: 1.05 } : {}}
-                whileTap={!watchingVideo ? { scale: 0.95 } : {}}
-                onClick={() => handleWatchVideo(pack.amount)}
-                disabled={watchingVideo}
+                whileHover={!watchingVideo && pack.active ? { scale: 1.05 } : {}}
+                whileTap={!watchingVideo && pack.active ? { scale: 0.95 } : {}}
+                onClick={() => pack.active && handleWatchVideo(pack.amount)}
+                disabled={watchingVideo || !pack.active}
                 className="p-4 rounded-xl border border-yellow-500/30 bg-yellow-500/5 text-center disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <span className="text-3xl block mb-2">{pack.icon}</span>
                 <p className="font-bold text-sm text-yellow-400">{pack.label}</p>
-                <div className="mt-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-xs font-bold inline-block">
-                  🎬 Ver Video
+                <div className={`mt-2 px-3 py-1.5 rounded-lg text-xs font-bold inline-block ${pack.active ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-white' : 'bg-secondary text-muted-foreground'}`}>
+                  {pack.active ? '🎬 Ver Video' : '🔒 Próximamente'}
                 </div>
               </motion.button>
             ))}
@@ -3216,7 +3216,7 @@ function ShopView() {
               };
               return shopReadings.map((reading, i) => {
                 const unlocked = isShopReadingUnlocked(reading.id);
-                const cost = reading.level === 'basic' ? 800 : reading.level === 'intermediate' ? 1200 : 1500;
+                const cost = reading.level === 'basic' ? 5000 : reading.level === 'intermediate' ? 10000 : 15000;
                 const canAfford = (user?.coins || 0) >= cost;
                 return (
                   <motion.div
