@@ -69,6 +69,8 @@ export interface Level {
   color: string;
   order: number;
   minXp: number;
+  totalLessons: number;
+  completedLessons: number;
 }
 
 export interface Scenario {
@@ -390,6 +392,10 @@ export interface AppStoreState {
   buyLives: (amount: number) => void;
   buyEnergy: () => void;
   buyCoinPack: (amount: number) => void;
+
+  // Actions - Level Access (Hybrid Strict)
+  canAccessLevel: (levelSlug: string) => boolean;
+  getLevelAccessInfo: (levelSlug: string) => { hasXp: boolean; hasLessons: boolean; requiredXp: number; currentXp: number; requiredLessons: number; completedLessons: number };
 }
 
 // ============================================
@@ -1687,10 +1693,17 @@ export const useAppStore = create<AppStoreState>()(
       loadLevels: async () => {
         set({ isLoading: true });
         try {
-          const res = await fetch(`${API_BASE}/levels`);
+          const userId = get().user?.id;
+          const url = userId ? `${API_BASE}/levels?userId=${userId}` : `${API_BASE}/levels`;
+          const res = await fetch(url);
           if (!res.ok) throw new Error('Failed to load levels');
           const data = await res.json();
-          set({ levels: data.levels ?? data, isLoading: false });
+          const levels = (data.levels ?? data).map((l: Level) => ({
+            ...l,
+            totalLessons: l.totalLessons ?? 0,
+            completedLessons: l.completedLessons ?? 0,
+          }));
+          set({ levels, isLoading: false });
         } catch (error) {
           console.error('Failed to load levels:', error);
           set({ isLoading: false });
@@ -1863,12 +1876,8 @@ export const useAppStore = create<AppStoreState>()(
         const totalCount = exerciseResults.length;
         const accuracy = totalCount > 0 ? correctCount / totalCount : 0;
 
-        // XP: base 10 per correct answer + bonus for speed
-        const baseXp = correctCount * 10;
-        const speedBonus = Math.floor(
-          exerciseResults.reduce((sum, r) => sum + (r.isCorrect ? Math.max(0, 30000 - r.timeTaken) / 1000 : 0), 0)
-        );
-        const totalXp = baseXp + speedBonus;
+        // XP: max 30 XP per lesson
+        const totalXp = 30;
 
         // Stars: 3 for 90%+, 2 for 70%+, 1 for 50%+, 0 otherwise
         let stars = 0;
@@ -1979,6 +1988,8 @@ export const useAppStore = create<AppStoreState>()(
                 set({ scenarios: scenariosData.scenarios ?? scenariosData });
               }
             }
+            // Refresh levels to update completedLessons counts
+            get().loadLevels();
           }
         } catch (error) {
           console.error('Failed to save exercise results:', error);
@@ -2853,6 +2864,54 @@ export const useAppStore = create<AppStoreState>()(
       setIsLoading: (val) => set({ isLoading: val }),
 
       setShowLevelUpAnimation: (val) => set({ showLevelUpAnimation: val }),
+
+      // ────────────────────────────────────────────
+      // LEVEL ACCESS (Hybrid Strict: XP + Lessons)
+      // ────────────────────────────────────────────
+      canAccessLevel: (levelSlug) => {
+        const { levels, user } = get();
+        if (!user) return false;
+        // Basic is always accessible
+        if (levelSlug === 'basic') return true;
+        const targetLevel = levels.find((l) => l.slug === levelSlug);
+        if (!targetLevel) return false;
+        // Must have XP
+        const hasXp = user.xp >= targetLevel.minXp;
+        // Must have completed all lessons in prerequisite levels
+        let requiredLessonsTotal = 0;
+        let completedLessonsTotal = 0;
+        const order = targetLevel.order;
+        for (const lvl of levels) {
+          if (lvl.order < order) {
+            requiredLessonsTotal += lvl.totalLessons;
+            completedLessonsTotal += lvl.completedLessons;
+          }
+        }
+        const hasLessons = requiredLessonsTotal === 0 || completedLessonsTotal >= requiredLessonsTotal;
+        return hasXp && hasLessons;
+      },
+
+      getLevelAccessInfo: (levelSlug) => {
+        const { levels, user } = get();
+        const targetLevel = levels.find((l) => l.slug === levelSlug);
+        const currentXp = user?.xp ?? 0;
+        const requiredXp = targetLevel?.minXp ?? 0;
+        const hasXp = currentXp >= requiredXp;
+        // Calculate required/completed lessons from prerequisite levels
+        let requiredLessons = 0;
+        let completedLessons = 0;
+        if (targetLevel) {
+          const order = targetLevel.order;
+          for (const lvl of levels) {
+            if (lvl.order < order) {
+              requiredLessons += lvl.totalLessons;
+              completedLessons += lvl.completedLessons;
+            }
+          }
+        }
+        const hasLessons = requiredLessons === 0 || completedLessons >= requiredLessons;
+        return { hasXp, hasLessons, requiredXp, currentXp, requiredLessons, completedLessons };
+      },
     }),
     {
       name: 'wisdomquest-preferences',

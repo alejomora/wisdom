@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAppStore, parseQuestionOptions, type ViewName, type Question, type ViewMode, computeTitle, TITLE_TIERS } from '@/lib/store'
+import { useAppStore, parseQuestionOptions, type ViewName, type Question, type ViewMode, type Level, computeTitle, TITLE_TIERS } from '@/lib/store'
 
 // ============================================
 // ICONS (inline SVG to avoid import issues)
@@ -607,12 +607,6 @@ function Dashboard() {
     navigate('scenario-map', { levelId })
   }
 
-  const levelColors = {
-    basic: { from: 'from-emerald-500', to: 'to-green-600', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
-    intermediate: { from: 'from-orange-500', to: 'to-amber-600', bg: 'bg-orange-500/10', border: 'border-orange-500/20', text: 'text-orange-400', glow: 'shadow-orange-500/20' },
-    advanced: { from: 'from-purple-500', to: 'to-violet-600', bg: 'bg-purple-500/10', border: 'border-purple-500/20', text: 'text-purple-400', glow: 'shadow-purple-500/20' },
-  }
-
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 pb-24">
       {/* Welcome Banner */}
@@ -673,48 +667,7 @@ function Dashboard() {
         🗺️ Choose Your World
       </h3>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        {levels.map((level, i) => {
-          const colors = levelColors[level.slug as keyof typeof levelColors] || levelColors.basic
-          const isLocked = level.minXp > (user?.xp || 0)
-
-          return (
-            <motion.button
-              key={level.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              whileHover={!isLocked ? { scale: 1.03 } : {}}
-              whileTap={!isLocked ? { scale: 0.97 } : {}}
-              onClick={() => !isLocked && handleLevelClick(level.id)}
-              disabled={isLocked}
-              className={`card-premium rounded-2xl p-4 sm:p-6 text-left relative overflow-hidden ${
-                isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-              } bg-gradient-card border ${colors.border} shadow-lg ${colors.glow}`}
-            >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${colors.from} ${colors.to} opacity-10 rounded-full -translate-y-1/2 translate-x-1/2" />
-              <div className="text-3xl sm:text-4xl mb-3">{level.icon}</div>
-              <h4 className={`text-lg sm:text-xl font-bold ${colors.text}`}>{level.name}</h4>
-              <p className="text-sm text-muted-foreground mt-1">{level.descriptionEs}</p>
-
-              {isLocked && (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded-2xl">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Icons.lock size={20} />
-                    <span className="text-sm font-medium">{level.minXp} XP required</span>
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-4 flex items-center gap-2">
-                <div className={`px-3 py-1 rounded-full text-xs font-medium ${colors.bg} ${colors.text}`}>
-                  {level.minXp === 0 ? 'Free' : `${level.minXp} XP`}
-                </div>
-              </div>
-            </motion.button>
-          )
-        })}
-      </div>
+      <LevelCards levels={levels} onLevelClick={handleLevelClick} />
 
       {/* Quick Actions */}
       <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -779,6 +732,84 @@ function Dashboard() {
         </div>
       </div>
     </div>
+  )
+}
+
+// ============================================
+// LEVEL CARDS (Hybrid Strict: XP + Lessons)
+// ============================================
+function LevelCards({ levels, onLevelClick }: {
+  levels: Level[];
+  onLevelClick: (levelId: string) => void;
+}) {
+  const getLevelAccessInfo = useAppStore((s) => s.getLevelAccessInfo)
+  const canAccessLevel = useAppStore((s) => s.canAccessLevel)
+
+  const levelColors = {
+    basic: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
+    intermediate: { bg: 'bg-orange-500/10', border: 'border-orange-500/20', text: 'text-orange-400', glow: 'shadow-orange-500/20' },
+    advanced: { bg: 'bg-purple-500/10', border: 'border-purple-500/20', text: 'text-purple-400', glow: 'shadow-purple-500/20' },
+  }
+
+  return (
+      <div className="grid gap-4 sm:grid-cols-3">
+        {levels.map((level, i) => {
+          const colors = levelColors[level.slug as keyof typeof levelColors] || levelColors.basic
+          const accessInfo = getLevelAccessInfo(level.slug)
+          const isLocked = !canAccessLevel(level.slug)
+
+          return (
+            <motion.button
+              key={level.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              whileHover={!isLocked ? { scale: 1.03 } : {}}
+              whileTap={!isLocked ? { scale: 0.97 } : {}}
+              onClick={() => !isLocked && onLevelClick(level.id)}
+              disabled={isLocked}
+              className={`card-premium rounded-2xl p-4 sm:p-6 text-left relative overflow-hidden ${
+                isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+              } bg-gradient-card border ${colors.border} shadow-lg ${colors.glow}`}
+            >
+              <div className="text-3xl sm:text-4xl mb-3">{level.icon}</div>
+              <h4 className={`text-lg sm:text-xl font-bold ${colors.text}`}>{level.name}</h4>
+              <p className="text-sm text-muted-foreground mt-1">{level.descriptionEs}</p>
+
+              {isLocked && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded-2xl">
+                  <div className="flex flex-col items-center gap-1.5 text-muted-foreground p-3">
+                    <Icons.lock size={20} />
+                    {!accessInfo.hasXp && (
+                      <span className="text-xs font-medium text-center">🔒 {accessInfo.requiredXp} XP requeridos ({accessInfo.currentXp}/{accessInfo.requiredXp})</span>
+                    )}
+                    {!accessInfo.hasLessons && (
+                      <span className="text-xs font-medium text-center">📚 {accessInfo.requiredLessons} lecciones requeridas ({accessInfo.completedLessons}/{accessInfo.requiredLessons})</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                {level.minXp === 0 ? (
+                  <div className={`px-3 py-1 rounded-full text-xs font-medium ${colors.bg} ${colors.text}`}>
+                    Libre
+                  </div>
+                ) : (
+                  <>
+                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${accessInfo.hasXp ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                      {accessInfo.hasXp ? '✅' : '🔒'} {accessInfo.currentXp}/{accessInfo.requiredXp} XP
+                    </div>
+                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${accessInfo.hasLessons ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                      {accessInfo.hasLessons ? '✅' : '📚'} {accessInfo.completedLessons}/{accessInfo.requiredLessons} lecciones
+                    </div>
+                  </>
+                )}
+              </div>
+            </motion.button>
+          )
+        })}
+      </div>
   )
 }
 
