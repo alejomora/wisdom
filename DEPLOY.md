@@ -1,8 +1,7 @@
-# 🚀 Guía de Deploy: Prompt Maestro en Vercel + Hostinger MySQL
+# 🚀 Guía de Deploy: Wisdom Quest en Vercel + Supabase
 
-## Costo total: **$0 adicionales/mes** 🎉
-> Ya pagas por Hostinger, así que la base de datos MySQL ya está incluida.
-> Vercel Hobby plan es 100% gratis.
+## Costo total: **$0/mes** 🎉
+> Supabase plan gratis + Vercel Hobby plan = $0
 
 ---
 
@@ -10,272 +9,216 @@
 
 ```
 ┌─────────────────┐         ┌──────────────────────┐
-│   VERCEL        │  ────→  │   HOSTINGER MySQL     │
-│   (Frontend +   │  Remoto │   (Base de datos)     │
-│    API Routes)  │  :3306  │                      │
+│   VERCEL        │  ────→  │   SUPABASE            │
+│   (Frontend +   │  HTTPS  │   (PostgreSQL)        │
+│    API Routes)  │  SSL ✅  │   Persistente ✅       │
+│                 │         │   Connection Pool ✅    │
+│   GRATIS        │         │   GRATIS (500MB)       │
 └─────────────────┘         └──────────────────────┘
-     🌐 Internet                  🗄️ Tu hosting
+     🌐 Internet                  🗄️ PostgreSQL
 ```
 
 - **Vercel**: Hospeda la app Next.js (frontend + API routes) → **Gratis**
-- **Hostinger MySQL**: Base de datos remota → **Ya incluido en tu plan**
+- **Supabase**: Base de datos PostgreSQL en la nube → **Gratis (500MB)**
 
 ---
 
-## ⚠️ Requisito IMPORTANTE: Acceso Remoto MySQL
+## PASO 1: Crear cuenta en Supabase
 
-Tu plan de Hostinger **DEBE** permitir acceso remoto a MySQL. La mayoría de los planes Premium y Business lo permiten.
+### 1a. Registrarse
 
-### ¿Cómo verificarlo?
-1. Entra a tu **hPanel** de Hostinger
-2. Ve a **Bases de datos** → **MySQL**
-3. Busca la sección **"Acceso Remoto"** o **"Remote MySQL"**
-4. Si existe → ✅ ¡Perfecto! Tu plan lo soporta
-5. Si NO existe → ❌ Necesitas actualizar tu plan o usar Supabase como alternativa
+1. Ve a **https://supabase.com**
+2. Clic en **"Start your project"**
+3. Regístrate con GitHub (más fácil) o email
+4. Clic en **"New Project"**
 
----
+### 1b. Crear el proyecto
 
-## PASO 1: Crear la base de datos en Hostinger
+1. **Name**: `wisdom-quest` (o el que prefieras)
+2. **Database Password**: Elige una contraseña FUERTE (¡guárdala!)
+3. **Region**: Selecciona **US East (North Virginia)** — más cerca de Colombia
+4. Clic en **"Create new project"**
+5. Espera ~2 minutos mientras se crea
 
-### 1a. Crear base de datos y usuario
+### 1c. Obtener la URL de conexión
 
-1. Entra a tu **hPanel** de Hostinger
-2. Ve a **Bases de datos** → **MySQL Bases de datos**
-3. En **"Crear nueva base de datos"**:
-   - **Nombre**: `lingoqueest` (o el que prefieras)
-   - **Usuario**: Crea un usuario nuevo (ej: `lingo_user`)
-   - **Contraseña**: Elige una contraseña fuerte (¡guárdala!)
-4. Clic en **"Crear"**
+1. En tu proyecto, ve a **Settings** (⚙️ icono abajo a la izquierda)
+2. Clic en **Database**
+3. Busca la sección **"Connection string"**
+4. Selecciona **"URI"** tab
+5. Verás algo como:
+   ```
+   postgresql://postgres.xxxxx:[YOUR-PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+   ```
+6. Reemplaza `[YOUR-PASSWORD]` con tu contraseña del paso 1b
 
-> **Nota**: Hostinger agrega un prefijo automáticamente. El nombre real será algo como `u123456789_lingoqueest`
+### 1d. ⚠️ IMPORTANTE: Connection Pooler vs Direct
 
-### 1b. Habilitar acceso remoto ⚠️ CRÍTICO
+Supabase te da DOS URLs:
 
-1. En la misma página de **MySQL Bases de datos**
-2. Busca la sección **"Acceso Remoto"** o **"Access Hosts"**
-3. Agrega el host: `%` (significa "cualquier IP" — necesario para Vercel)
-4. Clic en **"Agregar"** o **"Añadir"**
+| Tipo | Puerto | Para qué |
+|------|--------|----------|
+| **Pooler (Transaction)** | 6543 | Para Vercel (producción) ✅ |
+| **Direct** | 5432 | Para migraciones (prisma db push) |
 
-> ⚠️ **Sin este paso, Vercel NO puede conectarse a tu base de datos.**
-> Si Hostinger no te permite agregar `%`, intenta agregar las IPs de Vercel
-> (pero cambian frecuentemente, así que `%` es la mejor opción).
-
-### 1c. Obtener los datos de conexión
-
-En la página de tu base de datos, anota:
-
-| Dato | Dónde encontrarlo | Ejemplo |
-|------|-------------------|---------|
-| **Host** | Detalles de la BD (NO es "localhost") | `mysql.hostinger.co` o `185.XXX.XXX.XX` |
-| **Puerto** | Detalles de la BD | `3306` |
-| **Nombre BD** | Con el prefijo | `u123456789_lingoqueest` |
-| **Usuario** | El que creaste | `u123456789_lingo_user` |
-| **Contraseña** | La que creaste | `MiP4ssw0rd!` |
-
-### 1d. Construir la URL de conexión
-
-Formato:
-```
-mysql://USUARIO:CONTRASENA@HOST:PUERTO/NOMBRE_BD
-```
-
-Ejemplo:
-```
-mysql://u123456789_lingo_user:MiP4ssw0rd!@mysql.hostinger.co:3306/u123456789_lingoqueest
-```
-
-> ⚠️ **Codificar caracteres especiales en la contraseña:**
-> Si tu contraseña tiene caracteres especiales, reemplázalos:
-> - `@` → `%40`
-> - `#` → `%23`
-> - `/` → `%2F`
-> - `!` → `%21`
-> - `&` → `%26`
-> - `?` → `%3F`
-> - `=` → `%3D`
->
-> Ejemplo: `MiP4ss@w0rd!` → `MiP4ss%40w0rd%21`
+**Para Vercel usa la URL del POOLER** (puerto 6543) con `?pgbouncer=true`
+**Para migraciones usa la URL DIRECTA** (puerto 5432)
 
 ---
 
-## PASO 2: Cambiar Prisma a MySQL ⚠️ IMPORTANTE
+## PASO 2: Crear tablas en Supabase con Prisma
 
-Antes de subir a Vercel, necesitas cambiar el proveedor de base de datos.
-
-### 2a. Editar `prisma/schema.prisma`
-
-Cambia la línea 6:
-
-```prisma
-// ANTES (para desarrollo local con SQLite):
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
-
-// DESPUÉS (para Vercel + Hostinger MySQL):
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
-```
-
-### 2b. Cambiar el .env temporalmente
-
-Edita tu archivo `.env` y cambia la URL a la de Hostinger:
-
-```
-DATABASE_URL=mysql://u123456789_lingo_user:MiP4ss%40w0rd%21@mysql.hostinger.co:3306/u123456789_lingoqueest
-```
-
-### 2c. Generar el cliente Prisma y crear tablas
+### 2a. Cambiar schema a PostgreSQL
 
 ```bash
-# Generar el cliente Prisma para MySQL
-bunx prisma generate
+bun run db:switch:postgresql
+```
 
-# Crear las tablas en Hostinger MySQL
+Esto copia `schema.postgresql.prisma` a `schema.prisma` y genera el client.
+
+### 2b. Cambiar .env temporalmente a Supabase (DIRECT URL)
+
+Edita tu archivo `.env` y cambia la URL a la conexión DIRECTA de Supabase:
+
+```
+DATABASE_URL=postgresql://postgres.xxxxx:TU_PASSWORD@aws-0-us-east-1.pooler.supabase.com:5432/postgres
+```
+
+> ⚠️ Usa el puerto **5432** (directa) para migraciones, NO el 6543
+
+### 2c. Crear las tablas
+
+```bash
 bunx prisma db push
 ```
 
-> ⚠️ Si `prisma db push` falla con error de conexión:
-> - Verifica que agregaste `%` en "Acceso Remoto" de Hostinger
-> - Verifica que el host, usuario y contraseña sean correctos
-> - Prueba conectarte desde tu computadora con un cliente MySQL como DBeaver o MySQL Workbench
+Esto crea todas las tablas en Supabase. Deberías ver:
+```
+🚀 Your database is now in sync with your Prisma schema.
+```
 
-### 2d. Llenar la base de datos con datos iniciales
+### 2d. Llenar con datos iniciales (seed)
 
 ```bash
 bun run db:seed
 ```
 
-### 2e. Verificar en Hostinger
+Esto crea los niveles, escenarios, lecciones, recompensas, etc.
 
-1. Entra a tu **hPanel** → **phpMyAdmin**
-2. Selecciona tu base de datos
-3. Deberías ver tablas con datos:
+### 2e. Verificar en Supabase
+
+1. Ve a tu proyecto en **supabase.com**
+2. Clic en **Table Editor** (icono de tabla a la izquierda)
+3. Deberías ver todas las tablas con datos:
    - ✅ `User` — 2 usuarios (demo + admin)
    - ✅ `Level` — 3 niveles
-   - ✅ `Scenario` — Escenarios
+   - ✅ `Scenario` — 75 escenarios
    - ✅ `Lesson` + `Question` — Lecciones y preguntas
    - ✅ `Reward` — 68 recompensas
    - ✅ `Mission` — 18 misiones
+   - ✅ `Achievement` — 15 logros
 
 ### 2f. Restaurar .env local (para seguir desarrollando con SQLite)
 
-Si quieres volver a desarrollo local con SQLite:
+```bash
+bun run db:switch:sqlite
+```
 
-1. Cambia `prisma/schema.prisma` de vuelta a `provider = "sqlite"`
-2. Cambia `.env` de vuelta a `DATABASE_URL=file:/home/z/my-project/db/custom.db`
-3. Ejecuta `bunx prisma generate`
-
-> **Tip**: Puedes tener un script que cambie automáticamente. Ver sección "Script de cambio rápido" abajo.
+Esto restaura SQLite y actualiza tu `.env`.
 
 ---
 
-## PASO 3: Subir el código a GitHub
+## PASO 3: Subir a Vercel
 
-### 3a. Asegúrate de que schema.prisma dice "mysql"
+### 3a. Asegúrate de que schema.prisma dice "postgresql"
 
-Verifica que `prisma/schema.prisma` tenga:
-
-```prisma
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
-```
-
-### 3b. Crear repositorio en GitHub
-
-1. Ve a **https://github.com** y crea una cuenta (gratis)
-2. Clic en **"New repository"**
-3. Name: `prompt-maestro`
-4. Selecciona **Private** o **Public** (tu elección)
-5. **NO** marques "Add a README"
-6. Clic en **"Create repository"**
-
-### 3c. Subir el código
-
-En tu terminal local, desde la carpeta del proyecto:
+Antes de hacer push, cambia a PostgreSQL:
 
 ```bash
-# Inicializar git (si no lo has hecho)
-git init
-
-# Agregar todos los archivos
-git add .
-
-# Primer commit
-git commit -m "Prompt Maestro - Ready for Vercel + Hostinger MySQL deployment"
-
-# Cambiar nombre de la rama a main
-git branch -M main
-
-# Conectar con tu repositorio de GitHub
-git remote add origin https://github.com/TU-USUARIO/prompt-maestro.git
-
-# Subir el código
-git push -u origin main
+bun run db:switch:postgresql
 ```
 
-> **Nota**: Si te pide autenticación, usa un Personal Access Token (PAT) de GitHub.
-> Ve a GitHub → Settings → Developer settings → Personal access tokens → Generate new token
+> ⚠️ Verifica que `prisma/schema.prisma` tenga `provider = "postgresql"`
 
----
+### 3b. Hacer commit y push
 
-## PASO 4: Crear cuenta en Vercel y deployar
+```bash
+git add .
+git commit -m "Switch to PostgreSQL for Supabase deployment"
+git push
+```
+
+### 3c. Crear cuenta en Vercel
 
 1. Ve a **https://vercel.com**
 2. Clic en **"Sign Up"**
 3. **Regístrate con GitHub** (eso conecta todo automáticamente)
-4. Clic en **"Add New..."** → **"Project"**
-5. Verás tu repo `prompt-maestro` — clic en **"Import"**
-6. Configura el proyecto:
+
+### 3d. Importar el proyecto
+
+1. Clic en **"Add New..."** → **"Project"**
+2. Verás tu repo `wisdom` — clic en **"Import"**
+3. Configura el proyecto:
    - **Framework Preset**: Next.js (lo detecta automáticamente)
    - **Root Directory**: `.` (dejar por defecto)
-   - **Build Command**: Dejar por defecto
+   - **Build Command**: `next build` (dejar por defecto)
    - **Output Directory**: `.next` (dejar por defecto)
 
-7. ⚠️ **IMPORTANTE — Agregar variables de entorno**:
-   - Abre la sección **"Environment Variables"**
-   - Agrega:
-     - **Key**: `DATABASE_URL`
-     - **Value**: `mysql://u123456789_lingo_user:MiP4ss%40w0rd%21@mysql.hostinger.co:3306/u123456789_lingoqueest`
-   - Clic en **"Add"**
+### 3e. ⚠️ IMPORTANTE — Agregar variables de entorno
 
-8. Clic en **"Deploy"** 🚀
-9. Espera 2-3 minutos
-10. ¡Listo! Vercel te da una URL como: `https://prompt-maestro-xyz123.vercel.app`
+Antes de hacer clic en "Deploy":
+
+1. Abre la sección **"Environment Variables"**
+2. Agrega:
+   - **Key**: `DATABASE_URL`
+   - **Value**: La URL del **POOLER** de Supabase (puerto 6543) con `?pgbouncer=true`
+
+   Ejemplo:
+   ```
+   postgresql://postgres.xxxxx:TU_PASSWORD@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+   ```
+
+   > ⚠️ Usa el puerto **6543** (pooler) para Vercel, NO el 5432
+   > ⚠️ Agrega `?pgbouncer=true` al final
+   > ⚠️ Si tu contraseña tiene caracteres especiales, codifícalos: `@` → `%40`, `#` → `%23`, `!` → `%21`
+
+3. Clic en **"Add"**
+
+### 3f. Deploy 🚀
+
+1. Clic en **"Deploy"**
+2. Espera 2-3 minutos
+3. ¡Listo! Vercel te da una URL como: `https://wisdom-quest-xyz123.vercel.app`
 
 ---
 
-## PASO 5: Verificar que todo funciona
+## PASO 4: Verificar que todo funciona
 
 1. Abre la URL que te dio Vercel
-2. Deberías ver la pantalla de login de Prompt Maestro
+2. Deberías ver la pantalla de login de Wisdom Quest
 3. Inicia sesión con:
-   - **Email**: demo@lingoqueest.com
+   - **Email**: demo@wisdomquest.com
    - **Password**: demo123
 4. Navega por la app y verifica que:
    - ✅ Los niveles y escenarios se cargan
    - ✅ Puedes hacer ejercicios
    - ✅ El progreso se guarda (refresca la página y verifica)
-   - ✅ La pronunciación funciona (speed/voice)
    - ✅ La tienda funciona
    - ✅ Las misiones funcionan
+   - ✅ Las monedas se guardan
+   - ✅ Los avatars se pueden comprar
 
 ---
 
-## PASO 6: Agregar un dominio personalizado (opcional)
+## PASO 5: Agregar un dominio personalizado (opcional)
 
 Si tienes un dominio propio:
 
 1. En Vercel, ve a tu proyecto → **Settings** → **Domains**
-2. Escribe tu dominio (ej: `promptmaestro.com`)
+2. Escribe tu dominio (ej: `wisdomquest.com`)
 3. Clic en **"Add"**
-4. Vercel te dará los registros DNS que debes configurar en Hostinger:
-   - Ve a **hPanel** → **Dominios** → **DNS / Nameservers**
+4. Vercel te dará los registros DNS que debes configurar:
+   - Ve a tu proveedor de dominios → **DNS**
    - Agrega un registro **CNAME** apuntando a `cname.vercel-dns.com`
 5. SSL se configura automáticamente ✅
 
@@ -283,52 +226,43 @@ Si tienes un dominio propio:
 
 ## 🔄 Cómo actualizar la app en el futuro
 
-Cada vez que hagas cambios al código:
+### Flujo de desarrollo → producción:
 
 ```bash
-# Asegúrate de que schema.prisma dice "mysql" antes de hacer push
-git add .
-git commit -m "Descripción del cambio"
-git push
-```
+# 1. Desarrolla localmente con SQLite
+bun run db:switch:sqlite   # Asegúrate de estar en SQLite
+bun run dev                 # Desarrolla normalmente
 
-Vercel detecta el push automáticamente y redespliega en ~1-2 minutos.
+# 2. Cuando estés listo para deploy:
+bun run db:switch:postgresql  # Cambiar schema a PostgreSQL
+git add .
+git commit -m "Nueva funcionalidad"
+git push                       # Vercel redespliega automáticamente
+
+# 3. Volver a desarrollo local:
+bun run db:switch:sqlite       # Restaurar SQLite
+```
 
 ### Si cambias el esquema de la base de datos:
 
 ```bash
-# 1. Cambiar .env a MySQL de Hostinger
-# 2. Cambiar schema.prisma a provider = "mysql"
+# 1. Cambiar a PostgreSQL y apuntar a Supabase DIRECT URL
+bun run db:switch:postgresql
+
+# 2. Editar .env temporalmente a la URL DIRECTA de Supabase (puerto 5432)
+# DATABASE_URL=postgresql://postgres.xxxxx:PASSWORD@aws-0-us-east-1.pooler.supabase.com:5432/postgres
+
 # 3. Aplicar cambios
-bunx prisma generate
 bunx prisma db push
 
-# 4. Volver a SQLite local
-# Cambiar schema.prisma a provider = "sqlite" y .env a file:...
-bunx prisma generate
-```
+# 4. Restaurar SQLite local
+bun run db:switch:sqlite
 
----
-
-## 🛠️ Script de cambio rápido (SQLite ↔ MySQL)
-
-Agrega estos scripts a tu `package.json` para facilitar el cambio:
-
-```json
-{
-  "scripts": {
-    "db:switch:mysql": "sed -i 's/provider = \"sqlite\"/provider = \"mysql\"/' prisma/schema.prisma && bunx prisma generate",
-    "db:switch:sqlite": "sed -i 's/provider = \"mysql\"/provider = \"sqlite\"/' prisma/schema.prisma && bunx prisma generate"
-  }
-}
-```
-
-Uso:
-```bash
-# Cambiar a MySQL (antes de deploy o push)
-bun run db:switch:mysql
-
-# Cambiar a SQLite (para desarrollo local)
+# 5. Commit y push (con schema en postgresql)
+bun run db:switch:postgresql
+git add .
+git commit -m "Schema update"
+git push
 bun run db:switch:sqlite
 ```
 
@@ -337,126 +271,89 @@ bun run db:switch:sqlite
 ## 🛠️ Solución de problemas
 
 ### Error: "P1001: Can't reach database server"
-- **Causa más común**: No habilitaste el acceso remoto en Hostinger
-- **Solución**: Ve a hPanel → Bases de datos → Acceso Remoto → Agregar `%`
-- Verifica que el host MySQL sea correcto (NO es "localhost")
-- Verifica que la contraseña esté codificada (caracteres especiales → URL encoding)
+- Verifica que la URL de Supabase sea correcta
+- Verifica que la contraseña esté correcta
+- Si usas la URL del pooler (6543), agrega `?pgbouncer=true`
+- Para migraciones, usa la URL directa (5432)
 
-### Error: "Access denied for user"
-- Verifica usuario y contraseña
-- Recuerda que Hostinger agrega prefijos al nombre de usuario
-- Codifica caracteres especiales en la contraseña: `@` → `%40`, `!` → `%21`
+### Error: "P3009: cannot find migration"
+- Usa `prisma db push` en lugar de `prisma migrate`
+- `db push` sincroniza el schema sin migraciones
 
-### Error: "The table does not exist"
-- Necesitas correr `prisma db push` apuntando a Hostinger MySQL (ver Paso 2c)
-- Verifica en phpMyAdmin que las tablas existan
+### Error: "Can't reach database server at aws-0-us-east-1.pooler.supabase.com:6543"
+- Verifica tu región — puede que tu proyecto esté en otra región
+- Revisa la Connection String en Supabase Settings → Database
 
-### Error: "Prisma Client could not be generated"
-- Verifica que `prisma/schema.prisma` tenga `provider = "mysql"`
-- El script `postinstall` en package.json debería generar el cliente automáticamente
+### Error: "prepared statement does not exist"
+- Esto pasa cuando usas la URL directa (5432) con pgBouncer
+- Solución: Usa la URL del pooler (6543) con `?pgbouncer=true`
+
+### Error: "Too many connections"
+- Supabase free tier: ~60 conexiones simultáneas
+- Asegúrate de usar el Connection Pooler (puerto 6543)
+- Agrega `?connection_limit=5` a la URL si es necesario
 
 ### La app se ve bien pero no hay datos
-- Corre el seed: `bun run db:seed` apuntando a Hostinger MySQL
-- Verifica en phpMyAdmin que haya datos en las tablas
-
-### Errores de conexión intermitentes / "Too many connections"
-- Hostinger shared hosting tiene un límite de conexiones simultáneas (~25-50)
-- Prisma maneja pool de conexiones automáticamente
-- Si persiste, agrega estos parámetros a la URL:
-  ```
-  ?connection_limit=5&pool_timeout=20
-  ```
-- Ejemplo completo:
-  ```
-  mysql://user:pass@host:3306/db?connection_limit=5&pool_timeout=20
-  ```
-
-### Error: "SSL connection error"
-- Agrega `?sslaccept=strict` o `?sslaccept=accept_invalid_certs` a la URL
-- Ejemplo: `mysql://user:pass@host:3306/db?sslaccept=accept_invalid_certs`
+- Corre el seed apuntando a Supabase: `bun run db:seed`
+- Verifica en Supabase Table Editor que haya datos
 
 ### Vercel build falla
-- Verifica que `prisma/schema.prisma` tenga `provider = "mysql"`
+- Verifica que `prisma/schema.prisma` tenga `provider = "postgresql"`
 - Verifica que la variable `DATABASE_URL` esté configurada en Vercel
-- Verifica que el archivo `.env` NO esté en el repositorio (debe estar en .gitignore)
+- Verifica que `postinstall` esté en package.json (`prisma generate`)
 
-### Hostinger no permite acceso remoto MySQL
-- Verifica que tienes un plan Premium o Business
-- Si tienes un plan Single y no aparece la opción "Acceso Remoto":
-  - **Opción A**: Actualiza a Premium (~$3-6/mes)
-  - **Opción B**: Usa Supabase (PostgreSQL gratis) como alternativa
-  - **Opción C**: Usa un VPS de Hostinger (~$5/mes) donde tienes control total
+### Error: "Prisma Client could not be generated"
+- Verifica que `prisma/schema.prisma` tenga `provider = "postgresql"`
+- Ejecuta manualmente: `bunx prisma generate`
+- Verifica que el archivo `.env` no tenga errores
+
+### Cold starts (lentitud en primera request)
+- Es normal en Vercel serverless — la primera request tarda 1-3s
+- Las siguientes requests son rápidas
+- Si es muy notorio, considera Vercel Pro ($20/mes) con funciones siempre calientes
 
 ---
 
 ## 📊 Límites del plan gratis
 
-| Recurso | Vercel Free | Hostinger MySQL* |
-|---------|------------|------------------|
-| Bandwidth | 100GB/mes | Ilimitado** |
+| Recurso | Vercel Free | Supabase Free |
+|---------|------------|---------------|
+| Bandwidth | 100GB/mes | 5GB/mes |
 | Serverless Functions | 100K/día | — |
-| Base de datos | — | Ilimitado** |
-| Conexiones simultáneas | — | ~25-50 |
-| Almacenamiento BD | — | Ilimitado** |
-| Proyectos | Ilimitados | Ilimitados** |
-
-*\* Incluido en tu plan de Hostinger*
-*\*\* Dentro de los límites de tu plan de hosting*
-
----
-
-## 🔄 Flujo de trabajo recomendado
-
-### Desarrollo local (SQLite):
-```bash
-# 1. Asegúrate de usar SQLite
-# prisma/schema.prisma → provider = "sqlite"
-# .env → DATABASE_URL=file:/home/z/my-project/db/custom.db
-
-# 2. Desarrolla normalmente
-bun run dev
-```
-
-### Deploy a producción (Hostinger MySQL + Vercel):
-```bash
-# 1. Cambiar a MySQL
-# Editar prisma/schema.prisma → provider = "mysql"
-# (No necesitas cambiar .env local)
-
-# 2. Commit y push
-git add .
-git commit -m "Nueva funcionalidad"
-git push
-
-# 3. Volver a SQLite para seguir desarrollando
-# Editar prisma/schema.prisma → provider = "sqlite"
-```
+| Base de datos | — | 500MB |
+| Conexiones simultáneas | — | ~60 |
+| Storage de archivos | — | 1GB |
+| Proyectos | Ilimitados | 2 proyectos |
+| Backups | — | Diarios (7 días) |
+| Row Level Security | — | ✅ Incluido |
+| Real-time | — | ✅ 200 conexiones |
 
 ---
 
 ## 📋 Resumen rápido (Checklist)
 
-- [ ] En Hostinger: Crear base de datos MySQL + usuario
-- [ ] En Hostinger: Habilitar "Acceso Remoto" → agregar `%`
-- [ ] En Hostinger: Anotar host, puerto, nombre BD, usuario, contraseña
-- [ ] Cambiar `prisma/schema.prisma` → `provider = "mysql"`
-- [ ] Cambiar `.env` → DATABASE_URL de Hostinger MySQL
-- [ ] Ejecutar `bunx prisma generate`
+- [ ] Crear cuenta en **supabase.com**
+- [ ] Crear proyecto en Supabase (región US East)
+- [ ] Anotar contraseña y Connection Strings (directa + pooler)
+- [ ] Ejecutar `bun run db:switch:postgresql`
+- [ ] Cambiar `.env` temporalmente a Supabase DIRECT URL (puerto 5432)
 - [ ] Ejecutar `bunx prisma db push`
 - [ ] Ejecutar `bun run db:seed`
-- [ ] Verificar en phpMyAdmin que las tablas y datos existen
-- [ ] Crear repo en GitHub → Subir código (con schema en "mysql")
-- [ ] Crear cuenta en Vercel → Importar repo
-- [ ] Agregar DATABASE_URL en variables de entorno de Vercel
+- [ ] Verificar datos en Supabase Table Editor
+- [ ] Ejecutar `bun run db:switch:postgresql` (asegurar schema en postgresql)
+- [ ] Hacer `git push` (schema debe estar en postgresql)
+- [ ] Crear cuenta en **vercel.com** (con GitHub)
+- [ ] Importar repo `wisdom` en Vercel
+- [ ] Agregar `DATABASE_URL` con Supabase POOLER URL (puerto 6543 + ?pgbouncer=true)
 - [ ] Deploy → ¡Probar la app! 🎉
-- [ ] Restaurar schema a "sqlite" y .env local para seguir desarrollando
+- [ ] Restaurar desarrollo local: `bun run db:switch:sqlite`
 
 ---
 
 ## 🎉 ¡Felicidades!
 
-Tu app Prompt Maestro está ahora online con:
+Tu app Wisdom Quest está ahora online con:
 - **Frontend/API**: Vercel (gratis, CDN global, SSL automático)
-- **Base de datos**: Tu Hostinger MySQL (ya lo pagas, sin costo extra)
+- **Base de datos**: Supabase PostgreSQL (gratis, persistente, con pooler)
 
 ¡A aprender inglés! 🇬🇧📚
