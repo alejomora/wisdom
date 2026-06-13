@@ -421,15 +421,8 @@ function LoginScreen() {
         </form>
 
         <div className="mt-6 p-4 rounded-xl bg-secondary/50 border border-border">
-          <p className="text-xs text-muted-foreground text-center mb-2">Demo Credentials</p>
-          <div className="flex gap-4 justify-center text-xs text-muted-foreground">
-            <span>👤 Player: demo@wisdomquest.com</span>
-            <span>🔑 demo123</span>
-          </div>
-          <div className="flex gap-4 justify-center text-xs text-muted-foreground mt-1">
-            <span>🛡️ Admin: admin@wisdomquest.com</span>
-            <span>🔑 admin123</span>
-          </div>
+          <p className="text-sm font-medium text-center mb-1">🌍 Welcome to Wisdom Quest</p>
+          <p className="text-xs text-muted-foreground text-center">Tu aventura para aprender inglés comienza aquí. ¡Crea tu cuenta y empieza a aprender!</p>
         </div>
       </motion.div>
     </div>
