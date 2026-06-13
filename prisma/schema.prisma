@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -62,8 +62,8 @@ model Level {
   slug        String     @unique // basic | intermediate | advanced
   name        String
   nameEs      String
-  description String     @db.Text
-  descriptionEs String   @db.Text
+  description String
+  descriptionEs String
   icon        String
   color       String
   order       Int
@@ -80,8 +80,8 @@ model Scenario {
   slug          String
   name          String
   nameEs        String
-  description   String   @db.Text
-  descriptionEs String   @db.Text
+  description   String
+  descriptionEs String
   icon          String
   image         String   @default("")
   difficulty    Int      @default(1) // 1-5
@@ -106,8 +106,8 @@ model Lesson {
   scenarioId  String
   title       String
   titleEs     String
-  description String    @db.Text
-  descriptionEs String  @db.Text
+  description String
+  descriptionEs String
   type        String    // vocabulary | grammar | listening | speaking | conversation | reading
   order       Int
   xpReward    Int       @default(10)
@@ -122,15 +122,15 @@ model Question {
   id              String   @id @default(cuid())
   lessonId        String
   type            String   // multiple_choice | fill_blank | listen_write | order_words | match_concepts | pronunciation | translate | choose_image | build_sentence | find_error | dictation | flashcard
-  prompt          String   @db.Text // The question text in English
-  promptEs        String   @db.Text // Spanish hint/translation
-  hintEn          String   @db.Text // Hint in English
-  hintEs          String   @db.Text // Hint in Spanish
-  audioText       String   @db.Text // Text to speak via TTS
-  options         String   @db.Text // JSON array of options
-  correctAnswer   String   @db.Text // The correct answer
-  explanation     String   @db.Text // Why this is correct
-  explanationEs   String   @db.Text // Explanation in Spanish
+  prompt          String   // The question text in English
+  promptEs        String   // Spanish hint/translation
+  hintEn          String   // Hint in English
+  hintEs          String   // Hint in Spanish
+  audioText       String   // Text to speak via TTS
+  options         String   // JSON array of options
+  correctAnswer   String   // The correct answer
+  explanation     String   // Why this is correct
+  explanationEs   String   // Explanation in Spanish
   image           String   @default("")
   points          Int      @default(10)
   order           Int
@@ -150,10 +150,10 @@ model Exam {
   type        String    // midterm | final
   title       String
   titleEs     String
-  description String    @db.Text
-  descriptionEs String  @db.Text
+  description String
+  descriptionEs String
   minScore    Float     @default(0.9) // 90% to pass
-  questions   String    @db.Text // JSON array of question data — PostgreSQL TEXT is unlimited
+  questions   String    // JSON array of question data
   level       Level     @relation(fields: [levelId], references: [id])
   results     ExamResult[]
   createdAt   DateTime  @default(now())
@@ -166,7 +166,7 @@ model ExamResult {
   userId    String
   score     Float
   passed    Boolean
-  answers   String   @db.Text // JSON — PostgreSQL TEXT is unlimited
+  answers   String   // JSON
   exam      Exam     @relation(fields: [examId], references: [id])
   createdAt DateTime @default(now())
 }
@@ -199,7 +199,7 @@ model UserAnswer {
   id          String   @id @default(cuid())
   userId      String
   questionId  String
-  answer      String   @db.Text // User's answer can be long (sentences)
+  answer      String
   isCorrect   Boolean
   timeTaken   Int      @default(0) // ms
   question    Question @relation(fields: [questionId], references: [id])
@@ -215,8 +215,8 @@ model Achievement {
   slug        String   @unique
   name        String
   nameEs      String
-  description String   @db.Text
-  descriptionEs String @db.Text
+  description String
+  descriptionEs String
   icon        String
   category    String   // streak | xp | exercises | scenarios | special
   requirement Int      @default(1)
@@ -241,8 +241,8 @@ model Mission {
   slug          String   @unique
   title         String
   titleEs       String
-  description   String   @db.Text
-  descriptionEs String   @db.Text
+  description   String
+  descriptionEs String
   type          String   // daily | weekly | special
   category      String   // exercises | pronunciation | streak | xp | scenarios
   requirement   Int
@@ -296,7 +296,7 @@ model Notification {
   userId    String
   type      String   // achievement | level_up | streak | mission | event | system
   title     String
-  message   String   @db.Text
+  message   String
   icon      String   @default("🔔")
   read      Boolean  @default(false)
   user      User     @relation(fields: [userId], references: [id])
@@ -312,8 +312,8 @@ model Reward {
   slug        String   @unique
   name        String
   nameEs      String
-  description String   @db.Text
-  descriptionEs String @db.Text
+  description String
+  descriptionEs String
   type        String   // avatar | frame | title | skin | theme
   icon        String
   cost        Int      // coins
