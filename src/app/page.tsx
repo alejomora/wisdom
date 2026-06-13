@@ -1157,6 +1157,7 @@ function ExerciseView() {
     newItems.splice(index, 1)
     setDragItems(newItems)
     setInputAnswer(prev => (prev ? prev + ' ' + word : word))
+    speakText(word)
   }
 
   const handleRemoveFromAnswer = () => {
