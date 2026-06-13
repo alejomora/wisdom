@@ -14,10 +14,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Prompt Maestro - Learn English Like a Game",
+  title: "Wisdom Quest - Learn English Like a Game",
   description: "Master English through gamified scenarios, exercises, and challenges. The most fun way to learn English!",
-  keywords: ["English", "Learning", "Gamification", "ESL", "Language", "Education", "Prompt Maestro"],
-  authors: [{ name: "Prompt Maestro" }],
+  keywords: ["English", "Learning", "Gamification", "ESL", "Language", "Education", "Wisdom Quest"],
+  authors: [{ name: "Wisdom Quest" }],
   icons: {
     icon: "/logo.svg",
   },
