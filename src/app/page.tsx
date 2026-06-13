@@ -1103,6 +1103,14 @@ function ExerciseView() {
   const scenarios = useAppStore((s) => s.scenarios)
   const user = useAppStore((s) => s.user)
   const infiniteLivesUntil = useAppStore((s) => s.infiniteLivesUntil)
+  const selectedLevelId = useAppStore((s) => s.selectedLevelId)
+  const levels = useAppStore((s) => s.levels)
+  const speechSpeed = useAppStore((s) => s.speechSpeed)
+  const setSpeechSpeed = useAppStore((s) => s.setSpeechSpeed)
+
+  // Determine if speed toggle should show (basic + intermediate only)
+  const currentLevelSlug = levels.find((l: any) => l.id === selectedLevelId)?.slug
+  const showSpeedToggle = currentLevelSlug === 'basic' || currentLevelSlug === 'intermediate'
 
   const currentQuestion = questions[currentQuestionIndex]
   const [inputAnswer, setInputAnswer] = useState('')
@@ -1160,8 +1168,6 @@ function ExerciseView() {
     }
   }
 
-  const speechSpeed = useAppStore((s) => s.speechSpeed)
-  const setSpeechSpeed = useAppStore((s) => s.setSpeechSpeed)
   const speechVoiceIndex = useAppStore((s) => s.speechVoiceIndex)
   const setSpeechVoiceIndex = useAppStore((s) => s.setSpeechVoiceIndex)
 
@@ -1457,16 +1463,32 @@ function ExerciseView() {
         return (
           <div className="space-y-4">
             {q.type === 'listen_write' || q.type === 'dictation' ? (
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => speakText(q.audioText || q.prompt)}
-                className="mx-auto flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
-              >
-                <Icons.volume size={20} />
-                <span className="font-medium">Play Audio</span>
-                {speechSpeed === 'slow' && <span className="text-[10px] opacity-70 ml-1">🐢</span>}
-              </motion.button>
+              <div className="flex items-center justify-center gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => speakText(q.audioText || q.prompt)}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+                >
+                  <Icons.volume size={20} />
+                  <span className="font-medium">Play Audio</span>
+                  {speechSpeed === 'slow' && <span className="text-[10px] opacity-70 ml-1">🐢</span>}
+                </motion.button>
+                {showSpeedToggle && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setSpeechSpeed(speechSpeed === 'slow' ? 'normal' : 'slow')}
+                    className={`inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium border ${
+                      speechSpeed === 'slow'
+                        ? 'bg-amber-500/15 border-amber-500/30 text-amber-400'
+                        : 'bg-secondary border-border text-muted-foreground'
+                    }`}
+                  >
+                    {speechSpeed === 'slow' ? '🐢 Lento' : '🐇 Normal'}
+                  </motion.button>
+                )}
+              </div>
             ) : null}
 
             <div className="relative">
@@ -1547,16 +1569,32 @@ function ExerciseView() {
       case 'pronunciation':
         return (
           <div className="space-y-6 text-center">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => speakText(q.audioText || q.correctAnswer)}
-              className="mx-auto flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
-            >
-              <Icons.volume size={20} />
-              <span className="font-medium">Listen First</span>
-              {speechSpeed === 'slow' && <span className="text-[10px] opacity-70 ml-1">🐢</span>}
-            </motion.button>
+            <div className="flex items-center justify-center gap-2">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => speakText(q.audioText || q.correctAnswer)}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+              >
+                <Icons.volume size={20} />
+                <span className="font-medium">Listen First</span>
+                {speechSpeed === 'slow' && <span className="text-[10px] opacity-70 ml-1">🐢</span>}
+              </motion.button>
+              {showSpeedToggle && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSpeechSpeed(speechSpeed === 'slow' ? 'normal' : 'slow')}
+                  className={`inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium border ${
+                    speechSpeed === 'slow'
+                      ? 'bg-amber-500/15 border-amber-500/30 text-amber-400'
+                      : 'bg-secondary border-border text-muted-foreground'
+                  }`}
+                >
+                  {speechSpeed === 'slow' ? '🐢 Lento' : '🐇 Normal'}
+                </motion.button>
+              )}
+            </div>
 
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -1606,7 +1644,7 @@ function ExerciseView() {
             </motion.div>
 
             {!showResult && (
-              <div className="flex gap-3 justify-center">
+              <div className="flex gap-3 justify-center flex-wrap">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -1618,6 +1656,20 @@ function ExerciseView() {
                 >
                   🔊 Listen {speechSpeed === 'slow' && '🐢'}
                 </motion.button>
+                {showSpeedToggle && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setSpeechSpeed(speechSpeed === 'slow' ? 'normal' : 'slow')}
+                    className={`inline-flex items-center gap-1 px-3 py-3 rounded-xl text-xs font-medium border ${
+                      speechSpeed === 'slow'
+                        ? 'bg-amber-500/15 border-amber-500/30 text-amber-400'
+                        : 'bg-secondary border-border text-muted-foreground'
+                    }`}
+                  >
+                    {speechSpeed === 'slow' ? '🐢 Lento' : '🐇 Normal'}
+                  </motion.button>
+                )}
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -2089,7 +2141,7 @@ function ExerciseView() {
 
             {/* Audio button */}
             {currentQuestion.audioText && currentQuestion.type !== 'listen_write' && currentQuestion.type !== 'dictation' && currentQuestion.type !== 'pronunciation' && (
-              <div className="text-center">
+              <div className="text-center flex items-center justify-center gap-2">
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -2099,6 +2151,20 @@ function ExerciseView() {
                   <Icons.volume size={16} />
                   Listen {speechSpeed === 'slow' && '🐢'}
                 </motion.button>
+                {showSpeedToggle && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setSpeechSpeed(speechSpeed === 'slow' ? 'normal' : 'slow')}
+                    className={`inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium border ${
+                      speechSpeed === 'slow'
+                        ? 'bg-amber-500/15 border-amber-500/30 text-amber-400'
+                        : 'bg-secondary border-border text-muted-foreground'
+                    }`}
+                  >
+                    {speechSpeed === 'slow' ? '🐢 Lento' : '🐇 Normal'}
+                  </motion.button>
+                )}
               </div>
             )}
 
