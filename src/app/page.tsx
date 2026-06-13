@@ -422,7 +422,7 @@ function LoginScreen() {
 
         <div className="mt-6 p-4 rounded-xl bg-secondary/50 border border-border">
           <p className="text-sm font-medium text-center mb-1">🌍 Welcome to Wisdom Quest</p>
-          <p className="text-xs text-muted-foreground text-center">Tu aventura para aprender inglés comienza aquí. ¡Crea tu cuenta y empieza a aprender!</p>
+          <p className="text-xs text-muted-foreground text-center">Tu aventura para aprender inglés comienza aquí. ¡Ingresa con tu cuenta y empieza a aprender!</p>
         </div>
       </motion.div>
     </div>
