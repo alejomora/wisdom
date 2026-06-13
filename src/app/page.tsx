@@ -1212,7 +1212,7 @@ function ExerciseView() {
       speechSynthesis.cancel()
       const utterance = new SpeechSynthesisUtterance(text)
       utterance.lang = 'en-US'
-      utterance.rate = speechSpeed === 'slow' ? 0.5 : 0.9
+      utterance.rate = speechSpeed === 'slow' ? 0.4 : 0.9
       // Apply selected voice if available
       if (speechVoiceIndex >= 0 && speechVoiceIndex < availableVoices.length) {
         utterance.voice = availableVoices[speechVoiceIndex]
@@ -1222,7 +1222,7 @@ function ExerciseView() {
         const virtualVoice = virtualVoices[vIdx]
         if (virtualVoice) {
           utterance.pitch = virtualVoice.pitch
-          utterance.rate = speechSpeed === 'slow' ? virtualVoice.rate * 0.6 : virtualVoice.rate
+          utterance.rate = speechSpeed === 'slow' ? virtualVoice.rate * 0.45 : virtualVoice.rate
         }
       }
       speechSynthesis.speak(utterance)
@@ -2004,7 +2004,7 @@ function ExerciseView() {
                           speechSynthesis.cancel()
                           const u = new SpeechSynthesisUtterance('Hello, this is the default voice.')
                           u.lang = 'en-US'
-                          u.rate = speechSpeed === 'slow' ? 0.5 : 0.9
+                          u.rate = speechSpeed === 'slow' ? 0.4 : 0.9
                           speechSynthesis.speak(u)
                         }
                       }}
@@ -2073,7 +2073,7 @@ function ExerciseView() {
                             speechSynthesis.cancel()
                             const u = new SpeechSynthesisUtterance('Hello, this is how I sound.')
                             u.lang = 'en-US'
-                            u.rate = speechSpeed === 'slow' ? 0.5 : 0.9
+                            u.rate = speechSpeed === 'slow' ? 0.4 : 0.9
                             u.voice = voice
                             speechSynthesis.speak(u)
                           }
@@ -4205,7 +4205,7 @@ function ReadingsView() {
       speechSynthesis.cancel()
       const u = new SpeechSynthesisUtterance(currentReading.passage)
       u.lang = 'en-US'
-      u.rate = speechSpeed === 'slow' ? 0.6 : 0.9
+      u.rate = speechSpeed === 'slow' ? 0.4 : 0.9
       const voices = speechSynthesis.getVoices()
       const engVoices = voices.filter(v => v.lang.startsWith('en'))
       if (engVoices.length > 0 && speechVoiceIndex >= 0 && speechVoiceIndex < engVoices.length) {
